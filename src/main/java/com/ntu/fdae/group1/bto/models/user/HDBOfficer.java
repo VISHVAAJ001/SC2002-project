@@ -9,4 +9,9 @@ public class HDBOfficer extends User {
         super(userId, password, age, maritalStatus);
     }
 
+	public Project getAssignedProject() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 }

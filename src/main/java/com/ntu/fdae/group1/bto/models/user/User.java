@@ -9,6 +9,11 @@ public abstract class User {
     private String password;
     private int age;
     private String maritalStatus;
+    private String name;
+    public String getName() {
+        return name;
+    }
+
 
     public User(String userId, String password, int age, String maritalStatus) {
         this.userId = userId;

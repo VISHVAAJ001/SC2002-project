@@ -8,4 +8,15 @@ public class Project {
     private String projectStatus;
     private boolean projectVisibility;
     private List<Flat> flatType;
+    private String name;
+    public String getName1() {
+        return name;
+    }
+	public String getName() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+
 }
+

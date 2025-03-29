@@ -12,4 +12,14 @@ public class Applicant extends User {
         super(userId, password, age, maritalStatus);
     }
 
+	public Object getAppliedProject() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public Object getApplicationStatus() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 }
