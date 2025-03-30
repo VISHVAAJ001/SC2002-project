@@ -1,17 +1,25 @@
 package com.ntu.fdae.group1.bto.models.user;
 
-import com.ntu.fdae.group1.bto.models.project.Project;
+import com.ntu.fdae.group1.bto.enums.MaritalStatus;
+import com.ntu.fdae.group1.bto.enums.UserRole;
 
-public class HDBOfficer extends User {
-    private Project assignedProject;
+public class HDBOfficer extends HDBStaff {
+    private String handledProjectId;
 
-    public HDBOfficer(String userId, String password, int age, String maritalStatus) {
-        super(userId, password, age, maritalStatus);
+    public HDBOfficer(String nric, String passwordHash, String name, int age, MaritalStatus maritalStatus) {
+        super(nric, passwordHash, name, age, maritalStatus);
     }
 
-	public Project getAssignedProject() {
-		// TODO Auto-generated method stub
-		return null;
-	}
+    @Override
+    public UserRole getRole() {
+        return UserRole.HDB_OFFICER;
+    }
 
+    public String getHandledProjectId() {
+        return handledProjectId;
+    }
+
+    public void setHandledProjectId(String handledProjectId) {
+        this.handledProjectId = handledProjectId;
+    }
 }
