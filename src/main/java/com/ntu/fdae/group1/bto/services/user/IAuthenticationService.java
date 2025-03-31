@@ -1,4 +1,4 @@
-package com.ntu.fdae.group1.bto.services;
+package com.ntu.fdae.group1.bto.services.user;
 
 import com.ntu.fdae.group1.bto.exceptions.AuthenticationException;
 import com.ntu.fdae.group1.bto.models.user.User;

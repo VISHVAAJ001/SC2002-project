@@ -5,7 +5,7 @@ import java.util.List;
 import com.ntu.fdae.group1.bto.models.enquiry.Enquiry;
 import com.ntu.fdae.group1.bto.models.user.HDBStaff;
 import com.ntu.fdae.group1.bto.models.user.User;
-import com.ntu.fdae.group1.bto.services.IEnquiryService;
+import com.ntu.fdae.group1.bto.services.enquiry.IEnquiryService;
 
 /**
  * Controller for enquiry-related operations

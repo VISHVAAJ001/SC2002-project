@@ -8,9 +8,9 @@ import com.ntu.fdae.group1.bto.enums.OfficerRegStatus;
 import com.ntu.fdae.group1.bto.models.project.OfficerRegistration;
 import com.ntu.fdae.group1.bto.models.user.HDBManager;
 import com.ntu.fdae.group1.bto.models.user.HDBOfficer;
-import com.ntu.fdae.group1.bto.services.IBookingService;
-import com.ntu.fdae.group1.bto.services.IOfficerRegistrationService;
-import com.ntu.fdae.group1.bto.services.IReceiptService;
+import com.ntu.fdae.group1.bto.services.booking.IBookingService;
+import com.ntu.fdae.group1.bto.services.booking.IReceiptService;
+import com.ntu.fdae.group1.bto.services.project.IOfficerRegistrationService;
 
 /**
  * Controller for officer-related operations

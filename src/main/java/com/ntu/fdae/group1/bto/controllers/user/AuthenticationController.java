@@ -2,7 +2,7 @@ package com.ntu.fdae.group1.bto.controllers.user;
 
 import com.ntu.fdae.group1.bto.exceptions.AuthenticationException;
 import com.ntu.fdae.group1.bto.models.user.User;
-import com.ntu.fdae.group1.bto.services.IAuthenticationService;
+import com.ntu.fdae.group1.bto.services.user.IAuthenticationService;
 
 /**
  * Controller for authentication-related operations

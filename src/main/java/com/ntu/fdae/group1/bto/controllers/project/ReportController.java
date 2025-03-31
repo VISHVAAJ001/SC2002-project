@@ -2,7 +2,7 @@ package com.ntu.fdae.group1.bto.controllers.project;
 
 import java.util.Map;
 
-import com.ntu.fdae.group1.bto.services.IReportService;
+import com.ntu.fdae.group1.bto.services.project.IReportService;
 
 /**
  * Controller for report-related operations

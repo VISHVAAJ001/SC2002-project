@@ -8,7 +8,7 @@ import com.ntu.fdae.group1.bto.models.project.Project;
 import com.ntu.fdae.group1.bto.models.project.ProjectFlatInfo;
 import com.ntu.fdae.group1.bto.models.user.HDBManager;
 import com.ntu.fdae.group1.bto.models.user.User;
-import com.ntu.fdae.group1.bto.services.IProjectService;
+import com.ntu.fdae.group1.bto.services.project.IProjectService;
 
 /**
  * Controller for project-related operations

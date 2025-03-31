@@ -1,4 +1,4 @@
-package com.ntu.fdae.group1.bto.services;
+package com.ntu.fdae.group1.bto.services.enquiry;
 
 import java.util.List;
 

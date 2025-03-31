@@ -2,7 +2,6 @@ package com.ntu.fdae.group1.bto.services.user;
 
 import com.ntu.fdae.group1.bto.models.user.User;
 import com.ntu.fdae.group1.bto.repository.user.IUserRepository;
-import com.ntu.fdae.group1.bto.services.IAuthenticationService;
 import com.ntu.fdae.group1.bto.utils.PasswordUtils;
 import com.ntu.fdae.group1.bto.exceptions.AuthenticationException;
 

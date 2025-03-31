@@ -1,4 +1,4 @@
-package com.ntu.fdae.group1.bto.services;
+package com.ntu.fdae.group1.bto.services.project;
 
 import com.ntu.fdae.group1.bto.models.project.Project;
 import com.ntu.fdae.group1.bto.models.project.ProjectFlatInfo;
