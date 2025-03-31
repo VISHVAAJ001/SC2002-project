@@ -1,4 +1,5 @@
 package com.ntu.fdae.group1.bto.views;
+
 import java.util.Scanner;
 
 public abstract class BaseUI {

@@ -12,8 +12,9 @@ public class EligibilityService implements IEligibilityService {
 
     @Override
     public boolean canApplicantApply(Applicant applicant, Project project) {
-        return applicant.getAppliedProject() == null &&
-                applicant.getApplicationStatus().equals("NOT_APPLIED");
+        // return applicant.getAppliedProject() == null &&
+        // applicant.getApplicationStatus().equals("NOT_APPLIED");
+        return false;
     }
 
     @Override
@@ -21,8 +22,9 @@ public class EligibilityService implements IEligibilityService {
             Collection<OfficerRegistration> allRegistrations,
             Collection<Application> allApplications) {
 
-        return allRegistrations.stream()
-                .noneMatch(reg -> reg.getOfficer().equals(officer) &&
-                        reg.getProject().equals(project));
+        // return allRegistrations.stream()
+        // .noneMatch(reg -> reg.getOfficer().equals(officer) &&
+        // reg.getProject().equals(project));
+        return false;
     }
 }

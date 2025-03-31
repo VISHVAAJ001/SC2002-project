@@ -19,10 +19,10 @@ public class BookingService implements IBookingService {
     private IDataManager dataManager;
 
     public BookingService(Map<String, Application> applicationRepo,
-                          Map<String, Project> projectRepo,
-                          Map<String, Booking> bookingRepo,
-                          Map<String, User> userRepo,
-                          IDataManager dataManager) {
+            Map<String, Project> projectRepo,
+            Map<String, Booking> bookingRepo,
+            Map<String, User> userRepo,
+            IDataManager dataManager) {
         this.applicationRepo = applicationRepo;
         this.projectRepo = projectRepo;
         this.bookingRepo = bookingRepo;
@@ -32,37 +32,39 @@ public class BookingService implements IBookingService {
 
     @Override
     public Booking performBooking(HDBOfficer officer, String applicantNRIC, String flatType) throws BookingException {
-        User user = userRepo.get(applicantNRIC);
-        if (!(user instanceof Applicant)) {
-            throw new BookingException("Applicant not found or invalid.");
-        }
-        Applicant applicant = (Applicant) user;
+        // User user = userRepo.get(applicantNRIC);
+        // if (!(user instanceof Applicant)) {
+        // throw new BookingException("Applicant not found or invalid.");
+        // }
+        // Applicant applicant = (Applicant) user;
 
-        // Get officer’s assigned project
-        Project project = officer.getAssignedProject();
-        if (project == null) {
-            throw new BookingException("Officer has no assigned project.");
-        }
+        // // Get officer’s assigned project
+        // Project project = officer.getAssignedProject();
+        // if (project == null) {
+        // throw new BookingException("Officer has no assigned project.");
+        // }
 
-        // Check eligibility
-        EligibilityService eligibilityService = new EligibilityService();
-        if (!eligibilityService.canApplicantApply(applicant, project)) {
-            throw new BookingException("Applicant not eligible for this project.");
-        }
+        // // Check eligibility
+        // EligibilityService eligibilityService = new EligibilityService();
+        // if (!eligibilityService.canApplicantApply(applicant, project)) {
+        // throw new BookingException("Applicant not eligible for this project.");
+        // }
 
-        // Create booking
-        Booking booking = new Booking(flatType, java.time.LocalDate.now().toString());
+        // // Create booking
+        // Booking booking = new Booking(flatType,
+        // java.time.LocalDate.now().toString());
 
-        // Create and save application
-        Application application = new Application();
-        applicationRepo.put(applicantNRIC, application);
-        bookingRepo.put(applicantNRIC, booking);
+        // // Create and save application
+        // Application application = new Application();
+        // applicationRepo.put(applicantNRIC, application);
+        // bookingRepo.put(applicantNRIC, booking);
 
-        // Persist changes
-        dataManager.saveApplications(applicationRepo);
-        dataManager.saveBookings(bookingRepo);
+        // // Persist changes
+        // dataManager.saveApplications(applicationRepo);
+        // dataManager.saveBookings(bookingRepo);
 
-        return booking;
+        // return booking;
+        return null;
     }
 
 }
