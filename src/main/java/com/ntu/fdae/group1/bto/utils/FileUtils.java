@@ -1,11 +1,12 @@
 package com.ntu.fdae.group1.bto.utils;
 
-import java.io.*; // etc.
+import java.io.*;
 import java.nio.file.*;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -164,7 +165,7 @@ public final class FileUtils { // Make final, prevent instantiation if all metho
             return new ArrayList<>();
         }
         // Use split with -1 limit to keep trailing empty strings if necessary
-        return List.of(str.split(delimiter, -1));
+        return new ArrayList<>(Arrays.asList(str.split(delimiter, -1)));
     }
 
     // Add other generic helpers as needed (e.g., safe integer parsing)
