@@ -137,27 +137,77 @@ package Entity <<Folder>> {
 
 ' --- Repository (Data Persistence) Layer ---
 package Repository <<Folder>> {
-    interface IDataManager <<DIP>> {
-        + loadUsers() : Map<String, User>
-        + loadProjects() : Map<String, Project>
-        + loadApplications() : Map<String, Application>
-        + loadBookings() : Map<String, Booking>
-        + loadEnquiries() : Map<String, Enquiry>
-        + loadOfficerRegistrations() : Map<String, OfficerRegistration>
-
-        + saveUsers(users: Map<String, User>) : void
-        + saveProjects(projects: Map<String, Project>) : void
-        + saveApplications(applications: Map<String, Application>) : void
-        + saveBookings(bookings: Map<String, Booking>) : void
-        + saveEnquiries(enquiries: Map<String, Enquiry>) : void
-        + saveOfficerRegistrations(registrations: Map<String, OfficerRegistration>) : void
+    ' --- Generic Base Interface ---
+    interface IRepository<T, ID> <<DIP>> {
+        + findById(id : ID) : T <<nullable>>
+        + findAll() : Map<ID, T> ' Using Map for consistency with current loadAll
+        + save(entity : T) : void
+        + saveAll(entities: Map<ID, T>) : void ' Save the entire current state
+        + loadAll() : Map<ID, T> ' Load all from persistence
+        ' + delete(entity: T) : void ' Optional: Add if needed
+        ' + deleteById(id: ID) : void ' Optional: Add if needed
     }
 
-    class FileDataManager implements IDataManager {
-        ' - file paths for data...
-        + FileDataManager(...)
-        ' <<SRP: Handles data reading/writing from/to files>>
+    ' --- Specific Interfaces (Extend the Generic Base) ---
+    interface IUserRepository extends IRepository<User, String> {
+        ' Add any user-specific query methods here (if needed later)
     }
+
+    interface IProjectRepository extends IRepository<Project, String> {
+        ' Add any project-specific query methods here (if needed later)
+    }
+
+    interface IApplicationRepository extends IRepository<Application, String> {
+        + findByApplicantNric(nric: String) : Application <<nullable>>
+        + findByProjectId(projectId: String) : List<Application>
+        ' Add other application-specific methods if needed
+    }
+
+    interface IBookingRepository extends IRepository<Booking, String> {
+        + findByApplicantNric(nric: String) : Booking <<nullable>>
+    }
+
+    interface IEnquiryRepository extends IRepository<Enquiry, String> {
+        + findByUserNric(nric: String) : List<Enquiry>
+        + findByProjectId(projectId: String) : List<Enquiry>
+    }
+
+    interface IOfficerRegistrationRepository extends IRepository<OfficerRegistration, String> {
+        + findByOfficerNric(nric: String) : List<OfficerRegistration>
+        + findByProjectId(projectId: String) : List<OfficerRegistration>
+    }
+
+    ' --- (FileIOHelper remains the same) ---
+    class FileIOHelper {  }
+
+    ' --- Concrete File Implementations (Implement Specific Interfaces) ---
+    class FileUserRepository implements IUserRepository {
+        - filePath : String
+        - users : Map<String, User>
+        + FileUserRepository(filePath: String)
+        ' + Implement methods from IRepository<User, String> and IUserRepository
+    }
+
+    class FileProjectRepository implements IProjectRepository {
+        - projectFilePath : String
+        - flatInfoFilePath : String
+        - projects : Map<String, Project>
+        + FileProjectRepository(projectFilePath: String, flatInfoFilePath: String)
+        ' + Implement methods from IRepository<Project, String> and IProjectRepository
+    }
+
+    class FileApplicationRepository implements IApplicationRepository {
+        - filePath : String
+        - applications : Map<String, Application>
+        + FileApplicationRepository(filePath: String)
+        ' + Implement methods from IRepository<Application, String> and IApplicationRepository
+    }
+
+    ' --- (Other File...Repository classes implement their specific interfaces) ---
+    class FileBookingRepository implements IBookingRepository { }
+    class FileEnquiryRepository implements IEnquiryRepository {  }
+    class FileOfficerRegistrationRepository implements IOfficerRegistrationRepository { }
+
 }
 
 ' --- Service Layer ---
@@ -173,10 +223,6 @@ package Service <<Folder>> {
         - dataManager : IDataManager
         + BookingService(appMap, projMap, bookMap, dataMgr)
         + performBooking(officer: HDBOfficer, applicantNRIC: String, flatType: String) : Booking <<throws BookingException>>
-    }
-
-    class BookingException extends Exception {
-        + BookingException(message: String)
     }
 
     interface IReceiptService <<ISP>> {
@@ -240,10 +286,6 @@ package Control <<Folder>> {
         + getApplicationsByStatus(status: ApplicationStatus) : List<Application>
     }
 
-    class ApplicationException extends Exception { 
-        + ApplicationException(msg: String) 
-    }
-
     class OfficerController {
         - registrationRepo : Map<String, OfficerRegistration>
         - projectRepo : Map<String, Project>
@@ -260,10 +302,6 @@ package Control <<Folder>> {
         + handleFlatBooking(officer: HDBOfficer, applicantNRIC: String, flatType: String) : String <<throws BookingException>>
         + getPendingRegistrations() : List<OfficerRegistration>
         + getRegistrationsByProject(projectId: String) : List<OfficerRegistration>
-    }
-
-    class RegistrationException extends Exception { 
-        + RegistrationException(msg: String) 
     }
 
     class EnquiryController {
@@ -345,8 +383,6 @@ package Views <<Folder>> {
          + displayEnquiryList(enquiries: List<Enquiry>) : void
          + selectProjectFromList(projects: List<Project>) : Project <<nullable>>
     }
-
-  
 }
 
 package Utility <<Folder>> {
@@ -361,6 +397,21 @@ package Utility <<Folder>> {
     }
 }
 
+package Exception <<Folder>> {
+    class BookingException extends Exception {
+        + BookingException(message: String)
+    }
+
+
+    class ApplicationException extends Exception { 
+        + ApplicationException(msg: String) 
+    }
+    
+    class RegistrationException extends Exception { 
+        + RegistrationException(msg: String) 
+    }
+}
+
 ' --- Relationships ---
 
 ' Layers Dependencies (Conceptual)
@@ -368,10 +419,11 @@ Views ..> Control : uses
 Control ..> Service : uses
 Service ..> Repository : uses
 Service ..> Entity : uses
+Service ..> Exception: uses
 Control ..> Repository : uses
 Control ..> Entity : uses
+Control ..> Exception : uses
 Views ..> Entity : uses
-
 
 
 ' Composition / Aggregation
@@ -393,26 +445,23 @@ Enquiry "1" -- "1" User : submitted by
 OfficerRegistration "1" -- "1" HDBOfficer : requested by
 OfficerRegistration "1" -- "1" Project : for
 
-' Interface Implementation
-IDataManager <|.. FileDataManager
-IBookingService <|.. BookingService
-IReceiptService <|.. ReceiptService
-IEligibilityService <|.. EligibilityService
-
 ' Controller Dependencies (Illustrative)
-AuthenticationController ..> IDataManager
-ProjectController ..> IDataManager
-ApplicationController ..> IDataManager
+AuthenticationController ..> IUserRepository
+ProjectController ..> IProjectRepository
+ApplicationController ..> IApplicationRepository
 ApplicationController ..> IEligibilityService
-OfficerController ..> IDataManager
+OfficerController ..> IOfficerRegistrationRepository
 OfficerController ..> IEligibilityService
 OfficerController ..> IBookingService
 OfficerController ..> IReceiptService
-EnquiryController ..> IDataManager
+EnquiryController ..> IEnquiryRepository
 ReportController ..> IDataManager
 
 ' Service Dependencies
-BookingService ..> IDataManager
+BookingService ..> IApplicationRepository
+BookingService ..> IProjectRepository
+BookingService ..> IBookingRepository
+BookingService ..> IUserRepository
 EligibilityService ..> User
 EligibilityService ..> Project
 
@@ -438,6 +487,5 @@ HDBManagerUI ..> EnquiryController
 HDBManagerUI ..> ReportController
 
 Repository ..> Utility : uses
-
 
 @enduml
