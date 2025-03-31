@@ -33,12 +33,8 @@ public abstract class User {
 
     public abstract UserRole getRole();
 
-    public boolean verifyPassword(String password) {
-        return this.passwordHash.equals(password);
-    }
-
-    public void updatePasswordHash(String newHash) {
-        this.passwordHash = newHash;
+    public String getPasswordHash() {
+        return this.passwordHash;
     }
 
     public String getNric() {

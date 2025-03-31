@@ -1,16 +1,13 @@
 package com.ntu.fdae.group1.bto.controllers.user;
 
 import com.ntu.fdae.group1.bto.models.user.User;
-import com.ntu.fdae.group1.bto.services.booking.IDataManager;
-import java.util.Map;
+import com.ntu.fdae.group1.bto.repository.FileUserRepository;
 
 public class AuthenticationController {
-    public Map<String, User> userRepo;
-    public IDataManager dataManager;
+    public FileUserRepository userRepo;
 
-    public AuthenticationController(Map<String, User> userMap, IDataManager dataMgr) {
-        this.userRepo = userMap;
-        this.dataManager = dataMgr;
+    public AuthenticationController(FileUserRepository userRepo) {
+        this.userRepo = userRepo;
     }
 
     public User login(String nric, String password) {

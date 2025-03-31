@@ -1,80 +1,63 @@
 package com.ntu.fdae.group1.bto.controllers.project;
 
-import com.ntu.fdae.group1.bto.services.booking.IDataManager;
 import com.ntu.fdae.group1.bto.models.project.Project;
+import com.ntu.fdae.group1.bto.models.project.ProjectFlatInfo;
 import com.ntu.fdae.group1.bto.models.user.HDBManager;
 import com.ntu.fdae.group1.bto.models.user.User;
+import com.ntu.fdae.group1.bto.repository.IProjectRepository;
 
+import java.time.LocalDate;
 import java.util.Map;
-import java.util.stream.Collectors;
 import java.util.List;
 
 public class ProjectController {
-    private Map<String, Project> projectRepo;
-    private IDataManager dataManager;
+    private IProjectRepository projectRepo;
 
-    public ProjectController(Map<String, Project> projMap, IDataManager dataMgr) {
-        this.projectRepo = projMap;
-        this.dataManager = dataMgr;
+    public ProjectController(IProjectRepository projRepo) {
+        this.projectRepo = projRepo;
     }
 
-    public Project createProject(String projectId, String projectName, String neighbourhood) {
-        // Project project = new Project(projectId, projectName, neighbourhood);
-        // projectRepo.put(projectId, project);
-        // dataManager.saveProjects(projectRepo);
-
-        // return project;
+    public Project createProject(HDBManager manager, String name, String neighborhood,
+            Map<String, ProjectFlatInfo> flatInfoMap, LocalDate openDate,
+            LocalDate closeDate, int officerSlots) {
+        // Implementation
         return null;
     }
 
-    public boolean editProject(HDBManager manager, String projectId, String projectName, String neighbourhood) {
-        // Project project = projectRepo.get(projectId);
-        // if (project != null){
-        // project.setProjectName(newName);
-        // project.setNeighbourhood(newNeighbourhood);
-        // dataManager.saveProjects(projectRepo);
-        // return true;
-        // }
+    public boolean editProject(HDBManager manager, String projectId, String name,
+            String neighborhood, LocalDate openDate,
+            LocalDate closeDate, int officerSlots) {
+        // Implementation
         return false;
     }
 
     public boolean deleteProject(HDBManager manager, String projectId) {
-        // if (projectRepo.containsKey(projectId)){
-        // projectRepo.remove(projectId);
-        // dataManager.saveProjects(projectRepo);
-        // return true;
-        // }
+        // Implementation
         return false;
     }
 
     public boolean toggleVisibility(HDBManager manager, String projectId) {
-        // Project project = projectRepo.get(projectId);
-        // if (project != null){
-        // project.setVisibility(!project.isVisible());
-        // dataManager.saveProjects(projectRepo);
-        // return true;
-        // }
+        // Implementation
         return false;
     }
 
     public List<Project> getVisibleProjectsForUser(User user) {
-
+        // Implementation
         return null;
     }
 
     public List<Project> getAllProjects(HDBManager manager) {
-
+        // Implementation
         return null;
     }
 
     public List<Project> getProjectsManagedBy(String managerNRIC) {
-
+        // Implementation
         return null;
     }
 
     public Project findProjectById(String projectId) {
-
+        // Implementation
         return null;
     }
-
 }

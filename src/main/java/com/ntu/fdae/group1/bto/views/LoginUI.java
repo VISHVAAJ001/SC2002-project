@@ -1,4 +1,4 @@
-/* package com.ntu.fdae.group1.bto.views;
+package com.ntu.fdae.group1.bto.views;
 
 import com.ntu.fdae.group1.bto.controllers.user.AuthenticationController;
 import com.ntu.fdae.group1.bto.models.user.User;
@@ -21,7 +21,3 @@ public class LoginUI extends BaseUI {
         // Add later
     }
 }
-
-*/
-
-//yet to decide if needed

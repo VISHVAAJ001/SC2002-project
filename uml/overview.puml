@@ -73,6 +73,7 @@ package Entity <<Folder>> {
         + typeName : String {"2-Room", "3-Room"}
         + totalUnits : int
         + remainingUnits : int
+        + price : double
         + decreaseRemainingUnits() : boolean <<returns success>>
         + increaseRemainingUnits() : void ' For withdrawals before booking etc.
     }
@@ -177,9 +178,6 @@ package Repository <<Folder>> {
         + findByProjectId(projectId: String) : List<OfficerRegistration>
     }
 
-    ' --- (FileIOHelper remains the same) ---
-    class FileIOHelper {  }
-
     ' --- Concrete File Implementations (Implement Specific Interfaces) ---
     class FileUserRepository implements IUserRepository {
         - filePath : String
@@ -215,13 +213,12 @@ package Service <<Folder>> {
     interface IBookingService <<ISP>> {
          + performBooking(officer: HDBOfficer, applicantNRIC: String, flatType: String) : Booking <<throws BookingException>>
     }
-
     class BookingService implements IBookingService {
-        - applicationRepo : Map<String, Application>
-        - projectRepo : Map<String, Project>
-        - bookingRepo : Map<String, Booking>
-        - dataManager : IDataManager
-        + BookingService(appMap, projMap, bookMap, dataMgr)
+        - applicationRepo : IApplicationRepository
+        - projectRepo : IProjectRepository
+        - bookingRepo : IBookingRepository
+        - userRepo : IUserRepository
+        + BookingService(appRepo: IApplicationRepository, projRepo: IProjectRepository, bookingRepo: IBookingRepository, userRepo: IUserRepository)
         + performBooking(officer: HDBOfficer, applicantNRIC: String, flatType: String) : Booking <<throws BookingException>>
     }
 
@@ -247,34 +244,31 @@ package Service <<Folder>> {
 ' --- Control Layer ---
 package Control <<Folder>> {
     class AuthenticationController {
-        - userRepo : Map<String, User>
-        - dataManager : IDataManager
-        + AuthenticationController(userMap, dataMgr)
+        - userRepo : IUserRepository
+        + AuthenticationController(userRepo: IUserRepository)
         + login(nric: String, password: String) : User <<nullable>>
-        + logout() : void
+        + logout() : void ' Typically handles clearing session state if any
         + changePassword(user: User, newPassword: String) : boolean
     }
 
-    class ProjectController {
-        - projectRepo : Map<String, Project>
-        - dataManager : IDataManager
-        + ProjectController(projMap, dataMgr)
-        + createProject(...) : Project
-        + editProject(manager: HDBManager, projectId: String, ...) : boolean
+class ProjectController {
+        - projectRepo : IProjectRepository
+        + ProjectController(projRepo: IProjectRepository)
+        + createProject(manager: HDBManager, name: String, neighborhood: String, flatInfoMap: Map<String, ProjectFlatInfo>, openDate: LocalDate, closeDate: LocalDate, officerSlots: int) : Project
+        + editProject(manager: HDBManager, projectId: String, name: String, neighborhood: String, openDate: LocalDate, closeDate: LocalDate, officerSlots: int) : boolean 
         + deleteProject(manager: HDBManager, projectId: String) : boolean
         + toggleVisibility(manager: HDBManager, projectId: String) : boolean
-        + getVisibleProjectsForUser(user: User) : List<Project>
+        + getVisibleProjectsForUser(user: User) : List<Project> 
         + getAllProjects(manager: HDBManager) : List<Project>
         + getProjectsManagedBy(managerNRIC: String) : List<Project>
         + findProjectById(projectId: String) : Project <<nullable>>
     }
 
-    class ApplicationController {
-        - applicationRepo : Map<String, Application>
-        - projectRepo : Map<String, Project>
-        - dataManager : IDataManager
+ class ApplicationController {
+        - applicationRepo : IApplicationRepository
+        - projectRepo : IProjectRepository
         - eligibilityService : IEligibilityService
-        + ApplicationController(appMap, projMap, dataMgr, eligSvc)
+        + ApplicationController(appRepo: IApplicationRepository, projRepo: IProjectRepository, eligSvc: IEligibilityService)
         + submitApplication(applicant: Applicant, projectId: String) : boolean <<throws ApplicationException>>
         + requestWithdrawal(applicant: Applicant) : boolean <<throws ApplicationException>>
         + approveApplication(manager: HDBManager, applicationId: String) : boolean
@@ -286,28 +280,26 @@ package Control <<Folder>> {
         + getApplicationsByStatus(status: ApplicationStatus) : List<Application>
     }
 
-    class OfficerController {
-        - registrationRepo : Map<String, OfficerRegistration>
-        - projectRepo : Map<String, Project>
-        - userRepo : Map<String, User>
-        - dataManager : IDataManager
+class OfficerController {
+        - registrationRepo : IOfficerRegistrationRepository
+        - projectRepo : IProjectRepository
+        - userRepo : IUserRepository
         - eligibilityService : IEligibilityService
         - bookingService : IBookingService
         - receiptService : IReceiptService
-        + OfficerController(regMap, projMap, userMap, dataMgr, eligSvc, bookSvc, receiptSvc)
+        + OfficerController(regRepo: IOfficerRegistrationRepository, projRepo: IProjectRepository, userRepo: IUserRepository, eligSvc: IEligibilityService, bookSvc: IBookingService, receiptSvc: IReceiptService)
         + requestProjectRegistration(officer: HDBOfficer, projectId: String) : boolean <<throws RegistrationException>>
         + getRegistrationStatus(officer: HDBOfficer, projectId: String) : OfficerRegStatus <<nullable>>
         + approveRegistration(manager: HDBManager, registrationId: String) : boolean
         + rejectRegistration(manager: HDBManager, registrationId: String) : boolean
-        + handleFlatBooking(officer: HDBOfficer, applicantNRIC: String, flatType: String) : String <<throws BookingException>>
+        + handleFlatBooking(officer: HDBOfficer, applicantNRIC: String, flatType: String) : String <<throws BookingException>> ' Returns receipt string
         + getPendingRegistrations() : List<OfficerRegistration>
         + getRegistrationsByProject(projectId: String) : List<OfficerRegistration>
-    }
+     }
 
-    class EnquiryController {
-        - enquiryRepo : Map<String, Enquiry>
-        - dataManager : IDataManager
-        + EnquiryController(enqMap, dataMgr)
+     class EnquiryController {
+        - enquiryRepo : IEnquiryRepository
+        + EnquiryController(enqRepo: IEnquiryRepository)
         + createEnquiry(user: User, projectId: String <<nullable>>, content: String) : Enquiry
         + viewMyEnquiries(user: User) : List<Enquiry>
         + editEnquiry(enquiryId: String, newContent: String, user: User) : boolean
@@ -315,16 +307,16 @@ package Control <<Folder>> {
         + replyToEnquiry(enquiryId: String, replyContent: String, staff: HDBStaff) : boolean
         + viewAllEnquiries(manager: HDBManager) : List<Enquiry>
         + viewProjectEnquiries(staff: HDBStaff, projectId: String) : List<Enquiry>
-    }
+     }
 
-    class ReportController {
-        - applicationRepo : Map<String, Application>
-        - bookingRepo : Map<String, Booking>
-        - projectRepo : Map<String, Project>
-        - userRepo : Map<String, User>
-        + ReportController(appMap, bookMap, projMap, userMap)
-        + generateBookingReport(filters: Map<String, String>) : String
-    }
+     class ReportController {
+         - applicationRepo : IApplicationRepository
+         - bookingRepo : IBookingRepository
+         - projectRepo : IProjectRepository
+         - userRepo : IUserRepository
+         + ReportController(appRepo: IApplicationRepository, bookRepo: IBookingRepository, projRepo: IProjectRepository, userRepo: IUserRepository)
+         + generateBookingReport(filters: Map<String, String>) : String ' Filters Map allows flexible criteria
+     }
 }
 
 ' --- Views Layer (CLI) ---
@@ -386,14 +378,26 @@ package Views <<Folder>> {
 }
 
 package Utility <<Folder>> {
-    class FileUtil {
-        + readFile(path: String) : String
-        + writeFile(path: String, data: String) : boolean
+    class FileUtils <<Utility>> {
+      + {static} readCsvLines(filePath: String) : List<String[]>
+      + {static} writeCsvLines(filePath: String, data: List<String[]>, header: String[]) : void
+      + {static} parseLocalDate(dateString: String) : LocalDate <<nullable>>
+      + {static} formatLocalDate(date: LocalDate) : String
+      + {static} parseEnum(enumClass: Class<E>, value: String) : E <<nullable>>
+      + {static} joinList(list: List<String>, delimiter: String) : String
+      + {static} splitString(str: String, delimiter: String) : List<String>
+      + {static} parseIntOrDefault(value: String, defaultValue: Integer) : Integer
     }
+
     class InputUtil {
         + {static} validateNRIC(nric: String) : boolean
         + {static} readDate(prompt: String, scanner: Scanner) : LocalDate
         + {static} readMandatoryString(prompt: String, scanner: Scanner) : String
+    }
+
+    class PasswordUtil <<Utility>> {
+       + {static} hashPassword(plainPassword: String) : String
+       + {static} verifyPassword(plainPassword: String, storedHash: String) : boolean
     }
 }
 
@@ -424,7 +428,7 @@ Control ..> Repository : uses
 Control ..> Entity : uses
 Control ..> Exception : uses
 Views ..> Entity : uses
-
+Repository ..> Utility : uses
 
 ' Composition / Aggregation
 Project "1" *-- "1..*" ProjectFlatInfo : contains
@@ -455,7 +459,6 @@ OfficerController ..> IEligibilityService
 OfficerController ..> IBookingService
 OfficerController ..> IReceiptService
 EnquiryController ..> IEnquiryRepository
-ReportController ..> IDataManager
 
 ' Service Dependencies
 BookingService ..> IApplicationRepository
@@ -464,7 +467,6 @@ BookingService ..> IBookingRepository
 BookingService ..> IUserRepository
 EligibilityService ..> User
 EligibilityService ..> Project
-
 
 
 ' UI Dependencies
@@ -485,7 +487,5 @@ HDBManagerUI ..> ApplicationController
 HDBManagerUI ..> OfficerController
 HDBManagerUI ..> EnquiryController
 HDBManagerUI ..> ReportController
-
-Repository ..> Utility : uses
 
 @enduml

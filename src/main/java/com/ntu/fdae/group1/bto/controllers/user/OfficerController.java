@@ -11,28 +11,27 @@ import com.ntu.fdae.group1.bto.models.user.User;
 import com.ntu.fdae.group1.bto.services.booking.IBookingService;
 import com.ntu.fdae.group1.bto.services.booking.IEligibilityService;
 import com.ntu.fdae.group1.bto.services.booking.IReceiptService;
-import com.ntu.fdae.group1.bto.services.booking.IDataManager;
+import com.ntu.fdae.group1.bto.repository.IOfficerRegistrationRepository;
+import com.ntu.fdae.group1.bto.repository.IProjectRepository;
+import com.ntu.fdae.group1.bto.repository.IUserRepository;
 
-import java.util.Map;
 import java.util.UUID;
 import java.util.List;
 
 public class OfficerController {
-    private Map<String, OfficerRegistration> registrationRepo;
-    private Map<String, Project> projectRepo;
-    private Map<String, User> userRepo;
-    private IDataManager dataManager;
+    private IOfficerRegistrationRepository registrationRepo;
+    private IProjectRepository projectRepo;
+    private IUserRepository userRepo;
     private IEligibilityService eligibilityService;
     private IBookingService bookingService;
     private IReceiptService receiptService;
 
-    public OfficerController(Map<String, OfficerRegistration> regMap, Map<String, Project> projMap,
-            Map<String, User> userMap, IDataManager dataMgr, IEligibilityService eligSvc, IBookingService bookSvc,
+    public OfficerController(IOfficerRegistrationRepository regRepo, IProjectRepository projRepo,
+            IUserRepository userRepo, IEligibilityService eligSvc, IBookingService bookSvc,
             IReceiptService receiptSvc) {
-        this.registrationRepo = regMap;
-        this.projectRepo = projMap;
-        this.userRepo = userMap;
-        this.dataManager = dataMgr;
+        this.registrationRepo = regRepo;
+        this.projectRepo = projRepo;
+        this.userRepo = userRepo;
         this.eligibilityService = eligSvc;
         this.bookingService = bookSvc;
         this.receiptService = receiptSvc;
@@ -45,7 +44,6 @@ public class OfficerController {
         // String registrationId = UUID.randomUUID().toString();
         // OfficerRegistration registration = new OfficerRegistration();
         // registrationRepo.put(registrationId, registration);
-        // dataManager.saveOfficerRegistrations(registrationRepo);
         // return true;
         // }
         return false;
@@ -61,7 +59,6 @@ public class OfficerController {
         // if (registration != null && registration.getStatus() ==
         // OfficerRegistration.PENDING) {
         // registration.setStatus(OfficerRegistration.APPROVED);
-        // dataManager.saveOfficerRegistrations(registrationRepo);
         // return true;
         // }
         return false;
@@ -73,7 +70,6 @@ public class OfficerController {
         // if (registration != null && registration.getStatus() ==
         // OfficerRegistration.PENDING) {
         // registration.setStatus(OfficerRegistration.REJECTED);
-        // dataManager.saveOfficerRegistrations(registrationRepo);
         // return true;
         // }
         return false;
@@ -89,13 +85,10 @@ public class OfficerController {
     }
 
     public List<OfficerRegistration> getPendingRegistrations() {
-
         return null;
     }
 
     public List<OfficerRegistration> getRegistrationByProject(String projectId) {
-
         return null;
     }
-
 }
