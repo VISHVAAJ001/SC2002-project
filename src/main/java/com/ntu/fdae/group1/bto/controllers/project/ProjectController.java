@@ -1,63 +1,126 @@
 package com.ntu.fdae.group1.bto.controllers.project;
 
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Map;
+
 import com.ntu.fdae.group1.bto.models.project.Project;
 import com.ntu.fdae.group1.bto.models.project.ProjectFlatInfo;
 import com.ntu.fdae.group1.bto.models.user.HDBManager;
 import com.ntu.fdae.group1.bto.models.user.User;
-import com.ntu.fdae.group1.bto.repository.IProjectRepository;
+import com.ntu.fdae.group1.bto.services.IProjectService;
 
-import java.time.LocalDate;
-import java.util.Map;
-import java.util.List;
-
+/**
+ * Controller for project-related operations
+ */
 public class ProjectController {
-    private IProjectRepository projectRepo;
+    private final IProjectService projectService;
 
-    public ProjectController(IProjectRepository projRepo) {
-        this.projectRepo = projRepo;
+    /**
+     * Constructs a new ProjectController
+     * 
+     * @param projectService The project service to use
+     */
+    public ProjectController(IProjectService projectService) {
+        this.projectService = projectService;
     }
 
+    /**
+     * Creates a new project
+     * 
+     * @param manager      The manager creating the project
+     * @param name         Project name
+     * @param neighborhood Project location
+     * @param flatInfoMap  Information about flat types
+     * @param openDate     Opening date for applications
+     * @param closeDate    Closing date for applications
+     * @param officerSlots Number of slots for officers
+     * @return The created project
+     */
     public Project createProject(HDBManager manager, String name, String neighborhood,
-            Map<String, ProjectFlatInfo> flatInfoMap, LocalDate openDate,
-            LocalDate closeDate, int officerSlots) {
-        // Implementation
-        return null;
+            Map<String, ProjectFlatInfo> flatInfoMap,
+            LocalDate openDate, LocalDate closeDate, int officerSlots) {
+        return projectService.createProject(manager, name, neighborhood, flatInfoMap, openDate, closeDate,
+                officerSlots);
     }
 
+    /**
+     * Edits an existing project
+     * 
+     * @param manager      The manager editing the project
+     * @param projectId    ID of the project to edit
+     * @param name         New name
+     * @param neighborhood New location
+     * @param openDate     New opening date
+     * @param closeDate    New closing date
+     * @param officerSlots New number of officer slots
+     * @return true if edit was successful, false otherwise
+     */
     public boolean editProject(HDBManager manager, String projectId, String name,
             String neighborhood, LocalDate openDate,
             LocalDate closeDate, int officerSlots) {
-        // Implementation
-        return false;
+        return projectService.editCoreProjectDetails(manager, projectId, name, neighborhood,
+                openDate, closeDate, officerSlots);
     }
 
+    /**
+     * Deletes a project
+     * 
+     * @param manager   The manager deleting the project
+     * @param projectId ID of the project to delete
+     * @return true if deletion was successful, false otherwise
+     */
     public boolean deleteProject(HDBManager manager, String projectId) {
-        // Implementation
-        return false;
+        return projectService.deleteProject(manager, projectId);
     }
 
-    public boolean toggleVisibility(HDBManager manager, String projectId) {
-        // Implementation
-        return false;
+    /**
+     * Toggles the visibility of a project
+     * 
+     * @param manager   The manager toggling visibility
+     * @param projectId ID of the project to toggle
+     * @return true if toggle was successful, false otherwise
+     */
+    public boolean toggleProjectVisibility(HDBManager manager, String projectId) {
+        return projectService.toggleVisibility(manager, projectId);
     }
 
+    /**
+     * Gets projects visible to a user
+     * 
+     * @param user The user to get visible projects for
+     * @return List of visible projects
+     */
     public List<Project> getVisibleProjectsForUser(User user) {
-        // Implementation
-        return null;
+        return projectService.getVisibleProjectsForUser(user);
     }
 
-    public List<Project> getAllProjects(HDBManager manager) {
-        // Implementation
-        return null;
+    /**
+     * Gets all projects in the system
+     * 
+     * @return All projects
+     */
+    public List<Project> getAllProjects() {
+        return projectService.getAllProjects();
     }
 
+    /**
+     * Gets projects managed by a specific manager
+     * 
+     * @param managerNRIC NRIC of the manager
+     * @return List of projects managed by the manager
+     */
     public List<Project> getProjectsManagedBy(String managerNRIC) {
-        // Implementation
-        return null;
+        return projectService.getProjectsManagedBy(managerNRIC);
     }
 
+    /**
+     * Finds a project by its ID
+     * 
+     * @param projectId ID of the project to find
+     * @return The project, or null if not found
+     */
     public Project findProjectById(String projectId) {
-        // Implementation
-        return null;
+        return projectService.findProjectById(projectId);
     }
 }

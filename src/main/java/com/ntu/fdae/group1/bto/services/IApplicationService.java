@@ -1,4 +1,4 @@
-package com.ntu.fdae.group1.bto.controllers.project;
+package com.ntu.fdae.group1.bto.services;
 
 import java.util.List;
 
@@ -7,45 +7,26 @@ import com.ntu.fdae.group1.bto.models.project.Application;
 import com.ntu.fdae.group1.bto.enums.ApplicationStatus;
 import com.ntu.fdae.group1.bto.models.user.Applicant;
 import com.ntu.fdae.group1.bto.models.user.HDBManager;
-import com.ntu.fdae.group1.bto.services.IApplicationService;
 
-/**
- * Controller for application-related operations
- */
-public class ApplicationController {
-    private final IApplicationService applicationService;
-
+public interface IApplicationService {
     /**
-     * Constructs a new ApplicationController
-     * 
-     * @param applicationService The application service to use
-     */
-    public ApplicationController(IApplicationService applicationService) {
-        this.applicationService = applicationService;
-    }
-
-    /**
-     * Submits a new application
+     * Submits a new application for a project
      * 
      * @param applicant The applicant submitting the application
      * @param projectId ID of the project to apply for
      * @return The created application
-     * @throws ApplicationException if submission fails
+     * @throws ApplicationException if application submission fails
      */
-    public Application submitApplication(Applicant applicant, String projectId) throws ApplicationException {
-        return applicationService.submitApplication(applicant, projectId);
-    }
+    Application submitApplication(Applicant applicant, String projectId) throws ApplicationException;
 
     /**
-     * Requests withdrawal of an application
+     * Requests withdrawal of an existing application
      * 
      * @param applicant The applicant requesting withdrawal
      * @return true if request was successful, false otherwise
      * @throws ApplicationException if withdrawal request fails
      */
-    public boolean requestWithdrawal(Applicant applicant) throws ApplicationException {
-        return applicationService.requestWithdrawal(applicant);
-    }
+    boolean requestWithdrawal(Applicant applicant) throws ApplicationException;
 
     /**
      * Reviews an application
@@ -55,9 +36,7 @@ public class ApplicationController {
      * @param approve       true to approve, false to reject
      * @return true if review was successful, false otherwise
      */
-    public boolean reviewApplication(HDBManager manager, String applicationId, boolean approve) {
-        return applicationService.reviewApplication(manager, applicationId, approve);
-    }
+    boolean reviewApplication(HDBManager manager, String applicationId, boolean approve);
 
     /**
      * Reviews a withdrawal request
@@ -67,9 +46,7 @@ public class ApplicationController {
      * @param approve       true to approve, false to reject withdrawal
      * @return true if review was successful, false otherwise
      */
-    public boolean reviewWithdrawal(HDBManager manager, String applicationId, boolean approve) {
-        return applicationService.reviewWithdrawal(manager, applicationId, approve);
-    }
+    boolean reviewWithdrawal(HDBManager manager, String applicationId, boolean approve);
 
     /**
      * Gets the application for a specific applicant
@@ -77,9 +54,7 @@ public class ApplicationController {
      * @param applicantNRIC NRIC of the applicant
      * @return The application, or null if not found
      */
-    public Application getApplicationForUser(String applicantNRIC) {
-        return applicationService.getApplicationForUser(applicantNRIC);
-    }
+    Application getApplicationForUser(String applicantNRIC);
 
     /**
      * Gets all applications for a specific project
@@ -87,9 +62,7 @@ public class ApplicationController {
      * @param projectId ID of the project
      * @return List of applications for the project
      */
-    public List<Application> getApplicationsByProject(String projectId) {
-        return applicationService.getApplicationsByProject(projectId);
-    }
+    List<Application> getApplicationsByProject(String projectId);
 
     /**
      * Gets all applications with a specific status
@@ -97,7 +70,5 @@ public class ApplicationController {
      * @param status Status to filter by
      * @return List of applications with the specified status
      */
-    public List<Application> getApplicationsByStatus(ApplicationStatus status) {
-        return applicationService.getApplicationsByStatus(status);
-    }
+    List<Application> getApplicationsByStatus(ApplicationStatus status);
 }

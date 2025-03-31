@@ -1,12 +1,12 @@
 package com.ntu.fdae.group1.bto.services.booking;
 
 import com.ntu.fdae.group1.bto.exceptions.BookingException;
-import com.ntu.fdae.group1.bto.models.project.Booking;
+import com.ntu.fdae.group1.bto.models.booking.Booking;
 import com.ntu.fdae.group1.bto.models.user.HDBOfficer;
-import com.ntu.fdae.group1.bto.repository.IApplicationRepository;
-import com.ntu.fdae.group1.bto.repository.IBookingRepository;
-import com.ntu.fdae.group1.bto.repository.IProjectRepository;
-import com.ntu.fdae.group1.bto.repository.IUserRepository;
+import com.ntu.fdae.group1.bto.repository.booking.IBookingRepository;
+import com.ntu.fdae.group1.bto.repository.project.IApplicationRepository;
+import com.ntu.fdae.group1.bto.repository.project.IProjectRepository;
+import com.ntu.fdae.group1.bto.repository.user.IUserRepository;
 
 public class BookingService implements IBookingService {
     private IApplicationRepository applicationRepo;

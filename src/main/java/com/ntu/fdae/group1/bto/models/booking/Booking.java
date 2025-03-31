@@ -1,4 +1,4 @@
-package com.ntu.fdae.group1.bto.models.project;
+package com.ntu.fdae.group1.bto.models.booking;
 
 import java.time.LocalDate;
 

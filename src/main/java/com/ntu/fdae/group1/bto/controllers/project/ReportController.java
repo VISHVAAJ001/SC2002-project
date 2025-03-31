@@ -1,29 +1,31 @@
 package com.ntu.fdae.group1.bto.controllers.project;
 
-import com.ntu.fdae.group1.bto.models.project.Application;
-import com.ntu.fdae.group1.bto.models.project.Booking;
-import com.ntu.fdae.group1.bto.models.project.Project;
-import com.ntu.fdae.group1.bto.models.user.User;
-
 import java.util.Map;
 
+import com.ntu.fdae.group1.bto.services.IReportService;
+
+/**
+ * Controller for report-related operations
+ */
 public class ReportController {
-    private Map<String, Application> applicationRepo;
-    private Map<String, Booking> bookingRepo;
-    private Map<String, Project> projectRepo;
-    private Map<String, User> userRepo;
+    private final IReportService reportService;
 
-    public ReportController(Map<String, Application> appMap, Map<String, Booking> bookMap, Map<String, Project> projMap,
-            Map<String, User> userMap) {
-        this.applicationRepo = appMap;
-        this.bookingRepo = bookMap;
-        this.projectRepo = projMap;
-        this.userRepo = userMap;
+    /**
+     * Constructs a new ReportController
+     * 
+     * @param reportService The report service to use
+     */
+    public ReportController(IReportService reportService) {
+        this.reportService = reportService;
     }
 
+    /**
+     * Generates a booking report
+     * 
+     * @param filters Map of filter criteria
+     * @return The generated report as a formatted string
+     */
     public String generateBookingReport(Map<String, String> filters) {
-
-        return null;
+        return reportService.generateBookingReport(filters);
     }
-
 }

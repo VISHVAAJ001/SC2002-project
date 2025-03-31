@@ -1,94 +1,121 @@
 package com.ntu.fdae.group1.bto.controllers.user;
 
-import com.ntu.fdae.group1.bto.enums.OfficerRegStatus;
-import com.ntu.fdae.group1.bto.exceptions.BookingException;
-import com.ntu.fdae.group1.bto.exceptions.RegistrationException;
-import com.ntu.fdae.group1.bto.models.project.OfficerRegistration;
-import com.ntu.fdae.group1.bto.models.project.Project;
-import com.ntu.fdae.group1.bto.models.user.HDBManager;
-import com.ntu.fdae.group1.bto.models.user.HDBOfficer;
-import com.ntu.fdae.group1.bto.models.user.User;
-import com.ntu.fdae.group1.bto.services.booking.IBookingService;
-import com.ntu.fdae.group1.bto.services.booking.IEligibilityService;
-import com.ntu.fdae.group1.bto.services.booking.IReceiptService;
-import com.ntu.fdae.group1.bto.repository.IOfficerRegistrationRepository;
-import com.ntu.fdae.group1.bto.repository.IProjectRepository;
-import com.ntu.fdae.group1.bto.repository.IUserRepository;
-
-import java.util.UUID;
 import java.util.List;
 
+import com.ntu.fdae.group1.bto.exceptions.BookingException;
+import com.ntu.fdae.group1.bto.exceptions.RegistrationException;
+import com.ntu.fdae.group1.bto.enums.OfficerRegStatus;
+import com.ntu.fdae.group1.bto.models.project.OfficerRegistration;
+import com.ntu.fdae.group1.bto.models.user.HDBManager;
+import com.ntu.fdae.group1.bto.models.user.HDBOfficer;
+import com.ntu.fdae.group1.bto.services.IBookingService;
+import com.ntu.fdae.group1.bto.services.IOfficerRegistrationService;
+import com.ntu.fdae.group1.bto.services.IReceiptService;
+
+/**
+ * Controller for officer-related operations
+ */
 public class OfficerController {
-    private IOfficerRegistrationRepository registrationRepo;
-    private IProjectRepository projectRepo;
-    private IUserRepository userRepo;
-    private IEligibilityService eligibilityService;
-    private IBookingService bookingService;
-    private IReceiptService receiptService;
+    private final IOfficerRegistrationService registrationService;
+    private final IBookingService bookingService;
+    private final IReceiptService receiptService;
 
-    public OfficerController(IOfficerRegistrationRepository regRepo, IProjectRepository projRepo,
-            IUserRepository userRepo, IEligibilityService eligSvc, IBookingService bookSvc,
-            IReceiptService receiptSvc) {
-        this.registrationRepo = regRepo;
-        this.projectRepo = projRepo;
-        this.userRepo = userRepo;
-        this.eligibilityService = eligSvc;
-        this.bookingService = bookSvc;
-        this.receiptService = receiptSvc;
+    /**
+     * Constructs a new OfficerController
+     * 
+     * @param registrationService The registration service to use
+     * @param bookingService      The booking service to use
+     * @param receiptService      The receipt service to use
+     */
+    public OfficerController(IOfficerRegistrationService registrationService,
+            IBookingService bookingService,
+            IReceiptService receiptService) {
+        this.registrationService = registrationService;
+        this.bookingService = bookingService;
+        this.receiptService = receiptService;
     }
 
-    public boolean requestProjectRegistration(HDBOfficer officer, String projectId) throws RegistrationException {
-        // if (!projectRepo.containsKey(projectId)){
-        // throw new RegistrationException("Project not found.");
-
-        // String registrationId = UUID.randomUUID().toString();
-        // OfficerRegistration registration = new OfficerRegistration();
-        // registrationRepo.put(registrationId, registration);
-        // return true;
-        // }
-        return false;
+    /**
+     * Requests registration for a project
+     * 
+     * @param officer   The officer requesting registration
+     * @param projectId ID of the project to register for
+     * @return true if request was successful, false otherwise
+     */
+    public boolean requestProjectRegistration(HDBOfficer officer, String projectId) {
+        try {
+            registrationService.requestProjectRegistration(officer, projectId);
+            return true;
+        } catch (RegistrationException e) {
+            return false;
+        }
     }
 
-    public OfficerRegStatus getRegistrationStatus(HDBOfficer officer, String projectId) {
-        return null;
-    }
-
+    /**
+     * Approves a registration request
+     * 
+     * @param manager        The manager approving the request
+     * @param registrationId ID of the registration to approve
+     * @return true if approval was successful, false otherwise
+     */
     public boolean approveRegistration(HDBManager manager, String registrationId) {
-        // OfficerRegistration registration = registrationRepo.get(registrationId);
-
-        // if (registration != null && registration.getStatus() ==
-        // OfficerRegistration.PENDING) {
-        // registration.setStatus(OfficerRegistration.APPROVED);
-        // return true;
-        // }
-        return false;
+        return registrationService.reviewRegistration(manager, registrationId, true);
     }
 
+    /**
+     * Rejects a registration request
+     * 
+     * @param manager        The manager rejecting the request
+     * @param registrationId ID of the registration to reject
+     * @return true if rejection was successful, false otherwise
+     */
     public boolean rejectRegistration(HDBManager manager, String registrationId) {
-        // OfficerRegistration registration = registrationRepo.get(registrationId);
-
-        // if (registration != null && registration.getStatus() ==
-        // OfficerRegistration.PENDING) {
-        // registration.setStatus(OfficerRegistration.REJECTED);
-        // return true;
-        // }
-        return false;
+        return registrationService.reviewRegistration(manager, registrationId, false);
     }
 
-    public String handleFlatBooking(HDBOfficer officer, String applicantNRIC, String flatType) throws BookingException {
-        // if (!userRepo.containsKey(applicantNRIC)) {
-        // throw new BookingException("Applicant not found");
-        // }
-
-        // Applicant applicant = userRepo.get(applicantNRIC);
-        return null;
+    /**
+     * Handles flat booking for an applicant
+     * 
+     * @param officer       The officer handling the booking
+     * @param applicantNRIC NRIC of the applicant
+     * @param flatType      Type of flat to book
+     * @return Receipt as a formatted string, or error message if booking fails
+     */
+    public String handleFlatBooking(HDBOfficer officer, String applicantNRIC, String flatType) {
+        try {
+            return bookingService.performBooking(officer, applicantNRIC, flatType).getBookingId();
+        } catch (BookingException e) {
+            return "Booking failed: " + e.getMessage();
+        }
     }
 
+    /**
+     * Gets the status of an officer's registration for a project
+     * 
+     * @param officer   The officer
+     * @param projectId ID of the project
+     * @return The registration status, or null if not found
+     */
+    public OfficerRegStatus getRegistrationStatus(HDBOfficer officer, String projectId) {
+        return registrationService.getRegistrationStatus(officer, projectId);
+    }
+
+    /**
+     * Gets all pending registrations
+     * 
+     * @return List of pending registrations
+     */
     public List<OfficerRegistration> getPendingRegistrations() {
-        return null;
+        return registrationService.getPendingRegistrations();
     }
 
-    public List<OfficerRegistration> getRegistrationByProject(String projectId) {
-        return null;
+    /**
+     * Gets all registrations for a specific project
+     * 
+     * @param projectId ID of the project
+     * @return List of registrations for the project
+     */
+    public List<OfficerRegistration> getRegistrationsByProject(String projectId) {
+        return registrationService.getRegistrationsByProject(projectId);
     }
 }

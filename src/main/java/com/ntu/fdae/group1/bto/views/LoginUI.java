@@ -1,6 +1,7 @@
 package com.ntu.fdae.group1.bto.views;
 
 import com.ntu.fdae.group1.bto.controllers.user.AuthenticationController;
+import com.ntu.fdae.group1.bto.exceptions.AuthenticationException;
 import com.ntu.fdae.group1.bto.models.user.User;
 
 public class LoginUI extends BaseUI {
@@ -14,7 +15,12 @@ public class LoginUI extends BaseUI {
         displayMessage("Login");
         String nric = promptForInput("Enter NRIC: ");
         String password = promptForInput("Enter Password: ");
-        return authController.login(nric, password);
+        try {
+            return authController.login(nric, password);
+        } catch (AuthenticationException e) {
+            displayMessage("Login failed: " + e.getMessage());
+            return null;
+        }
     }
 
     public void displayChangePassword(User user) {
