@@ -81,10 +81,10 @@ public class FileUserRepository implements IUserRepository {
             try {
                 String name = row[0];
                 String nric = row[1];
-                int age = Integer.parseInt(row[2]);
-                MaritalStatus maritalStatus = MaritalStatus.valueOf(row[3]);
+                int age = FileUtils.parseIntOrDefault(row[2], 0); // Handle parsing errors
+                MaritalStatus maritalStatus = FileUtils.parseEnum(MaritalStatus.class, row[3]);
                 String passwordHash = row[4];
-                UserRole role = UserRole.valueOf(row[5]);
+                UserRole role = FileUtils.parseEnum(UserRole.class, row[5]);
 
                 // Create appropriate user based on role
                 User user;

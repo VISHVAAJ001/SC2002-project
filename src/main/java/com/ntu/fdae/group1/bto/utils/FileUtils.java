@@ -13,8 +13,7 @@ import java.util.stream.Collectors;
 public final class FileUtils { // Make final, prevent instantiation if all methods are static
 
     private static final String CSV_DELIMITER = ","; // Or configure if needed
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("M/d/yyyy"); // Adjust pattern
-                                                                                                     // as needed
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("d/M/yyyy"); // Adjust pattern
 
     private FileUtils() {
     } // Private constructor for utility class

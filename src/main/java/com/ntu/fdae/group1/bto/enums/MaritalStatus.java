@@ -2,9 +2,7 @@ package com.ntu.fdae.group1.bto.enums;
 
 public enum MaritalStatus {
     SINGLE("Single"),
-    MARRIED("Married"),
-    DIVORCED("Divorced"),
-    WIDOWED("Widowed");
+    MARRIED("Married");
 
     private final String status;
 
@@ -21,4 +19,7 @@ public enum MaritalStatus {
         return status;
     }
 
+    // public static MaritalStatus valueOfIgnoreCase(String status) {
+    // return valueOf(status.toUpperCase());
+    // }
 }
