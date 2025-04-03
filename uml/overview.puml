@@ -6,7 +6,7 @@ hide empty members
 skinparam packageStyle rect
 skinparam linetype ortho
 
-' --- Enums (Newline Separated Format) ---
+' --- Enums ---
 enum MaritalStatus {
     SINGLE
     MARRIED
@@ -16,7 +16,6 @@ enum ApplicationStatus {
     SUCCESSFUL
     UNSUCCESSFUL
     BOOKED
-    WITHDRAWN
 }
 enum OfficerRegStatus {
     PENDING
@@ -27,6 +26,10 @@ enum UserRole {
     APPLICANT
     HDB_OFFICER
     HDB_MANAGER
+}
+enum FlatType {
+    TWO_ROOM
+    THREE_ROOM
 }
 
 ' --- Entity Layer ---
@@ -49,36 +52,30 @@ package Entity <<Folder>> {
     }
 
     class Applicant extends User {
-        - currentApplicationId : String <<nullable>>
         + Applicant(nric: String, hash: String, name: String, age: int, status: MaritalStatus)
         + getRole() : UserRole <<override>>
-        + getCurrentApplicationId() : String <<nullable>>
-        + setCurrentApplicationId(appId: String) : void
     }
 
     abstract class HDBStaff extends User {
-         + HDBStaff(nric: String, hash: String, name: String, age: int, status: MaritalStatus) 
+         + HDBStaff(nric: String, hash: String, name: String, age: int, status: MaritalStatus)
     }
 
     class HDBOfficer extends HDBStaff {
-        - handledProjectId : String <<nullable>>
-        + HDBOfficer(nric: String, hash: String, name: String, age: int, status: MaritalStatus) 
+        + HDBOfficer(nric: String, hash: String, name: String, age: int, status: MaritalStatus)
         + getRole() : UserRole <<override>>
-        + getHandledProjectId() : String <<nullable>>
-        + setHandledProjectId(projId: String) : void
     }
 
     class HDBManager extends HDBStaff {
-        + HDBManager(nric: String, hash: String, name: String, age: int, status: MaritalStatus) 
+        + HDBManager(nric: String, hash: String, name: String, age: int, status: MaritalStatus)
         + getRole() : UserRole <<override>>
     }
 
     class ProjectFlatInfo {
-        + typeName : String
+        + flatType : FlatType
         + totalUnits : int
         + remainingUnits : int
         + price : double ' Or BigDecimal
-        + ProjectFlatInfo(typeName: String, totalUnits: int, remainingUnits: int, price: double)
+        + ProjectFlatInfo(flatType: FlatType, totalUnits: int, remainingUnits: int, price: double)
         + decreaseRemainingUnits() : boolean
         + increaseRemainingUnits() : void
         + getTypeName() : String
@@ -94,32 +91,33 @@ package Entity <<Folder>> {
         + flatTypes : Map<String, ProjectFlatInfo> <<get>>
         + openingDate : LocalDate
         + closingDate : LocalDate
-        + managerInChargeNRIC : String
+        + managerNric : String
         + maxOfficerSlots : int
         + isVisible : boolean
-        + approvedOfficerNRICs : List<String> <<get>>
+        + approvedOfficerNrics : List<String> <<get>>
         + Project(id: String, name: String, neighborhood: String, openDate: LocalDate, closeDate: LocalDate, managerNric: String, slots: int)
         + setVisibility(visible: boolean) : void
-        + addApprovedOfficer(nric: String) : boolean
-        + removeApprovedOfficer(nric: String) : void
+        + addApprovedOfficer(officerNric: String) : boolean
+        + removeApprovedOfficer(officerNric: String) : void
         + getFlatInfo(flatType: String) : ProjectFlatInfo <<nullable>>
         + getProjectId() : String
         + getProjectName() : String
         + getNeighborhood() : String
         + getOpeningDate() : LocalDate
         + getClosingDate() : LocalDate
-        + getManagerInChargeNRIC() : String
+        + getManagerNric() : String
         + getMaxOfficerSlots() : int
         + isVisible() : boolean
+        + getApprovedOfficerNrics() : List<String>
     }
 
     class Application {
         + applicationId : String
-        + applicantNRIC : String <<get>>
+        + applicantNric : String <<get>>
         + projectId : String <<get>>
         + submissionDate : LocalDate <<get>>
         + status : ApplicationStatus
-        + Application(appId: String, applicantNric: String, projId: String, submissionDate: LocalDate) ' Example constructor
+        + Application(appId: String, applicantNric: String, projId: String, submissionDate: LocalDate)
         + setStatus(newStatus: ApplicationStatus) : void
         + getApplicationId() : String
         + getStatus() : ApplicationStatus
@@ -128,7 +126,7 @@ package Entity <<Folder>> {
     class Booking {
         + bookingId : String
         + applicationId : String <<get>>
-        + applicantNRIC : String <<get>>
+        + applicantNric : String <<get>>
         + projectId : String <<get>>
         + bookedFlatType : String <<get>>
         + bookingDate : LocalDate <<get>>
@@ -153,14 +151,14 @@ package Entity <<Folder>> {
 
     class Enquiry {
         + enquiryId : String
-        + userNRIC : String <<get>>
+        + userNric : String <<get>>
         + projectId : String <<nullable>>
         + content : String
         + reply : String <<nullable>>
         + isReplied : boolean
         + submissionDate : LocalDate <<get>>
         + replyDate : LocalDate <<nullable>>
-        + Enquiry(enqId: String, userNric: String, projId: String, content: String, submissionDate: LocalDate) ' Example constructor
+        + Enquiry(enqId: String, userNric: String, projId: String, content: String, submissionDate: LocalDate)
         + addReply(replyContent: String, replyDate: LocalDate) : void
         + editContent(newContent: String) : void
         + getEnquiryId() : String
@@ -173,11 +171,11 @@ package Entity <<Folder>> {
 
      class OfficerRegistration {
         + registrationId : String
-        + officerNRIC : String <<get>>
+        + officerNric : String <<get>>
         + projectId : String <<get>>
         + requestDate : LocalDate <<get>>
         + status : OfficerRegStatus
-        + OfficerRegistration(regId: String, officerNric: String, projId: String, requestDate: LocalDate) ' Example constructor
+        + OfficerRegistration(regId: String, officerNric: String, projId: String, requestDate: LocalDate)
         + setStatus(newStatus: OfficerRegStatus) : void
         + getRegistrationId() : String
         + getStatus() : OfficerRegStatus
@@ -187,7 +185,7 @@ package Entity <<Folder>> {
 ' --- Exception Package ---
 package Exception <<Folder>> {
     class AuthenticationException extends Exception {
-         + AuthenticationException(message: String)
+        + AuthenticationException(message: String)
     }
     class BookingException extends Exception {
         + BookingException(message: String)
@@ -198,15 +196,13 @@ package Exception <<Folder>> {
     class RegistrationException extends Exception {
         + RegistrationException(message: String)
     }
-    ' Optional: DataAccessException for file errors
-     class DataAccessException extends RuntimeException {
+    class DataAccessException extends RuntimeException {
         + DataAccessException(message: String, cause: Throwable)
-     }
+    }
 }
 
 ' --- Repository Package ---
 package Repository <<Folder>> {
-
     interface IRepository<T, ID> <<DIP>> {
         + findById(id : ID) : T <<nullable>>
         + findAll() : Map<ID, T>
@@ -215,7 +211,7 @@ package Repository <<Folder>> {
         + loadAll() : Map<ID, T> <<throws DataAccessException>>
         ' + deleteById(id: ID) : void ' Optional
     }
-    ' --- Specific Interfaces (Extend the Generic Base) ---
+
     interface IUserRepository extends IRepository<User, String> {
         ' Add any user-specific query methods here (if needed later)
     }
@@ -244,7 +240,7 @@ package Repository <<Folder>> {
     }
 
     class FileUserRepository implements IUserRepository {
-        - FILE_PATH : String <<static>> final
+        - USER_FILE_PATH : String <<static>> final
         - users : Map<String, User>
         + FileUserRepository()
         + loadAll() : Map<String, User> <<throws DataAccessException>>
@@ -256,12 +252,12 @@ package Repository <<Folder>> {
 
     class FileProjectRepository implements IProjectRepository {
         - PROJECT_FILE_PATH : String <<static>> final
-        - FLAT_INFO_FILE_PATH : String <<static>> final
+        - FLAT_INFO_FILE_PATH : String <<static>> final ' Path to project_flat_info.csv
         - projects : Map<String, Project>
         + FileProjectRepository()
-        + loadAll() : Map<String, Project> <<throws DataAccessException>>
-        + saveAll(projects: Map<String, Project>) : void
-        + save(project: Project) : void
+        + loadAll() : Map<String, Project> <<throws DataAccessException>> ' Reads both files internally
+        + saveAll(projects: Map<String, Project>) : void ' Writes to both files internally
+        + save(project: Project) : void ' Writes to both files internally
         + findById(projectId: String) : Project <<nullable>>
         + findAll() : Map<String, Project>
     }
@@ -321,27 +317,27 @@ package Repository <<Folder>> {
 ' --- Utility Package ---
 package Utility <<Folder>> {
     class FileUtils <<Utility>> {
-      + {static} readCsvLines(filePath: String) : List<String[]> <<throws IOException>>
-      + {static} writeCsvLines(filePath: String, data: List<String[]>, header: String[]) : void <<throws IOException>>
-      + {static} parseLocalDate(dateString: String) : LocalDate <<nullable>>
-      + {static} formatLocalDate(date: LocalDate) : String
-      + {static} parseEnum(enumClass: Class<E>, value: String) : E <<nullable>>
-      + {static} joinList(list: List<String>, delimiter: String) : String
-      + {static} splitString(str: String, delimiter: String) : List<String>
-      + {static} parseIntOrDefault(value: String, defaultValue: Integer) : Integer
-      ' Add other necessary static methods (e.g., parseDoubleOrDefault)
+        + {static} readCsvLines(filePath: String) : List<String[]> <<throws IOException>>
+        + {static} writeCsvLines(filePath: String, data: List<String[]>, header: String[]) : void <<throws IOException>>
+        + {static} parseLocalDate(dateString: String) : LocalDate <<nullable>>
+        + {static} formatLocalDate(date: LocalDate) : String
+        + {static} parseEnum(enumClass: Class<E>, value: String) : E <<nullable>>
+        + {static} joinList(list: List<String>, delimiter: String) : String
+        + {static} splitString(str: String, delimiter: String) : List<String>
+        + {static} parseIntOrDefault(value: String, defaultValue: Integer) : Integer
+        ' Add other necessary static methods (e.g., parseDoubleOrDefault)
     }
     class InputUtil <<Utility>> {
-      + {static} validateNRIC(nric: String) : boolean
-      + {static} readPassword(scanner: Scanner) : String
-      + {static} readDate(prompt: String, scanner: Scanner) : LocalDate
-      + {static} readMandatoryString(prompt: String, scanner: Scanner) : String
-      + {static} readInt(scanner: Scanner, prompt: String) : int ' Example added
-      ' Add other necessary static input methods
+        + {static} validateNRIC(nric: String) : boolean
+        + {static} readPassword(scanner: Scanner) : String
+        + {static} readDate(prompt: String, scanner: Scanner) : LocalDate
+        + {static} readMandatoryString(prompt: String, scanner: Scanner) : String
+        + {static} readInt(scanner: Scanner, prompt: String) : int
+        ' Add other necessary static input methods
     }
     class PasswordUtil <<Utility>> {
-       + {static} hashPassword(plainPassword: String) : String
-       + {static} verifyPassword(plainPassword: String, storedHash: String) : boolean
+        + {static} hashPassword(plainPassword: String) : String
+        + {static} verifyPassword(plainPassword: String, storedHash: String) : boolean
     }
 }
 
@@ -359,7 +355,7 @@ package Service <<Folder>> {
     }
 
     interface IBookingService <<ISP>> {
-         + performBooking(officer: HDBOfficer, applicantNRIC: String, flatType: String) : Booking <<throws BookingException>>
+         + performBooking(officer: HDBOfficer, applicantNric: String, flatType: String) : Booking <<throws BookingException>>
     }
     class BookingService implements IBookingService {
         - applicationRepo : IApplicationRepository
@@ -367,7 +363,7 @@ package Service <<Folder>> {
         - bookingRepo : IBookingRepository
         - userRepo : IUserRepository
         + BookingService(appRepo: IApplicationRepository, projRepo: IProjectRepository, bookingRepo: IBookingRepository, userRepo: IUserRepository)
-        + performBooking(officer: HDBOfficer, applicantNRIC: String, flatType: String) : Booking <<throws BookingException>>
+        + performBooking(officer: HDBOfficer, applicantNric: String, flatType: String) : Booking <<throws BookingException>>
     }
 
     interface IReceiptService <<ISP>> {
@@ -390,16 +386,15 @@ package Service <<Folder>> {
 
       interface IProjectService <<ISP>> {
         + createProject(manager: HDBManager, name: String, neighborhood: String, flatInfoMap: Map<String, ProjectFlatInfo>, openDate: LocalDate, closeDate: LocalDate, officerSlots: int) : Project;
-        + editCoreProjectDetails(manager: HDBManager, projectId: String, name: String, neighborhood: String, openDate: LocalDate, closeDate: LocalDate, officerSlots: int) : boolean; ' Example edit focus
-        + deleteProject(manager: HDBManager, projectId: String) : boolean; ' Needs business rules check
+        + editCoreProjectDetails(manager: HDBManager, projectId: String, name: String, neighborhood: String, openDate: LocalDate, closeDate: LocalDate, officerSlots: int) : boolean;
+        + deleteProject(manager: HDBManager, projectId: String) : boolean;
         + toggleVisibility(manager: HDBManager, projectId: String) : boolean;
-        + getVisibleProjectsForUser(user: User) : List<Project>; // May use EligibilityService or filter here
-        + getAllProjects() : List<Project>; // Simple repo delegation?
-        + getProjectsManagedBy(managerNRIC: String) : List<Project>;
+        + getVisibleProjectsForUser(user: User) : List<Project>;
+        + getAllProjects() : List<Project>;
+        + getProjectsManagedBy(managerNric: String) : List<Project>;
         + findProjectById(projectId: String) : Project <<nullable>>;
-        ' Add methods for updating flat counts if needed separately from BookingService
     }
-    
+
     class ProjectService implements IProjectService {
         - projectRepo : IProjectRepository;
         ' - potentially other repos/services if needed for validation
@@ -408,35 +403,35 @@ package Service <<Folder>> {
     }
 
     interface IApplicationService <<ISP>> {
-        + submitApplication(applicant: Applicant, projectId: String) : Application <<throws ApplicationException>>; // Return created/found App
+        + submitApplication(applicant: Applicant, projectId: String) : Application <<throws ApplicationException>>;
         + requestWithdrawal(applicant: Applicant) : boolean <<throws ApplicationException>>;
-        + reviewApplication(manager: HDBManager, applicationId: String, approve: boolean) : boolean; // Combined approve/reject
-        + reviewWithdrawal(manager: HDBManager, applicationId: String, approve: boolean) : boolean; // Combined approve/reject
-        + getApplicationForUser(applicantNRIC: String) : Application <<nullable>>;
+        + reviewApplication(manager: HDBManager, applicationId: String, approve: boolean) : boolean;
+        + reviewWithdrawal(manager: HDBManager, applicationId: String, approve: boolean) : boolean;
+        + getApplicationForUser(applicantNric: String) : Application <<nullable>>;
         + getApplicationsByProject(projectId: String) : List<Application>;
         + getApplicationsByStatus(status: ApplicationStatus) : List<Application>;
-        ' + hasApplicantApplied(applicantNRIC: String) : boolean; ' Helper possibly needed by Eligibility
     }
     class ApplicationService implements IApplicationService {
         - applicationRepo : IApplicationRepository;
-        - projectRepo : IProjectRepository; // Needed for context/validation
+        - projectRepo : IProjectRepository;
         - eligibilityService : IEligibilityService;
-        ' - userRepo : IUserRepository; // If needed
-        + ApplicationService(appRepo: IApplicationRepository, projRepo: IProjectRepository, eligSvc: IEligibilityService);
+        - userRepo : IUserRepository;
+        - bookingRepo : IBookingRepository;
+        + ApplicationService(appRepo: IApplicationRepository, projRepo: IProjectRepository, eligSvc: IEligibilityService, userRepo: IUserRepository, bookingRepo: IBookingRepository);
          ' Implement methods, including validation & status change logic
     }
 
     interface IOfficerRegistrationService <<ISP>> {
          + requestProjectRegistration(officer: HDBOfficer, projectId: String) : OfficerRegistration <<throws RegistrationException>>;
-         + reviewRegistration(manager: HDBManager, registrationId: String, approve: boolean) : boolean; // Updates Reg status AND Project officer list
+         + reviewRegistration(manager: HDBManager, registrationId: String, approve: boolean) : boolean;
          + getRegistrationStatus(officer: HDBOfficer, projectId: String) : OfficerRegStatus <<nullable>>;
          + getPendingRegistrations() : List<OfficerRegistration>;
          + getRegistrationsByProject(projectId: String) : List<OfficerRegistration>;
     }
     class OfficerRegistrationService implements IOfficerRegistrationService {
         - registrationRepo : IOfficerRegistrationRepository;
-        - projectRepo : IProjectRepository; // Needed to update officer list/check slots
-        - applicationRepo : IApplicationRepository; // Needed for eligibility check
+        - projectRepo : IProjectRepository;
+        - applicationRepo : IApplicationRepository;
         - eligibilityService : IEligibilityService;
         + OfficerRegistrationService(regRepo: IOfficerRegistrationRepository, projRepo: IProjectRepository, appRepo: IApplicationRepository, eligSvc: IEligibilityService);
         ' Implement methods, including validation, status changes, project updates
@@ -444,8 +439,8 @@ package Service <<Folder>> {
 
     interface IEnquiryService <<ISP>> {
         + createEnquiry(user: User, projectId: String <<nullable>>, content: String) : Enquiry;
-        + editEnquiry(enquiryId: String, newContent: String, user: User) : boolean; // Includes permission check
-        + deleteEnquiry(enquiryId: String, user: User) : boolean; // Includes permission check
+        + editEnquiry(enquiryId: String, newContent: String, user: User) : boolean;
+        + deleteEnquiry(enquiryId: String, user: User) : boolean;
         + replyToEnquiry(enquiryId: String, replyContent: String, staff: HDBStaff) : boolean;
         + viewMyEnquiries(user: User) : List<Enquiry>;
         + viewAllEnquiries() : List<Enquiry>;
@@ -459,7 +454,7 @@ package Service <<Folder>> {
     }
 
      interface IReportService <<ISP>> {
-        + generateBookingReport(filters: Map<String, String>) : String; // Or maybe return List<BookingReportLine>
+        + generateBookingReport(filters: Map<String, String>) : String;
      }
      class ReportService implements IReportService {
          - applicationRepo : IApplicationRepository;
@@ -467,7 +462,7 @@ package Service <<Folder>> {
          - projectRepo : IProjectRepository;
          - userRepo : IUserRepository;
          + ReportService(appRepo: IApplicationRepository, bookRepo: IBookingRepository, projRepo: IProjectRepository, userRepo: IUserRepository);
-         + generateBookingReport(filters: Map<String, String>) : String; // Contains logic for filtering and formatting
+         + generateBookingReport(filters: Map<String, String>) : String;
      }
 }
 
@@ -476,61 +471,62 @@ package Control <<Folder>> {
     class AuthenticationController {
         - authService : IAuthenticationService;
         + AuthenticationController(authService: IAuthenticationService);
-        ' Methods delegate to authService '
     }
 
     class ProjectController {
-        - projectService : IProjectService; // Depends on Project Service
+        - projectService : IProjectService;
         + ProjectController(projectService: IProjectService);
-        ' Methods delegate to projectService '
-        ' Getters might still call service, e.g., projectService.getAllProjects() '
     }
 
     class ApplicationController {
-        - applicationService : IApplicationService; // Depends on Application Service
-        ' Removed eligibilityService dep if handled within ApplicationService '
+        - applicationService : IApplicationService;
         + ApplicationController(applicationService: IApplicationService);
-        ' Methods delegate to applicationService '
     }
 
-    class OfficerController {
-        ' Split dependencies: Reg logic goes to RegService, Booking logic uses BookingService '
+    class OfficerRegistrationController {
         - registrationService : IOfficerRegistrationService;
-        - bookingService : IBookingService;
+        + OfficerRegistrationController(regService: IOfficerRegistrationService);
+    }
+
+    ' Separate controller for Booking actions (if HDBOfficer performs them) '
+    class BookingController {
+         - bookingService : IBookingService;
+         + BookingController(bookingService: IBookingService);
+         ' Method for officer to initiate booking, calls bookingService '
+    }
+
+    ' Separate controller for Receipt actions (if HDBOfficer performs them) '
+    class ReceiptController {
         - receiptService : IReceiptService;
-        ' Removed eligibilityService dep if handled within RegistrationService '
-        + OfficerController(regService: IOfficerRegistrationService, bookingService: IBookingService, receiptService: IReceiptService);
-        + requestProjectRegistration(officer: HDBOfficer, projectId: String) : boolean; ' Calls registrationService '
-        + approveRegistration(manager: HDBManager, registrationId: String) : boolean; ' Calls registrationService.reviewRegistration '
-        + rejectRegistration(manager: HDBManager, registrationId: String) : boolean; ' Calls registrationService.reviewRegistration '
-        + handleFlatBooking(officer: HDBOfficer, applicantNRIC: String, flatType: String) : String; ' Calls bookingService & receiptService '
-         ' Other getter methods likely call registrationService '
+        + ReceiptController(receiptService: IReceiptService);
+        ' Method for officer to generate receipt info, calls receiptService '
     }
 
      class EnquiryController {
-        - enquiryService : IEnquiryService; // Depends on Enquiry Service
+        - enquiryService : IEnquiryService;
         + EnquiryController(enquiryService: IEnquiryService);
-        ' Methods delegate to enquiryService '
      }
 
      class ReportController {
-         - reportService : IReportService; // Depends on Report Service
+         - reportService : IReportService;
          + ReportController(reportService: IReportService);
-         + generateBookingReport(filters: Map<String, String>) : String; ' Calls reportService '
+         + generateBookingReport(filters: Map<String, String>) : String;
      }
 }
 
 ' --- Views Layer ---
 package Views <<Folder>> {
     class MainApp {
-        - authController : AuthenticationController ' Received via constructor
+        - authController : AuthenticationController
         - projectController : ProjectController
         - appController : ApplicationController
-        - officerController : OfficerController
+        - officerRegController : OfficerRegistrationController
+        - bookingController : BookingController
+        - receiptController : ReceiptController
         - enquiryController : EnquiryController
         - reportController : ReportController
         - currentUser : User <<nullable>>
-        ' + MainApp(controllers: ControllerContainer) ' Example constructor
+        + MainApp(controllers: ControllerContainer) 
         + {static} main(args : String[]) : void
         + run() : void
         - showLoginMenu() : void
@@ -544,12 +540,12 @@ package Views <<Folder>> {
         + promptForInput(prompt: String) : String
         + promptForInt(prompt: String) : int
         # displayError(message: String) : void
-        # clearConsole() : void ' Utility
+        # clearConsole() : void
     }
 
     class LoginUI extends BaseUI {
         - authController : AuthenticationController
-        + LoginUI(authController: AuthenticationController, scanner: Scanner) 
+        + LoginUI(authController: AuthenticationController, scanner: Scanner)
         + displayLogin() : User <<nullable>>
         + displayChangePassword(user: User) : void
     }
@@ -561,40 +557,33 @@ package Views <<Folder>> {
         - enquiryController : EnquiryController
         + ApplicantUI(user: Applicant, projCtrl: ProjectController, appCtrl: ApplicationController, enqCtrl: EnquiryController, scanner: Scanner)
         + displayMainMenu() : void
-        ' - viewAvailableProjects() : void'
-        ' - applyForProject() : void'
-        ' - etc. (private helper methods for menu options)'
     }
 
      class HDBOfficerUI extends BaseUI {
         - user : HDBOfficer
         - projectController : ProjectController
-        - officerController : OfficerController
+        - appController : ApplicationController ' For viewing app details
+        - officerRegController : OfficerRegistrationController
+        - bookingController : BookingController ' Added
+        - receiptController : ReceiptController ' Added
         - enquiryController : EnquiryController
-        + HDBOfficerUI(user: HDBOfficer, projCtrl: ProjectController, offCtrl: OfficerController, enqCtrl: EnquiryController, scanner: Scanner)
+        + HDBOfficerUI(user: HDBOfficer, projCtrl: ProjectController, appCtrl: ApplicationController, offRegCtrl: OfficerRegistrationController, bookCtrl: BookingController, receiptCtrl: ReceiptController, enqCtrl: EnquiryController, scanner: Scanner)
         + displayMainMenu() : void
-        ' - registerForProject() : void'
-        ' - handleFlatSelection() : void'
-        ' - etc.'
      }
 
      class HDBManagerUI extends BaseUI {
         - user : HDBManager
         - projectController : ProjectController
         - appController : ApplicationController
-        - officerController : OfficerController
+        - officerRegController : OfficerRegistrationController
         - enquiryController : EnquiryController
         - reportController : ReportController
-        + HDBManagerUI(user: HDBManager, projCtrl: ProjectController, appCtrl: ApplicationController, offCtrl: OfficerController, enqCtrl: EnquiryController, reportCtrl: ReportController, scanner: Scanner)
+        + HDBManagerUI(user: HDBManager, projCtrl: ProjectController, appCtrl: ApplicationController, offRegCtrl: OfficerRegistrationController, enqCtrl: EnquiryController, reportCtrl: ReportController, scanner: Scanner)
         + displayMainMenu() : void
-        ' - manageProjects() : void
-        ' - manageRegistrations() : void
-        ' - etc.'
      }
 }
 
-
-' --- Relationships (Cleaned) ---
+' --- Relationships ---
 
 ' Layers Dependencies (Conceptual)
 Views ..> Control : uses >
@@ -602,46 +591,55 @@ Control ..> Service : uses >
 Service ..> Repository : uses > ' (Interface Dependency)
 
 ' Composition / Aggregation (Entity Relationships)
-Project "1" *-- "1..*" ProjectFlatInfo : contains >
+' Project "1" -- "0..*" ProjectFlatInfo : contains
 Project "1" o-- "*" Application : has >
 Project "1" o-- "*" Booking : results in >
 Project "1" o-- "*" Enquiry : related to >
 Project "1" o-- "*" OfficerRegistration : requests for >
-Project "1" *-- "0..*" User : approved officers (NRIC list) >
+Project "1" -- "0..*" User : approved officers (via officerNric list) >
 
-Application "1" -- "1" Applicant : submitted by >
+Application "1" -- "1" User : submitted by (via applicantNric) >
 Application "1" -- "1" Project : for >
 Booking "1" -- "1" Application : fulfills >
 Booking "1" -- "1" Project : for >
-Booking "1" -- "1" Applicant : by >
-Enquiry "1" -- "1" User : submitted by >
-OfficerRegistration "1" -- "1" HDBOfficer : requested by >
+Booking "1" -- "1" User : by (via applicantNric) >
+Enquiry "1" -- "1" User : submitted by (via userNric) >
+OfficerRegistration "1" -- "1" User : requested by (via officerNric) >
 OfficerRegistration "1" -- "1" Project : for >
 
-' Key Usage Dependencies (Illustrative)
-AuthenticationController ..> IAuthenticationService : uses >
-ProjectController ..> IProjectRepository : uses >
-ApplicationController ..> IApplicationRepository : uses >
-ApplicationController ..> IProjectRepository : uses >
-ApplicationController ..> IEligibilityService : uses >
-OfficerController ..> IOfficerRegistrationRepository : uses >
-OfficerController ..> IProjectRepository : uses >
-OfficerController ..> IUserRepository : uses >
-OfficerController ..> IEligibilityService : uses >
-OfficerController ..> IBookingService : uses >
-OfficerController ..> IReceiptService : uses >
-EnquiryController ..> IEnquiryRepository : uses >
-ReportController ..> IApplicationRepository : uses >
-ReportController ..> IBookingRepository : uses >
-ReportController ..> IProjectRepository : uses >
-ReportController ..> IUserRepository : uses >
-
+' Key Usage Dependencies
 AuthenticationService ..> IUserRepository : uses >
+ProjectService ..> IProjectRepository : uses >
+ApplicationService ..> IApplicationRepository : uses >
+ApplicationService ..> IProjectRepository : uses >
+ApplicationService ..> IUserRepository : uses >
+ApplicationService ..> IBookingRepository : uses >
+ApplicationService ..> IEligibilityService : uses >
 BookingService ..> IApplicationRepository : uses >
 BookingService ..> IProjectRepository : uses >
 BookingService ..> IBookingRepository : uses >
 BookingService ..> IUserRepository : uses >
+OfficerRegistrationService ..> IOfficerRegistrationRepository : uses >
+OfficerRegistrationService ..> IProjectRepository : uses >
+OfficerRegistrationService ..> IApplicationRepository : uses >
+OfficerRegistrationService ..> IEligibilityService : uses >
+EnquiryService ..> IEnquiryRepository : uses >
+ReportService ..> IApplicationRepository : uses >
+ReportService ..> IBookingRepository : uses >
+ReportService ..> IProjectRepository : uses >
+ReportService ..> IUserRepository : uses >
 
+' Controller Dependencies
+AuthenticationController ..> IAuthenticationService : uses >
+ProjectController ..> IProjectService : uses >
+ApplicationController ..> IApplicationService : uses >
+OfficerRegistrationController ..> IOfficerRegistrationService : uses >
+BookingController ..> IBookingService : uses >
+ReceiptController ..> IReceiptService : uses >
+EnquiryController ..> IEnquiryService : uses >
+ReportController ..> IReportService : uses >
+
+' UI Dependencies
 MainApp --> LoginUI : creates >
 MainApp --> ApplicantUI : creates >
 MainApp --> HDBOfficerUI : creates >
@@ -651,18 +649,20 @@ ApplicantUI ..> ProjectController : uses >
 ApplicantUI ..> ApplicationController : uses >
 ApplicantUI ..> EnquiryController : uses >
 HDBOfficerUI ..> ProjectController : uses >
-HDBOfficerUI ..> OfficerController : uses >
+HDBOfficerUI ..> ApplicationController : uses >
+HDBOfficerUI ..> OfficerRegistrationController : uses >
+HDBOfficerUI ..> BookingController : uses >
+HDBOfficerUI ..> ReceiptController : uses >
 HDBOfficerUI ..> EnquiryController : uses >
 HDBManagerUI ..> ProjectController : uses >
 HDBManagerUI ..> ApplicationController : uses >
-HDBManagerUI ..> OfficerController : uses >
+HDBManagerUI ..> OfficerRegistrationController : uses >
 HDBManagerUI ..> EnquiryController : uses >
 HDBManagerUI ..> ReportController : uses >
 
-
+' Utility Dependencies
 Views ..> InputUtil : uses >
 Repository ..> FileUtils : uses >
-Service ..> PasswordUtil : uses > ' AuthenticationService uses PasswordUtil
-
+Service ..> PasswordUtil : uses >
 
 @enduml

@@ -4,11 +4,13 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
+import com.ntu.fdae.group1.bto.enums.FlatType;
+
 public class Project {
     private String projectId;
     private String projectName;
     private String neighborhood;
-    private Map<String, ProjectFlatInfo> flatTypes;
+    private Map<FlatType, ProjectFlatInfo> flatTypes;
     private LocalDate openingDate;
     private LocalDate closingDate;
     private String managerInChargeNRIC;
@@ -16,7 +18,7 @@ public class Project {
     private boolean isVisible = true;
     private List<String> approvedOfficerNRICs;
 
-    public Project(String projectId, String projectName, String neighborhood, Map<String, ProjectFlatInfo> flatTypes,
+    public Project(String projectId, String projectName, String neighborhood, Map<FlatType, ProjectFlatInfo> flatTypes,
             LocalDate openingDate, LocalDate closingDate, String managerInChargeNRIC) {
         this.projectId = projectId;
         this.projectName = projectName;
@@ -39,7 +41,7 @@ public class Project {
         return neighborhood;
     }
 
-    public Map<String, ProjectFlatInfo> getFlatTypes() {
+    public Map<FlatType, ProjectFlatInfo> getFlatTypes() {
         return flatTypes;
     }
 

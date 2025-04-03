@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Map;
 
 public class FileUserRepository implements IUserRepository {
-    private static final String FILE_PATH = "data/users.csv"; // Relative to project root
+    private static final String USER_FILE_PATH = "data/users.csv"; // Relative to project root
 
     private Map<String, User> users;
 
@@ -43,7 +43,7 @@ public class FileUserRepository implements IUserRepository {
     public void saveAll(Map<String, User> entities) {
         this.users = entities;
         try {
-            FileUtils.writeCsvLines(FILE_PATH, serializeUsers(), getUserCsvHeader());
+            FileUtils.writeCsvLines(USER_FILE_PATH, serializeUsers(), getUserCsvHeader());
         } catch (IOException e) {
             System.err.println("Error saving users to file: " + e.getMessage());
             // Consider adding more robust error handling here
@@ -53,7 +53,7 @@ public class FileUserRepository implements IUserRepository {
     @Override
     public Map<String, User> loadAll() {
         try {
-            users = deserializeUsers(FileUtils.readCsvLines(FILE_PATH));
+            users = deserializeUsers(FileUtils.readCsvLines(USER_FILE_PATH));
         } catch (IOException e) {
             System.err.println("Error loading users from file: " + e.getMessage());
             users = new HashMap<>(); // Initialize with empty map on error
@@ -64,7 +64,7 @@ public class FileUserRepository implements IUserRepository {
 
     // Helper methods for serialization/deserialization
     private String[] getUserCsvHeader() {
-        return new String[] { "Name", "NRIC", "Age", "Marital Status", "Password", "Role" };
+        return new String[] { "nric", "passwordHash", "name", "age", "maritalStatus", "role" };
     }
 
     private Map<String, User> deserializeUsers(List<String[]> csvData) {
@@ -79,11 +79,11 @@ public class FileUserRepository implements IUserRepository {
                 continue; // Skip invalid rows
 
             try {
-                String name = row[0];
-                String nric = row[1];
-                int age = FileUtils.parseIntOrDefault(row[2], 0); // Handle parsing errors
-                MaritalStatus maritalStatus = FileUtils.parseEnum(MaritalStatus.class, row[3]);
-                String passwordHash = row[4];
+                String nric = row[0];
+                String passwordHash = row[1];
+                String name = row[2];
+                int age = FileUtils.parseIntOrDefault(row[3], 0); // Handle parsing errors
+                MaritalStatus maritalStatus = FileUtils.parseEnum(MaritalStatus.class, row[4]);
                 UserRole role = FileUtils.parseEnum(UserRole.class, row[5]);
 
                 // Create appropriate user based on role

@@ -1,0 +1,2 @@
+projectId,projectName,neighborhood,openingDate,closingDate,managerNric,maxOfficerSlots,isVisible,approvedOfficerNrics
+PROJ001,Acacia Breeze,Yishun,2025-02-15,2025-03-20,S5678901G,3,true,"T2109876H;S6543210I"

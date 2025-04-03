@@ -1,11 +1,11 @@
-Name,NRIC,Age,Marital Status,Password,Role
-John,S1234567A,35,Single,password,APPLICANT
-Sarah,T7654321B,40,Married,password,APPLICANT
-Grace,S9876543C,37,Married,password,APPLICANT
-James,T2345678D,30,Married,password,APPLICANT
-Rachel,S3456789E,25,Single,password,APPLICANT
-Michael,T8765432F,36,Single,password,HDB_MANAGER
-Jessica,S5678901G,26,Married,password,HDB_MANAGER
-Daniel,T2109876H,36,Single,password,HDB_OFFICER
-Emily,S6543210I,28,Single,password,HDB_OFFICER
-David,T1234567J,29,Married,password,HDB_OFFICER
+nric,passwordHash,name,age,maritalStatus,role
+S1234567A,password,John,35,Single,APPLICANT
+T7654321B,password,Sarah,40,Married,APPLICANT
+S9876543C,password,Grace,37,Married,APPLICANT
+T2345678D,password,James,30,Married,APPLICANT
+S3456789E,password,Rachel,25,Single,APPLICANT
+T8765432F,password,Michael,36,Single,HDB_MANAGER
+S5678901G,password,Jessica,26,Married,HDB_MANAGER
+T2109876H,password,Daniel,36,Single,HDB_OFFICER
+S6543210I,password,Emily,28,Single,HDB_OFFICER
+T1234567J,password,David,29,Married,HDB_OFFICER
