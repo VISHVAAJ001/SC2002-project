@@ -4,11 +4,13 @@ public class ProjectFlatInfo {
     private String typeName;
     private int totalUnits;
     private int remainingUnits;
+    private double price;
 
-    public ProjectFlatInfo(String typeName, int totalUnits, int remainingUnits) {
+    public ProjectFlatInfo(String typeName, int totalUnits, int remainingUnits, double price) {
         this.typeName = typeName;
         this.totalUnits = totalUnits;
         this.remainingUnits = remainingUnits;
+        this.price = price;
     }
 
     public String getTypeName() {
@@ -21,6 +23,10 @@ public class ProjectFlatInfo {
 
     public int getRemainingUnits() {
         return remainingUnits;
+    }
+
+    public double getPrice() {
+        return price;
     }
 
     public boolean decreaseRemainingUnits() {

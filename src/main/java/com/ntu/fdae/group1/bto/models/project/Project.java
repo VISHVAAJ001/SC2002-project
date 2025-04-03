@@ -81,7 +81,8 @@ public class Project {
         approvedOfficerNRICs.remove(nric);
     }
 
-    public ProjectFlatInfo getFlatInfo(String flatType) {
+    public ProjectFlatInfo getFlatInfo(FlatType flatType) {
         return flatTypes.get(flatType);
     }
+
 }
