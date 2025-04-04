@@ -14,12 +14,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class FileUserRepository implements IUserRepository {
+public class UserRepository implements IUserRepository {
     private static final String USER_FILE_PATH = "data/users.csv"; // Relative to project root
 
     private Map<String, User> users;
 
-    public FileUserRepository() {
+    public UserRepository() {
         this.users = new HashMap<>();
     }
 

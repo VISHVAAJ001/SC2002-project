@@ -7,17 +7,15 @@ skinparam packageStyle rect
 skinparam linetype ortho
 
 ' --- Enums ---
-enum MaritalStatus {
-    SINGLE
-    MARRIED
-}
 enum ApplicationStatus {
     PENDING
     SUCCESSFUL
     UNSUCCESSFUL
     BOOKED
-    WITHDRAWAL_REQUESTED
-    WITHDRAWN
+}
+enum MaritalStatus {
+    SINGLE
+    MARRIED
 }
 enum OfficerRegStatus {
     PENDING
@@ -32,8 +30,6 @@ enum UserRole {
 enum FlatType {
     TWO_ROOM
     THREE_ROOM
-    FOUR_ROOM
-    FIVE_ROOM
 }
 
 ' --- Entity Layer ---
@@ -122,6 +118,7 @@ package Entity <<Folder>> {
         + submissionDate : LocalDate <<get>>
         + status : ApplicationStatus
         + requestedWithdrawalDate : LocalDate <<nullable>> ' Set by ApplicationService
+        + preferredFlatType : FlatType <<nullable>> <<get>> <<set>>
         + Application(appId: String, applicantNric: String, projId: String, submissionDate: LocalDate)
         + setStatus(newStatus: ApplicationStatus) : void ' Called by ApplicationService
         + getApplicationId() : String
@@ -248,10 +245,10 @@ package Repository <<Folder>> {
         + findByProjectId(projectId: String) : List<OfficerRegistration>
     }
 
-    class FileUserRepository implements IUserRepository {
+    class UserRepository implements IUserRepository {
         - USER_FILE_PATH : String <<static>> final
         - users : Map<String, User>
-        + FileUserRepository()
+        + UserRepository()
         + loadAll() : Map<String, User> <<throws DataAccessException>>
         + saveAll(users: Map<String, User>) : void
         + save(user: User) : void
@@ -259,11 +256,11 @@ package Repository <<Folder>> {
         + findAll() : Map<String, User>
     }
 
-    class FileProjectRepository implements IProjectRepository {
+    class ProjectRepository implements IProjectRepository {
         - PROJECT_FILE_PATH : String <<static>> final
         - FLAT_INFO_FILE_PATH : String <<static>> final
         - projects : Map<String, Project>
-        + FileProjectRepository()
+        + ProjectRepository()
         + loadAll() : Map<String, Project> <<throws DataAccessException>>
         + saveAll(projects: Map<String, Project>) : void
         + save(project: Project) : void
@@ -271,10 +268,10 @@ package Repository <<Folder>> {
         + findAll() : Map<String, Project>
     }
 
-    class FileApplicationRepository implements IApplicationRepository {
-        - FILE_PATH : String <<static>> final
+    class ApplicationRepository implements IApplicationRepository {
+        - APPLICATION_FILE_PATH : String <<static>> final
         - applications : Map<String, Application>
-        + FileApplicationRepository()
+        + ApplicationRepository()
         + loadAll() : Map<String, Application> <<throws DataAccessException>>
         + saveAll(applications: Map<String, Application>) : void
         + save(application: Application) : void
@@ -284,10 +281,10 @@ package Repository <<Folder>> {
         + findByProjectId(projectId: String) : List<Application>
     }
 
-    class FileBookingRepository implements IBookingRepository {
-        - FILE_PATH : String <<static>> final
+    class BookingRepository implements IBookingRepository {
+        - BOOKING_FILE_PATH : String <<static>> final
         - bookings : Map<String, Booking>
-        + FileBookingRepository()
+        + BookingRepository()
         + loadAll() : Map<String, Booking> <<throws DataAccessException>>
         + saveAll(bookings: Map<String, Booking>) : void
         + save(booking: Booking) : void
@@ -297,10 +294,10 @@ package Repository <<Folder>> {
         + findByApplicationId(applicationId: String) : Booking <<nullable>>
     }
 
-    class FileEnquiryRepository implements IEnquiryRepository {
-        - FILE_PATH : String <<static>> final
+    class EnquiryRepository implements IEnquiryRepository {
+        - ENQUIRY_FILE_PATH : String <<static>> final
         - enquiries : Map<String, Enquiry>
-        + FileEnquiryRepository()
+        + EnquiryRepository()
         + loadAll() : Map<String, Enquiry> <<throws DataAccessException>>
         + saveAll(enquiries: Map<String, Enquiry>) : void
         + save(enquiry: Enquiry) : void
@@ -310,10 +307,10 @@ package Repository <<Folder>> {
         + findByProjectId(projectId: String) : List<Enquiry>
     }
 
-    class FileOfficerRegistrationRepository implements IOfficerRegistrationRepository {
-        - FILE_PATH : String <<static>> final
+    class OfficerRegistrationRepository implements IOfficerRegistrationRepository {
+        - OFFICER_REGISTRATION_FILE_PATH : String <<static>> final
         - registrations : Map<String, OfficerRegistration>
-        + FileOfficerRegistrationRepository()
+        + OfficerRegistrationRepository()
         + loadAll() : Map<String, OfficerRegistration> <<throws DataAccessException>>
         + saveAll(registrations: Map<String, OfficerRegistration>) : void
         + save(registration: OfficerRegistration) : void
@@ -432,7 +429,7 @@ package Service <<Folder>> {
     }
 
     interface IApplicationService <<ISP>> {
-        + submitApplication(applicant: Applicant, projectId: String) : Application <<throws ApplicationException>>;
+        + submitApplication(applicant: Applicant, projectId: String, preferredFlatType: FlatType <<nullable>>) : Application <<throws ApplicationException>>
         + requestWithdrawal(applicant: Applicant) : boolean <<throws ApplicationException>>;
         + reviewApplication(manager: HDBManager, applicationId: String, approve: boolean) : boolean <<throws ApplicationException>>;
         + reviewWithdrawal(manager: HDBManager, applicationId: String, approve: boolean) : boolean <<throws ApplicationException>>;
@@ -447,7 +444,7 @@ package Service <<Folder>> {
         - userRepo : IUserRepository;
         - bookingRepo : IBookingRepository;
         + ApplicationService(appRepo: IApplicationRepository, projRepo: IProjectRepository, eligSvc: IEligibilityService, userRepo: IUserRepository, bookingRepo: IBookingRepository);
-        + submitApplication(applicant: Applicant, projectId: String) : Application <<throws ApplicationException>>;
+        + submitApplication(applicant: Applicant, projectId: String, preferredFlatType: FlatType <<nullable>>) : Application <<throws ApplicationException>>
         + requestWithdrawal(applicant: Applicant) : boolean <<throws ApplicationException>>;
         + reviewApplication(manager: HDBManager, applicationId: String, approve: boolean) : boolean <<throws ApplicationException>>;
         + reviewWithdrawal(manager: HDBManager, applicationId: String, approve: boolean) : boolean <<throws ApplicationException>>;
@@ -549,7 +546,7 @@ package Controller <<Folder>> {
     class ApplicationController {
         - applicationService : IApplicationService;
         + ApplicationController(applicationService: IApplicationService);
-        + submitApplication(applicant: Applicant, projectId: String) : Application <<throws ApplicationException>>;
+        + submitApplication(applicant: Applicant, projectId: String, preferredFlatType: FlatType <<nullable>>) : Application <<throws ApplicationException>>
         + requestWithdrawal(applicant: Applicant) : boolean <<throws ApplicationException>>;
         + reviewApplication(manager: HDBManager, applicationId: String, approve: boolean) : boolean <<throws ApplicationException>>;
         + reviewWithdrawal(manager: HDBManager, applicationId: String, approve: boolean) : boolean <<throws ApplicationException>>;
@@ -701,12 +698,12 @@ OfficerRegistration "1" -- "1" User : requested by (via officerNric) >
 OfficerRegistration "1" -- "1" Project : for >
 
 ' Interface Implementation
-IUserRepository <|.. FileUserRepository
-IProjectRepository <|.. FileProjectRepository
-IApplicationRepository <|.. FileApplicationRepository
-IBookingRepository <|.. FileBookingRepository
-IEnquiryRepository <|.. FileEnquiryRepository
-IOfficerRegistrationRepository <|.. FileOfficerRegistrationRepository
+IUserRepository <|.. UserRepository
+IProjectRepository <|.. ProjectRepository
+IApplicationRepository <|.. ApplicationRepository
+IBookingRepository <|.. BookingRepository
+IEnquiryRepository <|.. EnquiryRepository
+IOfficerRegistrationRepository <|.. OfficerRegistrationRepository
 
 IAuthenticationService <|.. AuthenticationService
 IBookingService <|.. BookingService

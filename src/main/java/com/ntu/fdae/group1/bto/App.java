@@ -73,14 +73,14 @@ public class App {
         try {
             // 1. Initialize Repositories
             // Using concrete implementations directly here for setup
-            IUserRepository userRepository = new FileUserRepository();
-            // IProjectRepository projectRepository = new FileProjectRepository();
+            IUserRepository userRepository = new UserRepository();
+            // IProjectRepository projectRepository = new ProjectRepository();
             // IApplicationRepository applicationRepository = new
-            // FileApplicationRepository();
-            // IBookingRepository bookingRepository = new FileBookingRepository();
-            // IEnquiryRepository enquiryRepository = new FileEnquiryRepository();
+            // ApplicationRepository();
+            // IBookingRepository bookingRepository = new BookingRepository();
+            // IEnquiryRepository enquiryRepository = new EnquiryRepository();
             // IOfficerRegistrationRepository officerRegRepository = new
-            // FileOfficerRegistrationRepository();
+            // OfficerRegistrationRepository();
 
             System.out.println("Repositories initialized.");
             // --- Load initial data ---
@@ -191,7 +191,6 @@ public class App {
     private void routeToRoleUI(User user) {
         System.out.printf("\nWelcome, %s (%s)! Routing to your dashboard...\n", user.getName(), user.getRole());
 
-        // Ensure dependencies are passed correctly to each UI constructor
         try {
             switch (user.getRole()) {
                 case APPLICANT:

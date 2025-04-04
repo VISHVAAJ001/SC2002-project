@@ -114,6 +114,17 @@ public class ApplicantUI extends BaseUI {
         // 2. Check if list is empty.
         // 3. Display filtered list based on user eligibility (handled by
         // service/controller ideally).
+        /*
+         * -----------------------------------------
+         * Available BTO Projects
+         * -----------------------------------------
+         * [1] Acacia Breeze (Yishun) - Apply by: 2025-03-20
+         * [2] Maple Grove (Boon Lay) - Apply by: 2025-04-10
+         * ...
+         * [0] Back
+         * 
+         * Enter project number to view details or apply, or 0 to go back: 1
+         */
         System.out.println("[Placeholder: List projects available to this applicant]");
     }
 

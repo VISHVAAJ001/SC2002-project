@@ -1,6 +1,7 @@
 package com.ntu.fdae.group1.bto.controllers.project;
 
 import java.time.LocalDate;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -92,6 +93,14 @@ public class ProjectController {
      * @return List of visible projects
      */
     public List<Project> getVisibleProjectsForUser(User user) {
+        // No specific authorization needed here usually, as the service filters based
+        // on user.
+        if (user == null) {
+            // Handle error - perhaps return empty list or throw exception
+            System.err.println("Error: User context is required to view visible projects.");
+            return Collections.emptyList();
+        }
+
         return projectService.getVisibleProjectsForUser(user);
     }
 
