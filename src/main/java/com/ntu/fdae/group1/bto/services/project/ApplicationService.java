@@ -3,6 +3,7 @@ package com.ntu.fdae.group1.bto.services.project;
 import java.util.List;
 
 import com.ntu.fdae.group1.bto.enums.ApplicationStatus;
+import com.ntu.fdae.group1.bto.enums.FlatType;
 import com.ntu.fdae.group1.bto.exceptions.ApplicationException;
 import com.ntu.fdae.group1.bto.models.project.Application;
 import com.ntu.fdae.group1.bto.models.user.Applicant;
@@ -30,7 +31,8 @@ public class ApplicationService implements IApplicationService {
     }
 
     @Override
-    public Application submitApplication(Applicant applicant, String projectId) throws ApplicationException {
+    public Application submitApplication(Applicant applicant, String projectId, FlatType preferredFlatType)
+            throws ApplicationException {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'submitApplication'");
     }

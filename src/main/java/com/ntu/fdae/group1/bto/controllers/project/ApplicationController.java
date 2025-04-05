@@ -5,6 +5,7 @@ import java.util.List;
 import com.ntu.fdae.group1.bto.exceptions.ApplicationException;
 import com.ntu.fdae.group1.bto.models.project.Application;
 import com.ntu.fdae.group1.bto.enums.ApplicationStatus;
+import com.ntu.fdae.group1.bto.enums.FlatType;
 import com.ntu.fdae.group1.bto.models.user.Applicant;
 import com.ntu.fdae.group1.bto.models.user.HDBManager;
 import com.ntu.fdae.group1.bto.services.project.IApplicationService;
@@ -32,8 +33,9 @@ public class ApplicationController {
      * @return The created application
      * @throws ApplicationException if submission fails
      */
-    public Application submitApplication(Applicant applicant, String projectId) throws ApplicationException {
-        return applicationService.submitApplication(applicant, projectId);
+    public Application submitApplication(Applicant applicant, String projectId, FlatType preferredFlatType)
+            throws ApplicationException {
+        return applicationService.submitApplication(applicant, projectId, preferredFlatType);
     }
 
     /**

@@ -22,8 +22,6 @@ import java.util.Optional;
 import java.util.Scanner;
 import java.util.stream.Collectors;
 
-// Import other necessary Entity/Enum/Exception types as needed
-
 public class HDBOfficerUI extends BaseUI {
     private final HDBOfficer user;
     private final ProjectController projectController;
@@ -32,7 +30,8 @@ public class HDBOfficerUI extends BaseUI {
     private final BookingController bookingController;
     private final ReceiptController receiptController;
     private final EnquiryController enquiryController;
-    private final AuthenticationController authController; // For password change
+    private final AuthenticationController authController;
+    private final ProjectUIHelper projectUIHelper; // Use the helper
 
     public HDBOfficerUI(HDBOfficer user,
             ProjectController projCtrl,
@@ -44,311 +43,250 @@ public class HDBOfficerUI extends BaseUI {
             AuthenticationController authCtrl,
             Scanner scanner) {
         super(scanner);
-        // Basic null checks (can add more robust checks later)
-        this.user = user;
-        this.projectController = projCtrl;
-        this.applicationController = appCtrl;
-        this.officerRegController = offRegCtrl;
-        this.bookingController = bookCtrl;
-        this.receiptController = receiptCtrl;
-        this.enquiryController = enqCtrl;
-        this.authController = authCtrl;
+        this.user = Objects.requireNonNull(user);
+        this.projectController = Objects.requireNonNull(projCtrl);
+        this.applicationController = Objects.requireNonNull(appCtrl);
+        this.officerRegController = Objects.requireNonNull(offRegCtrl);
+        this.bookingController = Objects.requireNonNull(bookCtrl);
+        this.receiptController = Objects.requireNonNull(receiptCtrl);
+        this.enquiryController = Objects.requireNonNull(enqCtrl);
+        this.authController = Objects.requireNonNull(authCtrl);
+        this.projectUIHelper = new ProjectUIHelper(this); // Initialize helper
     }
 
-    /**
-     * Displays the main menu for HDB Officers and handles user actions.
-     * This is the main loop for this UI until the user logs out.
-     */
     public void displayMainMenu() {
         boolean keepRunning = true;
         while (keepRunning) {
-            // 1. Display Header
-            displayHeader("HDB Officer Menu - " + (user != null ? user.getName() : "User")); // Basic header
+            displayHeader("HDB Officer Menu - Welcome " + (user != null ? user.getName() : "User"));
 
-            // 2. Display Menu Options
             System.out.println("--- View/Apply (Applicant Role) ---");
-            System.out.println("[1] View Available Projects");
-            System.out.println("[2] Submit BTO Application");
-            System.out.println("[3] View My BTO Application Status");
-            System.out.println("[4] Request BTO Application Withdrawal");
+            System.out.println("[1] View & Apply for Available Projects"); // Combined
+            System.out.println("[2] View My Application Status & Request Withdrawal"); // Combined
             System.out.println("-------------------------------------");
-            System.out.println("--- Officer Registration ---");
-            System.out.println("[5] Register for Project Handling");
-            System.out.println("[6] View My Registration Status");
+            System.out.println("--- Officer Project Role ---");
+            System.out.println("[3] Register for Project Handling");
+            System.out.println("[4] View My Registration Status");
+            System.out.println("[5] Manage Project Being Handled"); // Combined view/book/receipt/enquiry actions
             System.out.println("-------------------------------------");
-            System.out.println("--- Project Handling Actions ---");
-            System.out.println("[7] View Handling Project Details");
-            System.out.println("[8] Book Flat for Applicant");
-            System.out.println("[9] Generate Booking Receipt");
-            System.out.println("-------------------------------------");
-            System.out.println("--- Enquiries ---");
-            System.out.println("[10] Submit Enquiry (My Own)");
-            System.out.println("[11] Manage My Enquiries");
-            System.out.println("[12] View Project Enquiries (Handling)");
-            System.out.println("[13] Reply to Project Enquiry (Handling)");
+            System.out.println("--- Enquiries (Personal) ---");
+            System.out.println("[6] Submit Enquiry (My Own)");
+            System.out.println("[7] Manage My Enquiries (View/Edit/Delete)"); // Combined
             System.out.println("-------------------------------------");
             System.out.println("--- Account ---");
-            System.out.println("[14] Change Password");
+            System.out.println("[8] Change Password");
             System.out.println("-------------------------------------");
             System.out.println("[0] Logout");
             System.out.println("=====================================");
 
-            // 3. Get User Choice
             int choice = promptForInt("Enter your choice: ");
 
-            // 4. Handle Choice using Switch
             try {
                 switch (choice) {
+                    // Applicant Role Actions (Delegate to similar methods as ApplicantUI)
                     case 1:
-                        handleViewAvailableProjects();
-                        break;
+                        handleViewAndApplyProjects();
+                        break; // Uses Applicant View/Apply logic
                     case 2:
-                        handleSubmitApplication();
-                        break;
+                        handleViewAndWithdrawApplication();
+                        break; // Uses Applicant View/Withdraw logic
+
+                    // Officer Role Actions
                     case 3:
-                        handleViewMyApplication();
-                        break;
-                    case 4:
-                        handleRequestWithdrawal();
-                        break;
-                    case 5:
                         handleRequestRegistration();
                         break;
-                    case 6:
+                    case 4:
                         handleViewRegistrationStatus();
                         break;
-                    case 7:
-                        handleViewHandlingProjectDetails();
+                    case 5:
+                        handleManageHandlingProject();
                         break;
-                    case 8:
-                        handlePerformBooking();
-                        break;
-                    case 9:
-                        handleGenerateReceipt();
-                        break;
-                    case 10:
+
+                    // Personal Enquiry Actions (Delegate to similar methods as ApplicantUI)
+                    case 6:
                         handleSubmitEnquiry();
-                        break;
-                    case 11:
+                        break; // Officer submits own enquiry
+                    case 7:
                         handleManageMyEnquiries();
-                        break;
-                    case 12:
-                        handleViewProjectEnquiries();
-                        break;
-                    case 13:
-                        handleReplyToEnquiry();
-                        break;
-                    case 14:
+                        break; // Officer manages own enquiries
+
+                    // Account
+                    case 8:
                         handleChangePassword();
                         break;
                     case 0:
-                        keepRunning = false; // Exit the loop for this UI
+                        keepRunning = false;
                         break;
                     default:
                         displayError("Invalid choice. Please try again.");
                 }
             } catch (Exception e) {
-                // Basic catch-all for now. Refine later with specific exceptions.
                 displayError("An error occurred: " + e.getMessage());
-                // Optionally print stack trace during development: e.printStackTrace();
+                // e.printStackTrace(); // For debugging
             }
 
-            // 5. Pause before repeating loop (unless logging out)
             if (keepRunning && choice != 0) {
-                pause(); // Assumes pause() exists in BaseUI
+                pause();
             }
         }
-        // Loop ends, control returns to MainApp which will handle logout message.
     }
 
-    // --- Skeleton Handler Methods ---
-    // These methods will contain the logic to get input, call controllers, and
-    // display output.
+    // --- Handler Methods ---
 
-    private void handleViewAvailableProjects() {
+    // Duplicated/Similar Applicant Methods (Could potentially be shared via a
+    // helper if identical)
+    private void handleViewAndApplyProjects() {
+        // TODO: Implement identical flow as ApplicantUI.handleViewAndApplyProjects
+        System.out.println("[Placeholder: Officer viewing/applying like Applicant]");
+        // Remember service layer needs to check Officer eligibility (e.g., not handling
+        // project applying for)
         displayHeader("View Available BTO Projects");
-        System.out.println("Calling projectController.getVisibleProjects...");
-        // TODO: Implement logic:
-        // 1. Call projectController.getVisibleProjects(user);
-        // 2. Check if list is empty, display message.
-        // 3. If not empty, iterate and display project details using displayList or
-        // similar.
-        System.out.println("[Placeholder: List available projects]");
+        List<Project> projects = projectController.getVisibleProjectsForUser(this.user);
+
+        Project selectedProject = projectUIHelper.selectProjectFromList(projects,
+                "Select Project to View Details & Apply");
+
+        if (selectedProject != null) {
+            projectUIHelper.displayApplicantProjectDetails(selectedProject); // Show applicant view
+
+            System.out.println("\nOptions:");
+            System.out.println("[1] Apply for " + selectedProject.getProjectName());
+            System.out.println("[0] Back");
+            int actionChoice = promptForInt("Enter option: ");
+            if (actionChoice == 1) {
+                handleSubmitApplicationAction(selectedProject.getProjectId());
+            }
+        }
     }
 
-    private void handleSubmitApplication() {
-        displayHeader("Submit BTO Application");
-        System.out.println("Calling applicationController.submitApplication...");
-        // TODO: Implement logic:
-        // 1. Prompt for Project ID.
-        // 2. Validate Project ID format (basic).
-        // 3. Prompt for confirmation.
-        // 4. If confirmed, call applicationController.submitApplication(user,
-        // projectId);
-        // 5. Display success message with Application ID/Status or error message.
-        System.out.println("[Placeholder: Submit application for a project]");
+    private void handleSubmitApplicationAction(String projectId) {
+        // TODO: Implement identical flow as ApplicantUI.handleSubmitApplicationAction
+        System.out.println("[Placeholder: Officer submitting application like Applicant]");
+        // Prompt for preference etc. Call appController.submitApplication(...)
     }
 
-    private void handleViewMyApplication() {
-        displayHeader("View My BTO Application Status");
-        System.out.println("Calling applicationController.getMyApplication...");
-        // TODO: Implement logic:
-        // 1. Call applicationController.getMyApplication(user);
-        // 2. If null, display "No application found".
-        // 3. If found, display Application ID, Project ID, Submission Date, Status.
-        System.out.println("[Placeholder: Display my application details]");
-    }
-
-    private void handleRequestWithdrawal() {
-        displayHeader("Request BTO Application Withdrawal");
-        System.out.println("Calling applicationController.requestWithdrawal...");
-        // TODO: Implement logic:
-        // 1. Call applicationController.getMyApplication(user) to check if app exists
-        // and status.
-        // 2. If withdrawal is possible, prompt for confirmation.
-        // 3. If confirmed, call applicationController.requestWithdrawal(user);
-        // 4. Display success or error message.
-        System.out.println("[Placeholder: Request withdrawal for my application]");
-    }
-
-    private void handleRequestRegistration() {
-        displayHeader("Request Project Handling Registration");
-        System.out.println("Calling officerRegController.requestRegistration...");
-        // TODO: Implement logic:
-        // 1. Prompt for Project ID.
-        // 2. Validate Project ID format.
-        // 3. Prompt for confirmation.
-        // 4. If confirmed, call officerRegController.requestRegistration(user,
-        // projectId);
-        // 5. Display success message with Registration ID/Status or error message.
-        System.out.println("[Placeholder: Request registration for a project]");
-    }
-
-    private void handleViewRegistrationStatus() {
-        displayHeader("View Project Registration Status");
-        System.out.println("Calling officerRegController.getMyRegistrationStatus...");
-        // TODO: Implement logic:
-        // 1. Prompt for Project ID (or maybe view all?).
-        // 2. Call appropriate officerRegController method (e.g.,
-        // getMyRegistrationStatus(user, projectId) or getMyRegistrations(user)).
-        // 3. Display the status(es) found or "No registration found".
-        System.out.println("[Placeholder: Display my registration status for project(s)]");
-    }
-
-    private void handleViewHandlingProjectDetails() {
-        displayHeader("View Details of Project Handling");
-        System.out.println("Finding project officer is handling and calling projectController.findProjectById...");
-        // TODO: Implement logic:
-        // 1. ***Determine the Project ID the officer is handling*** (CRITICAL logic
-        // needed).
-        // 2. If found, call projectController.findProjectById(handlingProjectId);
-        // 3. If project found, display all details (Name, Dates, Flats, etc.).
-        // 4. If not handling a project or project not found, display appropriate
-        // message.
-        System.out.println("[Placeholder: Display details of the specific project being handled]");
-    }
-
-    private void handlePerformBooking() {
-        displayHeader("Perform Flat Booking for Applicant");
-        System.out.println("Calling bookingController.createBooking...");
-        // TODO: Implement logic:
-        // 1. Prompt for Applicant NRIC. Validate format.
-        // 2. Call applicationController.getApplicationForUser(applicantNric) to check
-        // status (must be SUCCESSFUL).
-        // 3. Get Project ID from the application.
-        // 4. Call projectController.findProjectById(projectId) to get flat info.
-        // Display available flats.
-        // 5. Prompt officer to select Flat Type. Validate choice against available
-        // types/units.
-        // 6. Prompt for confirmation.
-        // 7. If confirmed, call bookingController.createBooking(user, applicantNric,
-        // selectedFlatType);
-        // 8. Display success message with Booking ID/details or error message.
-        System.out.println("[Placeholder: Perform booking for an eligible applicant]");
-    }
-
-    private void handleGenerateReceipt() {
-        displayHeader("Generate Booking Receipt");
-        System.out.println("Calling receiptController.getBookingReceiptInfo...");
-        // TODO: Implement logic:
-        // 1. Prompt for Applicant NRIC.
-        // 2. ***Find the relevant Booking object*** (e.g., via applicant
-        // NRIC/Application ID - needs controller/service support).
-        // 3. If booking found, call receiptController.getBookingReceiptInfo(user,
-        // booking);
-        // 4. Display the formatted receipt details from the returned BookingReceiptInfo
-        // object.
-        // 5. Handle cases where booking is not found.
-        System.out.println("[Placeholder: Generate and display booking receipt]");
+    private void handleViewAndWithdrawApplication() {
+        // TODO: Implement identical flow as
+        // ApplicantUI.handleViewAndWithdrawApplication
+        System.out.println("[Placeholder: Officer viewing/withdrawing own application like Applicant]");
     }
 
     private void handleSubmitEnquiry() {
-        displayHeader("Submit Enquiry");
-        System.out.println("Calling enquiryController.createEnquiry...");
-        // TODO: Implement logic:
-        // 1. Prompt if project-specific. Get Project ID if yes.
-        // 2. Prompt for enquiry content. Validate not empty.
-        // 3. Call enquiryController.createEnquiry(user, projectId, content);
-        // 4. Display success message with Enquiry ID.
-        System.out.println("[Placeholder: Submit a general or project-specific enquiry]");
+        // TODO: Implement identical flow as ApplicantUI.handleSubmitEnquiry
+        System.out.println("[Placeholder: Officer submitting own enquiry like Applicant]");
     }
 
     private void handleManageMyEnquiries() {
-        displayHeader("Manage My Enquiries");
-        System.out.println("Calling enquiryController.viewMyEnquiries and potential edit/delete...");
-        // TODO: Implement logic:
-        // 1. Call enquiryController.viewMyEnquiries(user).
-        // 2. Display the list of enquiries.
-        // 3. Prompt user to select an Enquiry ID for action (view details, edit,
-        // delete).
-        // 4. If selected:
-        // a. Display full details.
-        // b. If eligible (e.g., not replied), offer Edit/Delete options.
-        // c. Get new content for edit or confirmation for delete.
-        // d. Call enquiryController.editMyEnquiry(...) or deleteMyEnquiry(...).
-        // e. Display success/error messages.
-        System.out.println("[Placeholder: View, Edit, Delete own enquiries]");
+        // TODO: Implement identical flow as ApplicantUI.handleManageMyEnquiries
+        System.out.println("[Placeholder: Officer managing own enquiries like Applicant]");
+    }
+    // ----------------------------------------------------------------------------
+
+    private void handleRequestRegistration() {
+        displayHeader("Register for Project Handling");
+        // TODO: Prompt for Project ID, Confirm, Call
+        // officerRegController.requestRegistration(...)
+        System.out.println("[Placeholder: Request registration for project]");
     }
 
-    private void handleViewProjectEnquiries() {
-        displayHeader("View Enquiries for Project Handling");
-        System.out.println("Finding handling project and calling enquiryController.viewProjectEnquiries...");
-        // TODO: Implement logic:
-        // 1. ***Determine the Project ID the officer is handling***.
-        // 2. If found, call enquiryController.viewProjectEnquiries(user,
-        // handlingProjectId);
-        // 3. Display list of enquiries for that project (showing submitter NRIC, date,
-        // content snippet, replied status).
-        // 4. Handle case where officer isn't handling a project or no enquiries exist.
-        System.out.println("[Placeholder: View enquiries related to the handled project]");
+    private void handleViewRegistrationStatus() {
+        displayHeader("View My Project Registration Status");
+        // TODO: Prompt for Project ID (or show all?), Call officerRegController
+        // method(s), Display status(es)
+        System.out.println("[Placeholder: Display my registration status for project(s)]");
     }
 
-    private void handleReplyToEnquiry() {
-        displayHeader("Reply to Project Enquiry");
-        System.out.println(
-                "Finding handling project, unreplied enquiries, and calling enquiryController.replyToEnquiry...");
-        // TODO: Implement logic:
-        // 1. ***Determine the Project ID the officer is handling***.
-        // 2. If found, call enquiryController.viewProjectEnquiries(...) and filter for
-        // unreplied ones.
-        // 3. Display the list of unreplied enquiries.
-        // 4. Prompt officer to select an Enquiry ID to reply to. Validate selection.
-        // 5. Prompt for reply content. Validate not empty.
-        // 6. Call enquiryController.replyToEnquiry(user, enquiryId, replyContent);
-        // 7. Display success or error message.
-        System.out.println("[Placeholder: Reply to an enquiry for the handled project]");
+    private void handleManageHandlingProject() {
+        displayHeader("Manage Project Being Handled");
+        // TODO: Determine which project the officer is *currently approved* to handle.
+        // This is CRITICAL logic. Needs service/controller support.
+        String handlingProjectId = null; // = findHandlingProjectIdForOfficer(this.user); // Needs implementation
+
+        if (handlingProjectId == null) {
+            displayMessage("You are not currently approved to handle a specific project.");
+            return;
+        }
+
+        Project handlingProject = projectController.findProjectById(handlingProjectId);
+        if (handlingProject == null) {
+            displayError("Could not retrieve details for the project you are handling (ID: " + handlingProjectId + ")");
+            return;
+        }
+
+        // Display project details (using the staff view)
+        projectUIHelper.displayStaffProjectDetails(handlingProject);
+
+        // --- Contextual Actions for Handling Officer ---
+        System.out.println("\nActions for Project " + handlingProject.getProjectName() + ":");
+        System.out.println("[1] Book Flat for Successful Applicant");
+        System.out.println("[2] Generate Booking Receipt for Applicant");
+        System.out.println("[3] View Enquiries for this Project");
+        System.out.println("[4] Reply to Enquiry for this Project");
+        System.out.println("[0] Back to Main Menu");
+
+        int actionChoice = promptForInt("Enter option: ");
+        switch (actionChoice) {
+            case 1:
+                handlePerformBookingAction(handlingProjectId);
+                break;
+            case 2:
+                handleGenerateReceiptAction(handlingProjectId);
+                break; // May need applicant NRIC first
+            case 3:
+                handleViewProjectEnquiriesAction(handlingProjectId);
+                break;
+            case 4:
+                handleReplyToProjectEnquiryAction(handlingProjectId);
+                break;
+            // Default or 0: Do nothing
+        }
     }
+
+    // Extracted Action Logic Helpers for Handling Project
+    private void handlePerformBookingAction(String projectId) {
+        System.out.println("Initiating booking for Project ID: " + projectId);
+        // TODO: Implement booking logic:
+        // 1. Prompt for Applicant NRIC.
+        // 2. Verify application is SUCCESSFUL via applicationController.
+        // 3. Display available flats for projectId.
+        // 4. **Prompt Officer for the FlatType chosen by applicant.**
+        // 5. Confirm. Call bookingController.createBooking(...)
+        // 6. Display result.
+        System.out.println("[Placeholder: Book flat action]");
+    }
+
+    private void handleGenerateReceiptAction(String projectId) {
+        System.out.println("Generating receipt for Project ID: " + projectId);
+        // TODO: Implement receipt generation:
+        // 1. Prompt for Applicant NRIC (or maybe Booking ID?).
+        // 2. Find the corresponding Booking record.
+        // 3. Call receiptController.getBookingReceiptInfo(...)
+        // 4. Display formatted receipt.
+        System.out.println("[Placeholder: Generate receipt action]");
+    }
+
+    private void handleViewProjectEnquiriesAction(String projectId) {
+        System.out.println("Viewing enquiries for Project ID: " + projectId);
+        // TODO: Implement enquiry viewing:
+        // 1. Call enquiryController.viewProjectEnquiries(user, projectId).
+        // 2. Display list.
+        System.out.println("[Placeholder: View project enquiries action]");
+    }
+
+    private void handleReplyToProjectEnquiryAction(String projectId) {
+        System.out.println("Replying to enquiry for Project ID: " + projectId);
+        // TODO: Implement reply logic:
+        // 1. Optionally list unreplied enquiries for this project first.
+        // 2. Prompt for Enquiry ID to reply to. Validate it belongs to this project.
+        // 3. Prompt for reply content.
+        // 4. Call enquiryController.replyToEnquiry(...)
+        // 5. Display result.
+        System.out.println("[Placeholder: Reply to project enquiry action]");
+    }
+    // ------------------------------------------------
 
     private void handleChangePassword() {
         displayHeader("Change Password");
-        System.out.println("Calling authController.changePassword...");
-        // TODO: Implement logic:
-        // 1. Prompt for new password.
-        // 2. Prompt for confirmation.
-        // 3. Check if passwords match and are not empty.
-        // 4. Call authController.changePassword(user, newPassword);
-        // 5. Display success or error message.
+        // TODO: Implement logic (same as other UIs)
         System.out.println("[Placeholder: Change user's password]");
     }
-
 }

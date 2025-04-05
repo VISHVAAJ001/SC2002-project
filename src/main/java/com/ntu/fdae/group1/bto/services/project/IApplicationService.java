@@ -5,6 +5,7 @@ import java.util.List;
 import com.ntu.fdae.group1.bto.exceptions.ApplicationException;
 import com.ntu.fdae.group1.bto.models.project.Application;
 import com.ntu.fdae.group1.bto.enums.ApplicationStatus;
+import com.ntu.fdae.group1.bto.enums.FlatType;
 import com.ntu.fdae.group1.bto.models.user.Applicant;
 import com.ntu.fdae.group1.bto.models.user.HDBManager;
 
@@ -17,7 +18,8 @@ public interface IApplicationService {
      * @return The created application
      * @throws ApplicationException if application submission fails
      */
-    Application submitApplication(Applicant applicant, String projectId) throws ApplicationException;
+    Application submitApplication(Applicant applicant, String projectId, FlatType preferredFlatType)
+            throws ApplicationException;
 
     /**
      * Requests withdrawal of an existing application

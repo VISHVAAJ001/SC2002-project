@@ -53,6 +53,17 @@ public class EnquiryService implements IEnquiryService {
             return false;
         }
 
+        // Check if enquiry has already been replied to
+        if (enquiry.isReplied()) {
+            // Once an enquiry has been
+            // replied to, should the applicant still
+            // be able to edit or delete it?
+            // A: No. Once replied, the enquiry
+            // should not be editable or deletable
+            // by the applicant.
+            return false;
+        }
+
         // TODO
         // We're not actually deleting from repository, so we need a way to mark as
         // deleted
