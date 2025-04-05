@@ -16,7 +16,7 @@ public final class FileUtil { // Make final, prevent instantiation if all method
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE;
 
     private FileUtil() {
-    } // Private constructor for utility class
+    }
 
     /**
      * Reads all lines from a CSV file, skipping the header.

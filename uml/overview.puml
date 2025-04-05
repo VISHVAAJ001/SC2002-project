@@ -42,13 +42,12 @@ package Entity <<Folder>> {
         # maritalStatus : MaritalStatus
         # role : UserRole <<get>>
         + {abstract} getRole() : UserRole
-        + verifyPassword(password: String) : boolean
-        + updatePasswordHash(newHash: String) : void
         + getNric() : String
         + getName() : String
         + getAge() : int
         + getMaritalStatus() : MaritalStatus
         + getPasswordHash() : String
+        + updatePasswordHash(newHash: String) : void
     }
 
     class Applicant extends User {
@@ -335,13 +334,7 @@ package Utility <<Folder>> {
         + {static} parseDoubleOrDefault(value: String, defaultValue: Double) : Double
     }
     class ValidatationUtil <<Utility>> {
-        + {static} validateNRIC(nric: String) : boolean
-        + {static} readPassword(scanner: Scanner) : String
-        + {static} readDate(prompt: String, scanner: Scanner) : LocalDate
-        + {static} readMandatoryString(prompt: String, scanner: Scanner) : String
-        + {static} readInt(prompt: String, scanner: Scanner) : int
-        + {static} readDouble(prompt: String, scanner: Scanner) : double
-        + {static} readEnum(prompt: String, enumClass: Class<E>, scanner: Scanner) : E <<throws InvalidInputException>>
+        + {static} isValidNric(nric: String) : boolean
         ' Add other necessary static input methods
     }
     class PasswordUtil <<Utility>> {

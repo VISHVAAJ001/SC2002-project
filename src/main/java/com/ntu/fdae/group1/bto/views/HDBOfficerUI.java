@@ -63,7 +63,7 @@ public class HDBOfficerUI extends BaseUI {
         boolean keepRunning = true;
         while (keepRunning) {
             // 1. Display Header
-            displayHeader("HDB Officer Menu - Welcome " + (user != null ? user.getName() : "User")); // Basic header
+            displayHeader("HDB Officer Menu - " + (user != null ? user.getName() : "User")); // Basic header
 
             // 2. Display Menu Options
             System.out.println("--- View/Apply (Applicant Role) ---");

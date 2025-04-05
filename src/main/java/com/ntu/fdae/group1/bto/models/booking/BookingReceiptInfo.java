@@ -30,7 +30,6 @@ public class BookingReceiptInfo {
         this.bookingDate = bookingDate;
     }
 
-    // Getters
     public String getApplicantName() {
         return applicantName;
     }

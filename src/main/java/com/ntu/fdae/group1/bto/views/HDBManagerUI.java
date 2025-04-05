@@ -58,7 +58,7 @@ public class HDBManagerUI extends BaseUI {
     public void displayMainMenu() {
         boolean keepRunning = true;
         while (keepRunning) {
-            displayHeader("HDB Manager Menu - Welcome " + (user != null ? user.getName() : "User"));
+            displayHeader("HDB Manager Menu - " + (user != null ? user.getName() : "User"));
 
             System.out.println("--- Project Management ---");
             System.out.println("[1] Create New BTO Project");

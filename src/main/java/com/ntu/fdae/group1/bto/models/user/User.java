@@ -3,16 +3,13 @@ package com.ntu.fdae.group1.bto.models.user;
 import com.ntu.fdae.group1.bto.enums.MaritalStatus;
 import com.ntu.fdae.group1.bto.enums.UserRole;
 
-/**
- * User class is an abstract class that represents a user in the system.
- * 
- */
 public abstract class User {
-    private String nric;
-    private String passwordHash;
-    private String name;
-    private int age;
-    private MaritalStatus maritalStatus;
+    protected String nric;
+    protected String passwordHash;
+    protected String name;
+    protected int age;
+    protected MaritalStatus maritalStatus;
+    protected UserRole role;
 
     /**
      * Constructor for User class.

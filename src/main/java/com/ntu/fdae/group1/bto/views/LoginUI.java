@@ -2,6 +2,7 @@ package com.ntu.fdae.group1.bto.views;
 
 import com.ntu.fdae.group1.bto.controllers.user.AuthenticationController;
 import com.ntu.fdae.group1.bto.models.user.User;
+import com.ntu.fdae.group1.bto.utils.ValidationUtil;
 import com.ntu.fdae.group1.bto.exceptions.AuthenticationException;
 
 import java.util.Scanner;
@@ -31,11 +32,11 @@ public class LoginUI extends BaseUI {
                 return null; // Signal exit
             }
 
-            // Basic NRIC format check (can use InputUtil)
-            // if (!InputUtil.validateNRIC(nric)) {
-            // displayError("Invalid NRIC format.");
-            // continue;
-            // }
+            // Basic NRIC format check
+            if (!ValidationUtil.isValidNric(nric)) {
+                displayError("Invalid NRIC format.");
+                continue;
+            }
 
             String password = promptForInput("Enter Password:"); // Basic password input
 
