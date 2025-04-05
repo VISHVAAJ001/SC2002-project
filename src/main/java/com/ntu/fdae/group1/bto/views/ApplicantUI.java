@@ -48,20 +48,21 @@ public class ApplicantUI extends BaseUI {
         while (keepRunning) {
             displayHeader("Applicant Menu - Welcome " + (user != null ? user.getName() : "User"));
 
-            System.out.println("--- BTO Application ---");
-            System.out.println("1. View Available Projects");
-            System.out.println("2. Submit BTO Application");
-            System.out.println("3. View My Application Status");
-            System.out.println("4. Request Application Withdrawal");
+            System.out.println("--- BTO Projects & Application ---");
+            System.out.println("[1] View Available Projects");
+            System.out.println("[2] Submit Application");
+            System.out.println("[3] View My Application Status");
+            System.out.println("[4] Request Application Withdrawal");
+            System.out.println("----------------------------------");
             System.out.println("--- Enquiries ---");
-            System.out.println("5. Submit Enquiry");
-            System.out.println("6. View/Edit/Delete My Enquiries");
+            System.out.println("[5] Submit Enquiry");
+            System.out.println("[6] Manage My Enquiries");
+            System.out.println("----------------------------------");
             System.out.println("--- Account ---");
-            System.out.println("7. Change Password");
-            System.out.println("--- Exit ---");
-            System.out.println("0. Logout");
-            System.out.println("-----------------------------------------");
-
+            System.out.println("[7] Change Password");
+            System.out.println("----------------------------------");
+            System.out.println("[0] Logout");
+            System.out.println("==================================");
             int choice = promptForInt("Enter your choice: ");
 
             try {

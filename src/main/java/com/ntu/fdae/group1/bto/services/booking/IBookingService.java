@@ -1,5 +1,6 @@
 package com.ntu.fdae.group1.bto.services.booking;
 
+import com.ntu.fdae.group1.bto.enums.FlatType;
 import com.ntu.fdae.group1.bto.exceptions.BookingException;
 import com.ntu.fdae.group1.bto.models.booking.Booking;
 import com.ntu.fdae.group1.bto.models.user.HDBOfficer;
@@ -14,5 +15,5 @@ public interface IBookingService {
      * @return The created booking
      * @throws BookingException if booking cannot be performed
      */
-    Booking performBooking(HDBOfficer officer, String applicantNRIC, String flatType) throws BookingException;
+    Booking performBooking(HDBOfficer officer, String applicantNRIC, FlatType flatType) throws BookingException;
 }

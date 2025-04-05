@@ -66,28 +66,32 @@ public class HDBOfficerUI extends BaseUI {
             displayHeader("HDB Officer Menu - Welcome " + (user != null ? user.getName() : "User")); // Basic header
 
             // 2. Display Menu Options
-            System.out.println("--- Applicant Actions ---");
-            System.out.println("1. View Available Projects (For Applying)");
-            System.out.println("2. Submit BTO Application (As Applicant)");
-            System.out.println("3. View My BTO Application Status");
-            System.out.println("4. Request BTO Application Withdrawal");
+            System.out.println("--- View/Apply (Applicant Role) ---");
+            System.out.println("[1] View Available Projects");
+            System.out.println("[2] Submit BTO Application");
+            System.out.println("[3] View My BTO Application Status");
+            System.out.println("[4] Request BTO Application Withdrawal");
+            System.out.println("-------------------------------------");
             System.out.println("--- Officer Registration ---");
-            System.out.println("5. Request Project Handling Registration");
-            System.out.println("6. View My Project Registration Status");
-            System.out.println("--- Project Handling ---");
-            System.out.println("7. View Details of Project Handling");
-            System.out.println("8. Perform Flat Booking for Applicant");
-            System.out.println("9. Generate Booking Receipt for Applicant");
+            System.out.println("[5] Register for Project Handling");
+            System.out.println("[6] View My Registration Status");
+            System.out.println("-------------------------------------");
+            System.out.println("--- Project Handling Actions ---");
+            System.out.println("[7] View Handling Project Details");
+            System.out.println("[8] Book Flat for Applicant");
+            System.out.println("[9] Generate Booking Receipt");
+            System.out.println("-------------------------------------");
             System.out.println("--- Enquiries ---");
-            System.out.println("10. Submit Enquiry");
-            System.out.println("11. View/Edit/Delete My Enquiries");
-            System.out.println("12. View Enquiries for Project Handling");
-            System.out.println("13. Reply to Project Enquiry");
+            System.out.println("[10] Submit Enquiry (My Own)");
+            System.out.println("[11] Manage My Enquiries");
+            System.out.println("[12] View Project Enquiries (Handling)");
+            System.out.println("[13] Reply to Project Enquiry (Handling)");
+            System.out.println("-------------------------------------");
             System.out.println("--- Account ---");
-            System.out.println("14. Change Password");
-            System.out.println("--- Exit ---");
-            System.out.println("0. Logout");
-            System.out.println("-----------------------------------------");
+            System.out.println("[14] Change Password");
+            System.out.println("-------------------------------------");
+            System.out.println("[0] Logout");
+            System.out.println("=====================================");
 
             // 3. Get User Choice
             int choice = promptForInt("Enter your choice: ");

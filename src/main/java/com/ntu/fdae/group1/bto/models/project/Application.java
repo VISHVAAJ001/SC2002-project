@@ -1,18 +1,21 @@
 package com.ntu.fdae.group1.bto.models.project;
 
 import com.ntu.fdae.group1.bto.enums.ApplicationStatus;
+import com.ntu.fdae.group1.bto.enums.FlatType;
 import java.time.LocalDate;
 
 public class Application {
     private String applicationId;
-    private String applicantNRIC;
+    private String applicantNric;
     private String projectId;
     private LocalDate submissionDate;
     private ApplicationStatus status = ApplicationStatus.PENDING;
+    private LocalDate requestedWithdrawalDate; // Can be null
+    private FlatType preferredFlatType; // Can be null
 
-    public Application(String applicationId, String applicantNRIC, String projectId, LocalDate submissionDate) {
+    public Application(String applicationId, String applicantNric, String projectId, LocalDate submissionDate) {
         this.applicationId = applicationId;
-        this.applicantNRIC = applicantNRIC;
+        this.applicantNric = applicantNric;
         this.projectId = projectId;
         this.submissionDate = submissionDate;
     }
@@ -21,8 +24,8 @@ public class Application {
         return applicationId;
     }
 
-    public String getApplicantNRIC() {
-        return applicantNRIC;
+    public String getApplicantNric() {
+        return applicantNric;
     }
 
     public String getProjectId() {
@@ -39,5 +42,21 @@ public class Application {
 
     public void setStatus(ApplicationStatus newStatus) {
         this.status = newStatus;
+    }
+
+    public LocalDate getRequestedWithdrawalDate() {
+        return requestedWithdrawalDate;
+    }
+
+    public void setRequestedWithdrawalDate(LocalDate requestedWithdrawalDate) {
+        this.requestedWithdrawalDate = requestedWithdrawalDate;
+    }
+
+    public FlatType getPreferredFlatType() {
+        return preferredFlatType;
+    }
+
+    public void setPreferredFlatType(FlatType preferredFlatType) {
+        this.preferredFlatType = preferredFlatType;
     }
 }

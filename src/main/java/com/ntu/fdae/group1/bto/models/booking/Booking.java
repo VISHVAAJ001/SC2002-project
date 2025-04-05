@@ -1,5 +1,6 @@
 package com.ntu.fdae.group1.bto.models.booking;
 
+import com.ntu.fdae.group1.bto.enums.FlatType;
 import java.time.LocalDate;
 
 public class Booking {
@@ -7,11 +8,11 @@ public class Booking {
     private String applicationId;
     private String applicantNRIC;
     private String projectId;
-    private String bookedFlatType;
+    private FlatType bookedFlatType;
     private LocalDate bookingDate;
 
     public Booking(String bookingId, String applicationId, String applicantNRIC, String projectId,
-            String bookedFlatType, LocalDate bookingDate) {
+            FlatType bookedFlatType, LocalDate bookingDate) {
         this.bookingId = bookingId;
         this.applicationId = applicationId;
         this.applicantNRIC = applicantNRIC;
@@ -36,7 +37,7 @@ public class Booking {
         return projectId;
     }
 
-    public String getBookedFlatType() {
+    public FlatType getBookedFlatType() {
         return bookedFlatType;
     }
 

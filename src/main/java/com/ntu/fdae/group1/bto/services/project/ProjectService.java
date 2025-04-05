@@ -11,31 +11,25 @@ import com.ntu.fdae.group1.bto.models.project.Project;
 import com.ntu.fdae.group1.bto.models.project.ProjectFlatInfo;
 import com.ntu.fdae.group1.bto.models.user.*;
 import com.ntu.fdae.group1.bto.repository.project.IProjectRepository;
+import com.ntu.fdae.group1.bto.repository.user.IUserRepository;
 import com.ntu.fdae.group1.bto.services.booking.IEligibilityService;
 
 public class ProjectService implements IProjectService {
     private final IProjectRepository projectRepo;
-    private final IEligibilityService eligibilityService; // Or put logic here
+    private final IUserRepository userRepo;
+    private final IEligibilityService eligibilityService;
 
-    public ProjectService(IProjectRepository projectRepo, IEligibilityService eligibilityService) {
+    public ProjectService(IProjectRepository projectRepo, IUserRepository userRepo,
+            IEligibilityService eligibilityService) {
         this.projectRepo = projectRepo;
+        this.userRepo = userRepo;
         this.eligibilityService = eligibilityService;
     }
 
     @Override
     public List<Project> getVisibleProjectsForUser(User user) {
-        // 1. Fetch all projects (handle potential map from repo)
-        List<Project> allProjects = new ArrayList<>(projectRepo.findAll().values());
-
-        // 2. Filter Stream
-        List<Project> filteredProjects = allProjects.stream()
-                // Filter 1: Must be visible
-                .filter(Project::isVisible)
-                // Optional: Sort alphabetically by name
-                .sorted(Comparator.comparing(Project::getProjectName, String.CASE_INSENSITIVE_ORDER))
-                .collect(Collectors.toList());
-
-        return filteredProjects;
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getVisibleProjectsForUser'");
     }
 
     @Override

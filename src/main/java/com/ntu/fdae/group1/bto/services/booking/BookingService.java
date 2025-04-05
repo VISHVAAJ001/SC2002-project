@@ -1,5 +1,6 @@
 package com.ntu.fdae.group1.bto.services.booking;
 
+import com.ntu.fdae.group1.bto.enums.FlatType;
 import com.ntu.fdae.group1.bto.exceptions.BookingException;
 import com.ntu.fdae.group1.bto.models.booking.Booking;
 import com.ntu.fdae.group1.bto.models.user.HDBOfficer;
@@ -23,7 +24,7 @@ public class BookingService implements IBookingService {
     }
 
     @Override
-    public Booking performBooking(HDBOfficer officer, String applicantNRIC, String flatType) throws BookingException {
+    public Booking performBooking(HDBOfficer officer, String applicantNRIC, FlatType flatType) throws BookingException {
         // Implementation logic for booking process
         // 1. Validate the officer has permission
         // 2. Check if applicant exists
@@ -32,6 +33,6 @@ public class BookingService implements IBookingService {
         // 5. Return the booking object
 
         // This is a placeholder implementation
-        return null;
+        throw new UnsupportedOperationException("Unimplemented method 'performBooking'");
     }
 }

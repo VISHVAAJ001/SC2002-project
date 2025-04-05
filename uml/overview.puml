@@ -95,7 +95,7 @@ package Entity <<Folder>> {
         + maxOfficerSlots : int
         + isVisible : boolean
         + approvedOfficerNrics : List<String> <<get>>
-        + Project(id: String, name: String, neighborhood: String, openDate: LocalDate, closeDate: LocalDate, managerNric: String, slots: int)
+        + Project(id: String, name: String, neighborhood: String, flatTypes: Map<FlatType, ProjectFlatInfo>, openDate: LocalDate, closeDate: LocalDate, managerNric: String, maxOfficerSlots: int)
         + setVisibility(visible: boolean) : void
         + addApprovedOfficer(officerNric: String) : boolean
         + removeApprovedOfficer(officerNric: String) : boolean
@@ -186,20 +186,20 @@ package Entity <<Folder>> {
 
 ' --- Exception Package ---
 package Exception <<Folder>> {
+    class ApplicationException extends Exception {
+        + ApplicationException(message: String)
+    }
     class AuthenticationException extends Exception {
         + AuthenticationException(message: String)
     }
     class BookingException extends Exception {
         + BookingException(message: String)
     }
-    class ApplicationException extends Exception {
-        + ApplicationException(message: String)
+    class DataAccessException extends RuntimeException {
+        + DataAccessException(message: String, cause: Throwable)
     }
     class RegistrationException extends Exception {
         + RegistrationException(message: String)
-    }
-    class DataAccessException extends RuntimeException {
-        + DataAccessException(message: String, cause: Throwable)
     }
      class InvalidInputException extends Exception {
         + InvalidInputException(message: String)
@@ -354,6 +354,7 @@ package Utility <<Folder>> {
         + {static} generateEnquiryId() : String
         + {static} generateOfficerRegId() : String
         + {static} generateProjectId() : String
+        + {static} generateProjectFlatInfoId() : String
     }
 }
 
@@ -417,7 +418,8 @@ package Service <<Folder>> {
     class ProjectService implements IProjectService {
         - projectRepo : IProjectRepository;
         - userRepo : IUserRepository;
-        + ProjectService(projectRepo: IProjectRepository, userRepo: IUserRepository);
+        - eligibilityService : IEligibilityService;
+        + ProjectService(projectRepo: IProjectRepository, userRepo: IUserRepository, eligSvc: IEligibilityService);
         + createProject(manager: HDBManager, name: String, neighborhood: String, flatInfoMap: Map<FlatType, ProjectFlatInfo>, openDate: LocalDate, closeDate: LocalDate, officerSlots: int) : Project <<throws RegistrationException>>;
         + editCoreProjectDetails(manager: HDBManager, projectId: String, name: String, neighborhood: String, openDate: LocalDate, closeDate: LocalDate, officerSlots: int) : boolean;
         + deleteProject(manager: HDBManager, projectId: String) : boolean;

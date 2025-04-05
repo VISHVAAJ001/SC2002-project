@@ -4,7 +4,7 @@ import java.time.LocalDate;
 
 public class Enquiry {
     private String enquiryId;
-    private String userNRIC;
+    private String userNric;
     private String projectId;
     private String content;
     private String reply;
@@ -12,9 +12,9 @@ public class Enquiry {
     private LocalDate submissionDate;
     private LocalDate replyDate;
 
-    public Enquiry(String enquiryId, String userNRIC, String projectId, String content, LocalDate submissionDate) {
+    public Enquiry(String enquiryId, String userNric, String projectId, String content, LocalDate submissionDate) {
         this.enquiryId = enquiryId;
-        this.userNRIC = userNRIC;
+        this.userNric = userNric;
         this.projectId = projectId;
         this.content = content;
         this.submissionDate = submissionDate;
@@ -24,8 +24,8 @@ public class Enquiry {
         return enquiryId;
     }
 
-    public String getUserNRIC() {
-        return userNRIC;
+    public String getUserNric() {
+        return userNric;
     }
 
     public String getProjectId() {

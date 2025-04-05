@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 public final class FileUtils { // Make final, prevent instantiation if all methods are static
 
     private static final String CSV_DELIMITER = ","; // Or configure if needed
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("d/M/yyyy"); // Adjust pattern
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     private FileUtils() {
     } // Private constructor for utility class
@@ -30,8 +30,7 @@ public final class FileUtils { // Make final, prevent instantiation if all metho
         List<String[]> lines = new ArrayList<>();
         Path path = Paths.get(filePath);
         if (!Files.exists(path)) {
-            // Decide how to handle missing files - maybe return empty list or throw
-            // specific exception
+            // Handle missing files (e.g., return empty list or throw specific exception)
             System.err.println("Warning: File not found: " + filePath);
             return lines; // Return empty list
         }
@@ -41,8 +40,16 @@ public final class FileUtils { // Make final, prevent instantiation if all metho
             String line;
             while ((line = reader.readLine()) != null) {
                 if (!line.trim().isEmpty()) { // Skip empty lines
-                    // Simple split, may need more robust CSV parsing for quoted fields
-                    lines.add(line.split(CSV_DELIMITER, -1)); // -1 to keep trailing empty strings
+                    // Split the line based on the CSV delimiter
+                    String[] fields = line.split(CSV_DELIMITER, -1); // -1 to keep trailing empty strings
+
+                    // Remove double quotes from each field
+                    for (int i = 0; i < fields.length; i++) {
+                        fields[i] = fields[i].replace("\"", "");
+                    }
+
+                    // Add the cleaned fields to the list
+                    lines.add(fields);
                 }
             }
         }
@@ -109,7 +116,7 @@ public final class FileUtils { // Make final, prevent instantiation if all metho
             return date.format(DATE_FORMATTER);
         } catch (Exception e) {
             System.err.println("Warning: Could not format date: " + date + " - " + e.getMessage());
-            return "";
+            return LocalDate.now().format(DATE_FORMATTER);
         }
     }
 
@@ -175,6 +182,17 @@ public final class FileUtils { // Make final, prevent instantiation if all metho
             return Integer.parseInt(value.trim());
         } catch (NumberFormatException e) {
             System.err.println("Warning: Could not parse integer: " + value);
+            return defaultValue;
+        }
+    }
+
+    public static Double parseDoubleOrDefault(String value, Double defaultValue) {
+        if (value == null || value.trim().isEmpty())
+            return defaultValue;
+        try {
+            return Double.parseDouble(value.trim());
+        } catch (NumberFormatException e) {
+            System.err.println("Warning: Could not parse double: " + value);
             return defaultValue;
         }
     }

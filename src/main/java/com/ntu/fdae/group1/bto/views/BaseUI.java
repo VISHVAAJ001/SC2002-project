@@ -37,7 +37,6 @@ public abstract class BaseUI {
      */
     protected void displayError(String message) {
         System.err.println("ERROR: " + message);
-        pause(); // Pause so user can see the error
     }
 
     /**
@@ -156,7 +155,7 @@ public abstract class BaseUI {
      * Pauses execution until the user presses Enter.
      */
     protected void pause() {
-        System.out.print("Press Enter to continue...");
+        System.out.print("\nPress Enter to continue...");
         scanner.nextLine();
     }
 

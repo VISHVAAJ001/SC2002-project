@@ -61,25 +61,29 @@ public class HDBManagerUI extends BaseUI {
             displayHeader("HDB Manager Menu - Welcome " + (user != null ? user.getName() : "User"));
 
             System.out.println("--- Project Management ---");
-            System.out.println("1. Create New BTO Project");
-            System.out.println("2. Edit Existing BTO Project");
-            System.out.println("3. Delete BTO Project");
-            System.out.println("4. Toggle Project Visibility");
-            System.out.println("5. View All Projects (Filterable)"); // Includes own and others
-            System.out.println("--- Approvals ---");
-            System.out.println("6. View/Approve/Reject Officer Registrations");
-            System.out.println("7. View/Approve/Reject BTO Applications");
-            System.out.println("8. View/Approve/Reject Application Withdrawals");
+            System.out.println("[1] Create New BTO Project");
+            System.out.println("[2] Edit Existing BTO Project");
+            System.out.println("[3] Delete BTO Project");
+            System.out.println("[4] Toggle Project Visibility");
+            System.out.println("[5] View All Projects (Filterable)");
+            System.out.println("----------------------------------");
+            System.out.println("--- Approvals & Reviews ---");
+            System.out.println("[6] Review Officer Registrations");
+            System.out.println("[7] Review BTO Applications");
+            System.out.println("[8] Review Application Withdrawals");
+            System.out.println("----------------------------------");
             System.out.println("--- Reporting ---");
-            System.out.println("9. Generate Applicant Booking Report (Filterable)");
+            System.out.println("[9] Generate Booking Report");
+            System.out.println("----------------------------------");
             System.out.println("--- Enquiries ---");
-            System.out.println("10. View All Enquiries");
-            System.out.println("11. Reply to Enquiry"); // For projects they manage? Or any? Clarify scope.
+            System.out.println("[10] View All Enquiries");
+            System.out.println("[11] Reply to Enquiry");
+            System.out.println("----------------------------------");
             System.out.println("--- Account ---");
-            System.out.println("12. Change Password");
-            System.out.println("--- Exit ---");
-            System.out.println("0. Logout");
-            System.out.println("-----------------------------------------");
+            System.out.println("[12] Change Password");
+            System.out.println("----------------------------------");
+            System.out.println("[0] Logout");
+            System.out.println("==================================");
 
             int choice = promptForInt("Enter your choice: ");
 

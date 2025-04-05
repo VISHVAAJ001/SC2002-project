@@ -16,31 +16,26 @@ import com.ntu.fdae.group1.bto.views.HDBOfficerUI;
 import com.ntu.fdae.group1.bto.views.HDBManagerUI;
 
 // Controllers (All controllers needed by different UIs)
-import com.ntu.fdae.group1.bto.controllers.user.AuthenticationController;
-import com.ntu.fdae.group1.bto.exceptions.DataAccessException;
-// import com.ntu.fdae.group1.bto.controllers.user.UserController; // If exists and needed globally
-import com.ntu.fdae.group1.bto.controllers.project.ProjectController;
-import com.ntu.fdae.group1.bto.controllers.project.ApplicationController;
 import com.ntu.fdae.group1.bto.controllers.ControllerContainer;
-// import com.ntu.fdae.group1.bto.controllers.project.OfficerRegistrationController;
-// import com.ntu.fdae.group1.bto.controllers.booking.BookingController;
-// import com.ntu.fdae.group1.bto.controllers.booking.ReceiptController;
-import com.ntu.fdae.group1.bto.controllers.enquiry.EnquiryController;
+import com.ntu.fdae.group1.bto.controllers.user.*;
+import com.ntu.fdae.group1.bto.controllers.project.*;
+import com.ntu.fdae.group1.bto.controllers.booking.*;
+import com.ntu.fdae.group1.bto.controllers.enquiry.*;
 
 // Services (Interfaces and Concrete implementations needed for initialization)
 import com.ntu.fdae.group1.bto.services.user.*;
-// import com.ntu.fdae.group1.bto.services.project.*;
-// import com.ntu.fdae.group1.bto.services.booking.*;
-// import com.ntu.fdae.group1.bto.services.enquiry.*;
+import com.ntu.fdae.group1.bto.services.project.*;
+import com.ntu.fdae.group1.bto.services.booking.*;
+import com.ntu.fdae.group1.bto.services.enquiry.*;
 
 // Repositories (Interfaces and Concrete implementations needed for initialization)
 import com.ntu.fdae.group1.bto.repository.user.*;
-// import com.ntu.fdae.group1.bto.repository.project.*;
-// import com.ntu.fdae.group1.bto.repository.booking.*;
-// import com.ntu.fdae.group1.bto.repository.enquiry.*;
+import com.ntu.fdae.group1.bto.repository.project.*;
+import com.ntu.fdae.group1.bto.repository.booking.*;
+import com.ntu.fdae.group1.bto.repository.enquiry.*;
 
 // Exceptions
-// import com.ntu.fdae.group1.bto.exceptions.DataAccessException;
+import com.ntu.fdae.group1.bto.exceptions.DataAccessException;
 
 /**
  * Main entry point for the BTO Management System application.
@@ -74,13 +69,11 @@ public class App {
             // 1. Initialize Repositories
             // Using concrete implementations directly here for setup
             IUserRepository userRepository = new UserRepository();
-            // IProjectRepository projectRepository = new ProjectRepository();
-            // IApplicationRepository applicationRepository = new
-            // ApplicationRepository();
-            // IBookingRepository bookingRepository = new BookingRepository();
-            // IEnquiryRepository enquiryRepository = new EnquiryRepository();
-            // IOfficerRegistrationRepository officerRegRepository = new
-            // OfficerRegistrationRepository();
+            IProjectRepository projectRepository = new ProjectRepository();
+            IApplicationRepository applicationRepository = new ApplicationRepository();
+            IBookingRepository bookingRepository = new BookingRepository();
+            IEnquiryRepository enquiryRepository = new EnquiryRepository();
+            IOfficerRegistrationRepository officerRegRepository = new OfficerRegistrationRepository();
 
             System.out.println("Repositories initialized.");
             // --- Load initial data ---
@@ -88,11 +81,11 @@ public class App {
             // Example (assuming loadAll needs to be called explicitly):
             try {
                 userRepository.loadAll();
-                // projectRepository.loadAll();
-                // applicationRepository.loadAll();
-                // bookingRepository.loadAll();
-                // enquiryRepository.loadAll();
-                // officerRegRepository.loadAll();
+                projectRepository.loadAll();
+                applicationRepository.loadAll();
+                bookingRepository.loadAll();
+                enquiryRepository.loadAll();
+                officerRegRepository.loadAll();
                 System.out.println("Data loaded successfully.");
             } catch (DataAccessException e) {
                 System.err.println("FATAL: Failed to load initial data: " + e.getMessage());
@@ -102,47 +95,42 @@ public class App {
             }
 
             // 2. Initialize Services (Inject Repositories and other Services)
-            // EligibilityService eligibilityService = new EligibilityService(); //
+            EligibilityService eligibilityService = new EligibilityService(); //
             // Standalone or simple dependencies
             AuthenticationService authService = new AuthenticationService(userRepository);
-            // ProjectService projectService = new ProjectService(projectRepository,
-            // userRepository);
-            // ApplicationService applicationService = new ApplicationService(
-            // applicationRepository, projectRepository, eligibilityService, userRepository,
-            // bookingRepository);
-            // OfficerRegistrationService officerRegService = new
-            // OfficerRegistrationService(
-            // officerRegRepository, projectRepository, applicationRepository,
-            // eligibilityService);
-            // BookingService bookingService = new BookingService(
-            // applicationRepository, projectRepository, bookingRepository, userRepository);
-            // ReceiptService receiptService = new ReceiptService(
-            // bookingRepository, userRepository, projectRepository);
-            // EnquiryService enquiryService = new EnquiryService(enquiryRepository);
-            // ReportService reportService = new ReportService(
-            // applicationRepository, bookingRepository, projectRepository, userRepository);
+            ProjectService projectService = new ProjectService(projectRepository,
+                    userRepository, eligibilityService);
+            EnquiryService enquiryService = new EnquiryService(enquiryRepository);
+            ApplicationService applicationService = new ApplicationService(
+                    applicationRepository, projectRepository, eligibilityService,
+                    userRepository, bookingRepository);
+            OfficerRegistrationService officerRegService = new OfficerRegistrationService(
+                    officerRegRepository, projectRepository, applicationRepository,
+                    eligibilityService);
+            BookingService bookingService = new BookingService(
+                    applicationRepository, projectRepository, bookingRepository, userRepository);
+            ReceiptService receiptService = new ReceiptService(
+                    bookingRepository, userRepository, projectRepository);
+            ReportService reportService = new ReportService(
+                    applicationRepository, bookingRepository, projectRepository, userRepository);
             System.out.println("Services initialized.");
 
             // 3. Initialize Controllers (Inject Services)
             AuthenticationController authController = new AuthenticationController(authService);
-            // ProjectController projectController = new ProjectController(projectService);
-            // ApplicationController appController = new
-            // ApplicationController(applicationService);
-            // OfficerRegistrationController officerRegController = new
-            // OfficerRegistrationController(officerRegService);
-            // BookingController bookingController = new BookingController(bookingService);
-            // ReceiptController receiptController = new ReceiptController(receiptService);
-            // EnquiryController enquiryController = new EnquiryController(enquiryService);
-            // ReportController reportController = new ReportController(reportService);
+            ProjectController projectController = new ProjectController(projectService);
+            ApplicationController appController = new ApplicationController(applicationService);
+            OfficerRegistrationController officerRegController = new OfficerRegistrationController(officerRegService);
+            BookingController bookingController = new BookingController(bookingService);
+            ReceiptController receiptController = new ReceiptController(receiptService);
+            EnquiryController enquiryController = new EnquiryController(enquiryService);
+            ReportController reportController = new ReportController(reportService);
             System.out.println("Controllers initialized.");
 
             // 4. Create Controller Container
-            // ControllerContainer container = new ControllerContainer(
-            // authController, projectController, appController, officerRegController,
-            // bookingController, receiptController, enquiryController, reportController);
             ControllerContainer container = new ControllerContainer(
-                    authController, null, null, null,
-                    null, null, null, null);
+                    authController, projectController, appController, officerRegController,
+                    bookingController, receiptController, enquiryController, reportController);
+
             System.out.println("Initialization complete.");
             return container;
 

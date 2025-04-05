@@ -120,7 +120,7 @@ public class UserRepository implements IUserRepository {
                     user.getName(),
                     user.getNric(),
                     String.valueOf(user.getAge()),
-                    user.getMaritalStatus().name(),
+                    user.getMaritalStatus().toString(),
                     user.getPasswordHash(),
                     user.getRole().name()
             });
