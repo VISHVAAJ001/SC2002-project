@@ -2,7 +2,7 @@ package com.ntu.fdae.group1.bto.services.user;
 
 import com.ntu.fdae.group1.bto.models.user.User;
 import com.ntu.fdae.group1.bto.repository.user.IUserRepository;
-import com.ntu.fdae.group1.bto.utils.PasswordUtils;
+import com.ntu.fdae.group1.bto.utils.PasswordUtil;
 import com.ntu.fdae.group1.bto.exceptions.AuthenticationException;
 
 public class AuthenticationService implements IAuthenticationService {
@@ -20,7 +20,7 @@ public class AuthenticationService implements IAuthenticationService {
             throw new AuthenticationException("Login failed: User not found.");
         }
 
-        if (!PasswordUtils.verifyPassword(password, user.getPasswordHash())) { // Assuming User has getPasswordHash()
+        if (!PasswordUtil.verifyPassword(password, user.getPasswordHash())) { // Assuming User has getPasswordHash()
             throw new AuthenticationException("Login failed: Incorrect password.");
         }
 

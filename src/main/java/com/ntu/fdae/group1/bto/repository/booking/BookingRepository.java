@@ -3,7 +3,7 @@ package com.ntu.fdae.group1.bto.repository.booking;
 import com.ntu.fdae.group1.bto.models.booking.Booking;
 import com.ntu.fdae.group1.bto.enums.FlatType;
 import com.ntu.fdae.group1.bto.exceptions.DataAccessException;
-import com.ntu.fdae.group1.bto.utils.FileUtils;
+import com.ntu.fdae.group1.bto.utils.FileUtil;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Map;
 
 public class BookingRepository implements IBookingRepository {
-    private static final String BOOKING_FILE_PATH = "data/bookings.csv";
+    private static final String BOOKING_FILE_PATH = "resources/bookings.csv";
 
     private Map<String, Booking> bookings;
 
@@ -41,7 +41,7 @@ public class BookingRepository implements IBookingRepository {
     public void saveAll(Map<String, Booking> entities) {
         this.bookings = entities;
         try {
-            FileUtils.writeCsvLines(BOOKING_FILE_PATH, serializeBookings(), getBookingCsvHeader());
+            FileUtil.writeCsvLines(BOOKING_FILE_PATH, serializeBookings(), getBookingCsvHeader());
         } catch (IOException e) {
             throw new DataAccessException("Error saving bookings to file: " + e.getMessage(), e);
         }
@@ -50,7 +50,7 @@ public class BookingRepository implements IBookingRepository {
     @Override
     public Map<String, Booking> loadAll() throws DataAccessException {
         try {
-            List<String[]> bookingData = FileUtils.readCsvLines(BOOKING_FILE_PATH);
+            List<String[]> bookingData = FileUtil.readCsvLines(BOOKING_FILE_PATH);
             bookings = deserializeBookings(bookingData);
         } catch (IOException e) {
             throw new DataAccessException("Error loading bookings from file: " + e.getMessage(), e);
@@ -102,8 +102,8 @@ public class BookingRepository implements IBookingRepository {
                 String applicationId = row[1];
                 String applicantNric = row[2];
                 String projectId = row[3];
-                FlatType flatType = FileUtils.parseEnum(FlatType.class, row[4]);
-                LocalDate bookingDate = FileUtils.parseLocalDate(row[5]);
+                FlatType flatType = FileUtil.parseEnum(FlatType.class, row[4]);
+                LocalDate bookingDate = FileUtil.parseLocalDate(row[5]);
 
                 // Create the booking
                 Booking booking = new Booking(
@@ -133,7 +133,7 @@ public class BookingRepository implements IBookingRepository {
                     booking.getApplicantNRIC(),
                     booking.getProjectId(),
                     booking.getBookedFlatType().toString(),
-                    FileUtils.formatLocalDate(booking.getBookingDate())
+                    FileUtil.formatLocalDate(booking.getBookingDate())
             });
         }
 

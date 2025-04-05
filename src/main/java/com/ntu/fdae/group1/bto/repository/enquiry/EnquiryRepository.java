@@ -2,7 +2,7 @@ package com.ntu.fdae.group1.bto.repository.enquiry;
 
 import com.ntu.fdae.group1.bto.models.enquiry.Enquiry;
 import com.ntu.fdae.group1.bto.exceptions.DataAccessException;
-import com.ntu.fdae.group1.bto.utils.FileUtils;
+import com.ntu.fdae.group1.bto.utils.FileUtil;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -13,7 +13,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public class EnquiryRepository implements IEnquiryRepository {
-    private static final String ENQUIRY_FILE_PATH = "data/enquiries.csv";
+    private static final String ENQUIRY_FILE_PATH = "resources/enquiries.csv";
 
     private Map<String, Enquiry> enquiries;
 
@@ -41,7 +41,7 @@ public class EnquiryRepository implements IEnquiryRepository {
     public void saveAll(Map<String, Enquiry> entities) {
         this.enquiries = entities;
         try {
-            FileUtils.writeCsvLines(ENQUIRY_FILE_PATH, serializeEnquiries(), getEnquiryCsvHeader());
+            FileUtil.writeCsvLines(ENQUIRY_FILE_PATH, serializeEnquiries(), getEnquiryCsvHeader());
         } catch (IOException e) {
             throw new DataAccessException("Error saving enquiries to file: " + e.getMessage(), e);
         }
@@ -50,7 +50,7 @@ public class EnquiryRepository implements IEnquiryRepository {
     @Override
     public Map<String, Enquiry> loadAll() throws DataAccessException {
         try {
-            List<String[]> enquiryData = FileUtils.readCsvLines(ENQUIRY_FILE_PATH);
+            List<String[]> enquiryData = FileUtil.readCsvLines(ENQUIRY_FILE_PATH);
             enquiries = deserializeEnquiries(enquiryData);
         } catch (IOException e) {
             throw new DataAccessException("Error loading enquiries from file: " + e.getMessage(), e);
@@ -104,14 +104,14 @@ public class EnquiryRepository implements IEnquiryRepository {
                 String content = row[3];
                 String reply = row[4].trim().isEmpty() ? null : row[4];
                 boolean isReplied = Boolean.parseBoolean(row[5]);
-                LocalDate submissionDate = FileUtils.parseLocalDate(row[6]);
+                LocalDate submissionDate = FileUtil.parseLocalDate(row[6]);
 
                 // Create the enquiry
                 Enquiry enquiry = new Enquiry(enquiryId, userNric, projectId, content, submissionDate);
 
                 // Set reply if exists
                 if (isReplied && reply != null && row.length > 7) {
-                    LocalDate replyDate = FileUtils.parseLocalDate(row[7]);
+                    LocalDate replyDate = FileUtil.parseLocalDate(row[7]);
                     enquiry.addReply(reply, replyDate);
                 }
 
@@ -133,7 +133,7 @@ public class EnquiryRepository implements IEnquiryRepository {
             String replyDate = "";
 
             if (enquiry.isReplied() && enquiry.getReplyDate() != null) {
-                replyDate = FileUtils.formatLocalDate(enquiry.getReplyDate());
+                replyDate = FileUtil.formatLocalDate(enquiry.getReplyDate());
             }
 
             serializedData.add(new String[] {
@@ -143,7 +143,7 @@ public class EnquiryRepository implements IEnquiryRepository {
                     enquiry.getContent(),
                     reply,
                     String.valueOf(enquiry.isReplied()),
-                    FileUtils.formatLocalDate(enquiry.getSubmissionDate()),
+                    FileUtil.formatLocalDate(enquiry.getSubmissionDate()),
                     replyDate
             });
         }

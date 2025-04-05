@@ -4,7 +4,7 @@ import com.ntu.fdae.group1.bto.models.project.Application;
 import com.ntu.fdae.group1.bto.enums.ApplicationStatus;
 import com.ntu.fdae.group1.bto.enums.FlatType;
 import com.ntu.fdae.group1.bto.exceptions.DataAccessException;
-import com.ntu.fdae.group1.bto.utils.FileUtils;
+import com.ntu.fdae.group1.bto.utils.FileUtil;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -15,7 +15,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public class ApplicationRepository implements IApplicationRepository {
-    private static final String APPLICATION_FILE_PATH = "data/applications.csv";
+    private static final String APPLICATION_FILE_PATH = "resources/applications.csv";
 
     private Map<String, Application> applications;
 
@@ -43,7 +43,7 @@ public class ApplicationRepository implements IApplicationRepository {
     public void saveAll(Map<String, Application> entities) {
         this.applications = entities;
         try {
-            FileUtils.writeCsvLines(APPLICATION_FILE_PATH, serializeApplications(), getApplicationCsvHeader());
+            FileUtil.writeCsvLines(APPLICATION_FILE_PATH, serializeApplications(), getApplicationCsvHeader());
         } catch (IOException e) {
             throw new DataAccessException("Error saving applications to file: " + e.getMessage(), e);
         }
@@ -52,7 +52,7 @@ public class ApplicationRepository implements IApplicationRepository {
     @Override
     public Map<String, Application> loadAll() throws DataAccessException {
         try {
-            List<String[]> applicationData = FileUtils.readCsvLines(APPLICATION_FILE_PATH);
+            List<String[]> applicationData = FileUtil.readCsvLines(APPLICATION_FILE_PATH);
             applications = deserializeApplications(applicationData);
         } catch (IOException e) {
             throw new DataAccessException("Error loading applications from file: " + e.getMessage(), e);
@@ -100,8 +100,8 @@ public class ApplicationRepository implements IApplicationRepository {
                 String applicationId = row[0];
                 String applicantNric = row[1];
                 String projectId = row[2];
-                LocalDate submissionDate = FileUtils.parseLocalDate(row[3]);
-                ApplicationStatus status = FileUtils.parseEnum(ApplicationStatus.class, row[4]);
+                LocalDate submissionDate = FileUtil.parseLocalDate(row[3]);
+                ApplicationStatus status = FileUtil.parseEnum(ApplicationStatus.class, row[4]);
 
                 // Create the application
                 Application application = new Application(applicationId, applicantNric, projectId, submissionDate);
@@ -109,7 +109,7 @@ public class ApplicationRepository implements IApplicationRepository {
 
                 // Set withdrawal date if exists
                 if (row[5] != null && !row[5].trim().isEmpty()) {
-                    LocalDate withdrawalDate = FileUtils.parseLocalDate(row[5]);
+                    LocalDate withdrawalDate = FileUtil.parseLocalDate(row[5]);
                     if (withdrawalDate != null) {
                         application.setRequestedWithdrawalDate(withdrawalDate);
                     }
@@ -117,7 +117,7 @@ public class ApplicationRepository implements IApplicationRepository {
 
                 // Set preferred flat type if exists
                 if (row.length > 6 && row[6] != null && !row[6].trim().isEmpty()) {
-                    FlatType preferredFlatType = FileUtils.parseEnum(FlatType.class, row[6]);
+                    FlatType preferredFlatType = FileUtil.parseEnum(FlatType.class, row[6]);
                     if (preferredFlatType != null) {
                         application.setPreferredFlatType(preferredFlatType);
                     }
@@ -138,7 +138,7 @@ public class ApplicationRepository implements IApplicationRepository {
         for (Application application : applications.values()) {
             String withdrawalDate = "";
             if (application.getRequestedWithdrawalDate() != null) {
-                withdrawalDate = FileUtils.formatLocalDate(application.getRequestedWithdrawalDate());
+                withdrawalDate = FileUtil.formatLocalDate(application.getRequestedWithdrawalDate());
             }
 
             String flatType = "";
@@ -150,7 +150,7 @@ public class ApplicationRepository implements IApplicationRepository {
                     application.getApplicationId(),
                     application.getApplicantNric(),
                     application.getProjectId(),
-                    FileUtils.formatLocalDate(application.getSubmissionDate()),
+                    FileUtil.formatLocalDate(application.getSubmissionDate()),
                     application.getStatus().toString(),
                     withdrawalDate,
                     flatType

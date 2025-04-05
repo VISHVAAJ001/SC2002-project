@@ -10,7 +10,7 @@ import com.ntu.fdae.group1.bto.models.user.HDBOfficer;
 import com.ntu.fdae.group1.bto.models.user.HDBManager;
 
 // Views
-import com.ntu.fdae.group1.bto.views.LoginUI; // Need LoginUI specifically
+import com.ntu.fdae.group1.bto.views.LoginUI;
 import com.ntu.fdae.group1.bto.views.ApplicantUI;
 import com.ntu.fdae.group1.bto.views.HDBOfficerUI;
 import com.ntu.fdae.group1.bto.views.HDBManagerUI;
@@ -22,13 +22,13 @@ import com.ntu.fdae.group1.bto.controllers.project.*;
 import com.ntu.fdae.group1.bto.controllers.booking.*;
 import com.ntu.fdae.group1.bto.controllers.enquiry.*;
 
-// Services (Interfaces and Concrete implementations needed for initialization)
+// Services (Interfaces and Concrete implementations needed for initialisation)
 import com.ntu.fdae.group1.bto.services.user.*;
 import com.ntu.fdae.group1.bto.services.project.*;
 import com.ntu.fdae.group1.bto.services.booking.*;
 import com.ntu.fdae.group1.bto.services.enquiry.*;
 
-// Repositories (Interfaces and Concrete implementations needed for initialization)
+// Repositories (Interfaces and Concrete implementations needed for initialisation)
 import com.ntu.fdae.group1.bto.repository.user.*;
 import com.ntu.fdae.group1.bto.repository.project.*;
 import com.ntu.fdae.group1.bto.repository.booking.*;
@@ -39,7 +39,7 @@ import com.ntu.fdae.group1.bto.exceptions.DataAccessException;
 
 /**
  * Main entry point for the BTO Management System application.
- * Handles initialization, the main application loop, and routing to user
+ * Handles initialisation, the main application loop, and routing to user
  * interfaces.
  */
 public class App {
@@ -48,37 +48,29 @@ public class App {
     private final LoginUI loginUI;
     private User currentUser = null;
 
-    /**
-     * Constructor: Initializes the scanner and sets up application components.
-     */
     public App(ControllerContainer controllerContainer, Scanner scanner) {
         this.controllerContainer = controllerContainer;
         this.scanner = scanner;
-        // Create LoginUI once, as it's used repeatedly
         this.loginUI = new LoginUI(controllerContainer.authController, scanner);
     }
 
     /**
-     * Initializes all application components (Repositories, Services, Controllers).
-     * Handles potential critical errors during initialization.
+     * initialises all application components (Repositories, Services, Controllers).
+     * Handles potential critical errors during initialisation.
      *
-     * @return A configured ControllerContainer or null if initialization fails.
+     * @return A configured ControllerContainer or null if initialisation fails.
      */
-    private static ControllerContainer initializeComponents() {
+    private static ControllerContainer initialiseComponents() {
         try {
-            // 1. Initialize Repositories
-            // Using concrete implementations directly here for setup
+            // 1. initialise Repositories
             IUserRepository userRepository = new UserRepository();
             IProjectRepository projectRepository = new ProjectRepository();
             IApplicationRepository applicationRepository = new ApplicationRepository();
             IBookingRepository bookingRepository = new BookingRepository();
             IEnquiryRepository enquiryRepository = new EnquiryRepository();
             IOfficerRegistrationRepository officerRegRepository = new OfficerRegistrationRepository();
+            // System.out.println("Repositories initialised.");
 
-            System.out.println("Repositories initialized.");
-            // --- Load initial data ---
-            // Explicitly load after creation or handle exceptions if load is in constructor
-            // Example (assuming loadAll needs to be called explicitly):
             try {
                 userRepository.loadAll();
                 projectRepository.loadAll();
@@ -86,7 +78,7 @@ public class App {
                 bookingRepository.loadAll();
                 enquiryRepository.loadAll();
                 officerRegRepository.loadAll();
-                System.out.println("Data loaded successfully.");
+                // System.out.println("Data loaded successfully.");
             } catch (DataAccessException e) {
                 System.err.println("FATAL: Failed to load initial data: " + e.getMessage());
                 // Optionally: Create default files or handle differently
@@ -94,8 +86,9 @@ public class App {
                 System.err.println("Continuing with potentially empty data stores.");
             }
 
-            // 2. Initialize Services (Inject Repositories and other Services)
+            // 2. initialise Services (Inject Repositories and other Services)
             EligibilityService eligibilityService = new EligibilityService(); //
+
             // Standalone or simple dependencies
             AuthenticationService authService = new AuthenticationService(userRepository);
             ProjectService projectService = new ProjectService(projectRepository,
@@ -113,9 +106,9 @@ public class App {
                     bookingRepository, userRepository, projectRepository);
             ReportService reportService = new ReportService(
                     applicationRepository, bookingRepository, projectRepository, userRepository);
-            System.out.println("Services initialized.");
+            // System.out.println("Services initialised.");
 
-            // 3. Initialize Controllers (Inject Services)
+            // 3. initialise Controllers (Inject Services)
             AuthenticationController authController = new AuthenticationController(authService);
             ProjectController projectController = new ProjectController(projectService);
             ApplicationController appController = new ApplicationController(applicationService);
@@ -124,18 +117,18 @@ public class App {
             ReceiptController receiptController = new ReceiptController(receiptService);
             EnquiryController enquiryController = new EnquiryController(enquiryService);
             ReportController reportController = new ReportController(reportService);
-            System.out.println("Controllers initialized.");
+            // System.out.println("Controllers initialised.");
 
             // 4. Create Controller Container
             ControllerContainer container = new ControllerContainer(
                     authController, projectController, appController, officerRegController,
                     bookingController, receiptController, enquiryController, reportController);
 
-            System.out.println("Initialization complete.");
+            // System.out.println("Initialisation complete.");
             return container;
 
         } catch (Exception e) { // Catch broader exceptions during setup
-            System.err.println("FATAL: Application initialization failed: " + e.getMessage());
+            System.err.println("FATAL: Application initialisation failed: " + e.getMessage());
             e.printStackTrace(); // Print stack trace for debugging during development
             return null; // Indicate failure
         }
@@ -145,10 +138,11 @@ public class App {
      * Starts and runs the main application loop.
      */
     public void run() {
+        // TODO: Could consider printing a logo or welcome message here
         System.out.println("\nWelcome to the BTO Management System!");
 
-        boolean running = true;
-        while (running) {
+        boolean isApplicationRunning = true;
+        while (isApplicationRunning) {
             if (currentUser == null) {
                 // If no user is logged in, display the login screen
                 currentUser = loginUI.displayLogin(); // This method handles the login logic via AuthController
@@ -156,7 +150,7 @@ public class App {
                 if (currentUser == null) {
                     // If displayLogin returns null, it typically means the user chose to exit.
                     System.out.println("Exiting application.");
-                    running = false; // Set flag to break the loop
+                    isApplicationRunning = false; // Set flag to break the loop
                 }
             } else {
                 // If a user is logged in, route them to their specific UI
@@ -182,18 +176,16 @@ public class App {
         try {
             switch (user.getRole()) {
                 case APPLICANT:
-                    // Applicant UI needs controllers relevant to applicant actions
                     ApplicantUI applicantUI = new ApplicantUI(
                             (Applicant) user,
                             controllerContainer.projectController,
                             controllerContainer.appController,
                             controllerContainer.enquiryController,
                             controllerContainer.authController, scanner);
-                    applicantUI.displayMainMenu();// This method runs until the user logs out
+                    applicantUI.displayMainMenu();
                     break;
 
                 case HDB_OFFICER:
-                    // HDB Officer UI needs a broader set of controllers, pass whatever is needed
                     HDBOfficerUI officerUI = new HDBOfficerUI(
                             (HDBOfficer) user, // Cast user to HDBOfficer
                             controllerContainer.projectController,
@@ -203,13 +195,11 @@ public class App {
                             controllerContainer.receiptController,
                             controllerContainer.enquiryController,
                             controllerContainer.authController,
-                            scanner // Pass the scanner for user input
-                    );
+                            scanner);
                     officerUI.displayMainMenu();
                     break;
 
                 case HDB_MANAGER:
-                    // HDB Manager UI needs controllers for management tasks
                     HDBManagerUI managerUI = new HDBManagerUI(
                             (HDBManager) user,
                             controllerContainer.projectController,
@@ -231,19 +221,19 @@ public class App {
             }
         } catch (ClassCastException cce) {
             System.err.println("Error: Role mismatch during UI routing. Logging out.");
-            cce.printStackTrace(); // Helps debugging if this happens
-            // currentUser will be set to null in the main loop
         } catch (Exception e) {
             System.err.println("An unexpected error occurred in the user interface. Logging out.");
-            e.printStackTrace();
-            // currentUser will be set to null in the main loop
         }
     }
 
     public static void main(String[] args) {
-        ControllerContainer controllers = initializeComponents();
-        Scanner scanner = new Scanner(System.in);
+        ControllerContainer controllers = initialiseComponents();
+        if (controllers == null) {
+            System.err.println("FATAL: Application initialisation failed. Exiting.");
+            return;
+        }
 
+        Scanner scanner = new Scanner(System.in);
         App app = new App(controllers, scanner);
         app.run();
     }

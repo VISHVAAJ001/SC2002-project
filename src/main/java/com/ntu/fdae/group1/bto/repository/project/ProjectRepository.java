@@ -4,7 +4,7 @@ import com.ntu.fdae.group1.bto.models.project.Project;
 import com.ntu.fdae.group1.bto.models.project.ProjectFlatInfo;
 import com.ntu.fdae.group1.bto.enums.FlatType;
 import com.ntu.fdae.group1.bto.exceptions.DataAccessException;
-import com.ntu.fdae.group1.bto.utils.FileUtils;
+import com.ntu.fdae.group1.bto.utils.FileUtil;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -14,8 +14,8 @@ import java.util.List;
 import java.util.Map;
 
 public class ProjectRepository implements IProjectRepository {
-    private static final String PROJECT_FILE_PATH = "data/projects.csv";
-    private static final String FLAT_INFO_FILE_PATH = "data/projects_flat_info.csv";
+    private static final String PROJECT_FILE_PATH = "resources/projects.csv";
+    private static final String FLAT_INFO_FILE_PATH = "resources/projects_flat_info.csv";
 
     private Map<String, Project> projects;
 
@@ -44,10 +44,10 @@ public class ProjectRepository implements IProjectRepository {
         this.projects = entities;
         try {
             // Save main project data
-            FileUtils.writeCsvLines(PROJECT_FILE_PATH, serializeProjects(), getProjectCsvHeader());
+            FileUtil.writeCsvLines(PROJECT_FILE_PATH, serializeProjects(), getProjectCsvHeader());
 
             // Save flat info data
-            FileUtils.writeCsvLines(FLAT_INFO_FILE_PATH, serializeFlatInfos(), getFlatInfoCsvHeader());
+            FileUtil.writeCsvLines(FLAT_INFO_FILE_PATH, serializeFlatInfos(), getFlatInfoCsvHeader());
         } catch (IOException e) {
             throw new DataAccessException("Error saving projects to file: " + e.getMessage(), e);
         }
@@ -56,8 +56,8 @@ public class ProjectRepository implements IProjectRepository {
     @Override
     public Map<String, Project> loadAll() throws DataAccessException {
         try {
-            List<String[]> projectData = FileUtils.readCsvLines(PROJECT_FILE_PATH);
-            List<String[]> flatInfoData = FileUtils.readCsvLines(FLAT_INFO_FILE_PATH);
+            List<String[]> projectData = FileUtil.readCsvLines(PROJECT_FILE_PATH);
+            List<String[]> flatInfoData = FileUtil.readCsvLines(FLAT_INFO_FILE_PATH);
             projects = deserializeProjects(projectData, flatInfoData);
         } catch (IOException e) {
             throw new DataAccessException("Error loading projects from file: " + e.getMessage(), e);
@@ -91,10 +91,10 @@ public class ProjectRepository implements IProjectRepository {
 
                 try {
                     String projectId = row[1];
-                    FlatType flatType = FileUtils.parseEnum(FlatType.class, row[2]);
-                    int totalUnits = FileUtils.parseIntOrDefault(row[3], 0);
-                    int remainingUnits = FileUtils.parseIntOrDefault(row[4], 0);
-                    double price = FileUtils.parseDoubleOrDefault(row[5], 0.0);
+                    FlatType flatType = FileUtil.parseEnum(FlatType.class, row[2]);
+                    int totalUnits = FileUtil.parseIntOrDefault(row[3], 0);
+                    int remainingUnits = FileUtil.parseIntOrDefault(row[4], 0);
+                    double price = FileUtil.parseDoubleOrDefault(row[5], 0.0);
 
                     ProjectFlatInfo flatInfo = new ProjectFlatInfo(flatType, totalUnits, remainingUnits, price);
 
@@ -116,10 +116,10 @@ public class ProjectRepository implements IProjectRepository {
                     String projectId = row[0];
                     String projectName = row[1];
                     String neighborhood = row[2];
-                    LocalDate openingDate = FileUtils.parseLocalDate(row[3]);
-                    LocalDate closingDate = FileUtils.parseLocalDate(row[4]);
+                    LocalDate openingDate = FileUtil.parseLocalDate(row[3]);
+                    LocalDate closingDate = FileUtil.parseLocalDate(row[4]);
                     String managerNric = row[5];
-                    int maxOfficerSlots = FileUtils.parseIntOrDefault(row[6], 0);
+                    int maxOfficerSlots = FileUtil.parseIntOrDefault(row[6], 0);
                     boolean isVisible = Boolean.parseBoolean(row[7]);
 
                     // Get the flat types map for this project
@@ -136,7 +136,7 @@ public class ProjectRepository implements IProjectRepository {
 
                     // Add approved officers if any
                     if (row.length > 8 && row[8] != null && !row[8].trim().isEmpty()) {
-                        List<String> approvedOfficers = FileUtils.splitString(row[8], ";");
+                        List<String> approvedOfficers = FileUtil.splitString(row[8], ";");
                         for (String officerNric : approvedOfficers) {
                             if (!officerNric.trim().isEmpty()) {
                                 project.addApprovedOfficer(officerNric.trim());
@@ -164,8 +164,8 @@ public class ProjectRepository implements IProjectRepository {
                     project.getProjectId(),
                     project.getProjectName(),
                     project.getNeighborhood(),
-                    FileUtils.formatLocalDate(project.getOpeningDate()),
-                    FileUtils.formatLocalDate(project.getClosingDate()),
+                    FileUtil.formatLocalDate(project.getOpeningDate()),
+                    FileUtil.formatLocalDate(project.getClosingDate()),
                     project.getManagerNric(),
                     String.valueOf(project.getMaxOfficerSlots()),
                     String.valueOf(project.isVisible()),

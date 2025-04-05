@@ -6,7 +6,7 @@ import com.ntu.fdae.group1.bto.models.user.HDBOfficer;
 import com.ntu.fdae.group1.bto.models.user.HDBManager;
 import com.ntu.fdae.group1.bto.enums.MaritalStatus;
 import com.ntu.fdae.group1.bto.enums.UserRole;
-import com.ntu.fdae.group1.bto.utils.FileUtils;
+import com.ntu.fdae.group1.bto.utils.FileUtil;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Map;
 
 public class UserRepository implements IUserRepository {
-    private static final String USER_FILE_PATH = "data/users.csv"; // Relative to project root
+    private static final String USER_FILE_PATH = "resources/users.csv";
 
     private Map<String, User> users;
 
@@ -43,7 +43,7 @@ public class UserRepository implements IUserRepository {
     public void saveAll(Map<String, User> entities) {
         this.users = entities;
         try {
-            FileUtils.writeCsvLines(USER_FILE_PATH, serializeUsers(), getUserCsvHeader());
+            FileUtil.writeCsvLines(USER_FILE_PATH, serializeUsers(), getUserCsvHeader());
         } catch (IOException e) {
             System.err.println("Error saving users to file: " + e.getMessage());
             // Consider adding more robust error handling here
@@ -53,10 +53,10 @@ public class UserRepository implements IUserRepository {
     @Override
     public Map<String, User> loadAll() {
         try {
-            users = deserializeUsers(FileUtils.readCsvLines(USER_FILE_PATH));
+            users = deserializeUsers(FileUtil.readCsvLines(USER_FILE_PATH));
         } catch (IOException e) {
             System.err.println("Error loading users from file: " + e.getMessage());
-            users = new HashMap<>(); // Initialize with empty map on error
+            users = new HashMap<>(); // initialise with empty map on error
             // Consider adding more robust error handling here
         }
         return users;
@@ -82,9 +82,9 @@ public class UserRepository implements IUserRepository {
                 String nric = row[0];
                 String passwordHash = row[1];
                 String name = row[2];
-                int age = FileUtils.parseIntOrDefault(row[3], 0); // Handle parsing errors
-                MaritalStatus maritalStatus = FileUtils.parseEnum(MaritalStatus.class, row[4]);
-                UserRole role = FileUtils.parseEnum(UserRole.class, row[5]);
+                int age = FileUtil.parseIntOrDefault(row[3], 0); // Handle parsing errors
+                MaritalStatus maritalStatus = FileUtil.parseEnum(MaritalStatus.class, row[4]);
+                UserRole role = FileUtil.parseEnum(UserRole.class, row[5]);
 
                 // Create appropriate user based on role
                 User user;

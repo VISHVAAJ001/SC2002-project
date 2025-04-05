@@ -10,12 +10,12 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public final class FileUtils { // Make final, prevent instantiation if all methods are static
+public final class FileUtil { // Make final, prevent instantiation if all methods are static
 
     private static final String CSV_DELIMITER = ","; // Or configure if needed
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE;
 
-    private FileUtils() {
+    private FileUtil() {
     } // Private constructor for utility class
 
     /**

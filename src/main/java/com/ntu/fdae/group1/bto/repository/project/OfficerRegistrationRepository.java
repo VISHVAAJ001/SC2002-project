@@ -3,7 +3,7 @@ package com.ntu.fdae.group1.bto.repository.project;
 import com.ntu.fdae.group1.bto.models.project.OfficerRegistration;
 import com.ntu.fdae.group1.bto.enums.OfficerRegStatus;
 import com.ntu.fdae.group1.bto.exceptions.DataAccessException;
-import com.ntu.fdae.group1.bto.utils.FileUtils;
+import com.ntu.fdae.group1.bto.utils.FileUtil;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -14,7 +14,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public class OfficerRegistrationRepository implements IOfficerRegistrationRepository {
-    private static final String OFFICER_REGISTRATION_FILE_PATH = "data/officer_registrations.csv";
+    private static final String OFFICER_REGISTRATION_FILE_PATH = "resources/officer_registrations.csv";
 
     private Map<String, OfficerRegistration> registrations;
 
@@ -42,7 +42,7 @@ public class OfficerRegistrationRepository implements IOfficerRegistrationReposi
     public void saveAll(Map<String, OfficerRegistration> entities) {
         this.registrations = entities;
         try {
-            FileUtils.writeCsvLines(OFFICER_REGISTRATION_FILE_PATH, serializeRegistrations(),
+            FileUtil.writeCsvLines(OFFICER_REGISTRATION_FILE_PATH, serializeRegistrations(),
                     getRegistrationCsvHeader());
         } catch (IOException e) {
             throw new DataAccessException("Error saving officer registrations to file: " + e.getMessage(), e);
@@ -52,7 +52,7 @@ public class OfficerRegistrationRepository implements IOfficerRegistrationReposi
     @Override
     public Map<String, OfficerRegistration> loadAll() throws DataAccessException {
         try {
-            List<String[]> registrationData = FileUtils.readCsvLines(OFFICER_REGISTRATION_FILE_PATH);
+            List<String[]> registrationData = FileUtil.readCsvLines(OFFICER_REGISTRATION_FILE_PATH);
             registrations = deserializeRegistrations(registrationData);
         } catch (IOException e) {
             throw new DataAccessException("Error loading officer registrations from file: " + e.getMessage(), e);
@@ -96,8 +96,8 @@ public class OfficerRegistrationRepository implements IOfficerRegistrationReposi
                 String registrationId = row[0];
                 String officerNric = row[1];
                 String projectId = row[2];
-                LocalDate requestDate = FileUtils.parseLocalDate(row[3]);
-                OfficerRegStatus status = FileUtils.parseEnum(OfficerRegStatus.class, row[4]);
+                LocalDate requestDate = FileUtil.parseLocalDate(row[3]);
+                OfficerRegStatus status = FileUtil.parseEnum(OfficerRegStatus.class, row[4]);
 
                 // Create the registration
                 OfficerRegistration registration = new OfficerRegistration(
@@ -126,7 +126,7 @@ public class OfficerRegistrationRepository implements IOfficerRegistrationReposi
                     registration.getRegistrationId(),
                     registration.getOfficerNric(),
                     registration.getProjectId(),
-                    FileUtils.formatLocalDate(registration.getRequestDate()),
+                    FileUtil.formatLocalDate(registration.getRequestDate()),
                     registration.getStatus().toString()
             });
         }

@@ -1,6 +1,6 @@
 package com.ntu.fdae.group1.bto.utils;
 
-public class PasswordUtils {
+public class PasswordUtil {
     public static String hashPassword(String password) {
         // Implement your password hashing logic here
         // For example, you can use BCrypt or PBKDF2 for hashing

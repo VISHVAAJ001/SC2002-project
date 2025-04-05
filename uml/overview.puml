@@ -323,7 +323,7 @@ package Repository <<Folder>> {
 
 ' --- Utility Package ---
 package Utility <<Folder>> {
-    class FileUtils <<Utility>> {
+    class FileUtil <<Utility>> {
         + {static} readCsvLines(filePath: String) : List<String[]> <<throws IOException>>
         + {static} writeCsvLines(filePath: String, data: List<String[]>, header: String[]) : void <<throws IOException>>
         + {static} parseLocalDate(dateString: String) : LocalDate <<nullable>>
@@ -334,7 +334,7 @@ package Utility <<Folder>> {
         + {static} parseIntOrDefault(value: String, defaultValue: Integer) : Integer
         + {static} parseDoubleOrDefault(value: String, defaultValue: Double) : Double
     }
-    class InputUtil <<Utility>> {
+    class ValidatationUtil <<Utility>> {
         + {static} validateNRIC(nric: String) : boolean
         + {static} readPassword(scanner: Scanner) : String
         + {static} readDate(prompt: String, scanner: Scanner) : LocalDate
@@ -778,10 +778,10 @@ HDBManagerUI ..> ReportController : uses >
 
 ' Utility Dependencies
 Views .> InputUtil : uses >
-Views .> FileUtils : uses >
-Repository ..> FileUtils : uses >
+Views .> FileUtil : uses >
+Repository ..> FileUtil : uses >
 Service ..> PasswordUtil : uses >
 Service ..> IdGenerator : uses >
-Service ..> FileUtils : uses >
+Service ..> FileUtil : uses >
 
 @enduml
