@@ -117,11 +117,11 @@ public class UserRepository implements IUserRepository {
         List<String[]> serializedData = new ArrayList<>();
         for (User user : users.values()) {
             serializedData.add(new String[] {
-                    user.getName(),
                     user.getNric(),
+                    user.getPasswordHash(),
+                    user.getName(),
                     String.valueOf(user.getAge()),
                     user.getMaritalStatus().toString(),
-                    user.getPasswordHash(),
                     user.getRole().name()
             });
         }

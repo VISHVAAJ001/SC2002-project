@@ -624,7 +624,6 @@ package Views <<Folder>> {
         - authController : AuthenticationController
         + LoginUI(authController: AuthenticationController, scanner: Scanner)
         + displayLogin() : User <<nullable>>
-        + displayChangePassword(user: User) : void
     }
 
     class ApplicantUI extends BaseUI {
@@ -637,7 +636,7 @@ package Views <<Folder>> {
         ' - Methods for View Projects, Submit App, View App Status, Withdraw App, View/Submit/Edit/Delete Enquiries
     }
 
-     class HDBOfficerUI extends BaseUI {
+    class HDBOfficerUI extends BaseUI {
         - user : HDBOfficer
         - projectController : ProjectController
         - appController : ApplicationController
@@ -650,7 +649,7 @@ package Views <<Folder>> {
         ' - Methods for View Projects, Request Reg, View Reg Status, View App Details, Perform Booking, Generate Receipt, View/Reply Enquiries
      }
 
-     class HDBManagerUI extends BaseUI {
+    class HDBManagerUI extends BaseUI {
         - user : HDBManager
         - projectController : ProjectController
         - appController : ApplicationController
@@ -661,6 +660,25 @@ package Views <<Folder>> {
         + displayMainMenu() : void
         ' - Methods for CRUD Projects, Toggle Visibility, Review Apps, Review Withdrawals, Review Regs, View/Reply Enquiries, Generate Reports
      }
+
+    class AccountUIHelper {
+        - baseUI : BaseUI
+        - authController : AuthenticationController
+
+        + AccountUIHelper(BaseUI baseUI, AuthenticationController authController)
+        + handlePasswordChange(User currentUser)
+    }
+
+    class ProjectUIHelper {
+        - baseUI : BaseUI
+        - DATE_FORMATTER : DateTimeFormatter
+
+        + ProjectUIHelper(BaseUI baseUI)
+        + selectProjectFromList(List<Project> projects, String listTitle)
+        + displayApplicantProjectDetails(Project project)
+        + displayStaffProjectDetails(Project project)
+        - displayFlatInfoSection(Project project)
+    }
 }
 
 ' --- Relationships ---

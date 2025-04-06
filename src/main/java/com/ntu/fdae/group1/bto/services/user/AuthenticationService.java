@@ -29,7 +29,20 @@ public class AuthenticationService implements IAuthenticationService {
     }
 
     public boolean changePassword(User user, String newPassword) {
-        return false; // Placeholder for actual password change logic
+        if (user == null || newPassword == null || newPassword.trim().isEmpty()) {
+            return false;
+        }
+
+        // Generate the new hash using PasswordUtil
+        String newHash = PasswordUtil.hashPassword(newPassword);
+
+        // Update the hash on the User object
+        user.updatePasswordHash(newHash);
+
+        // Update the user in the repository
+        userRepository.save(user);
+
+        return true;
     }
 
 }

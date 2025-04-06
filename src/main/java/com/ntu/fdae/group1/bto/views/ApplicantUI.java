@@ -32,6 +32,7 @@ public class ApplicantUI extends BaseUI {
     private final EnquiryController enquiryController;
     private final AuthenticationController authController;
     private final ProjectUIHelper projectUIHelper; // Use the helper
+    private final AccountUIHelper accountUIHelper; // Use the helper
 
     public ApplicantUI(Applicant user,
             ProjectController projCtrl,
@@ -45,6 +46,7 @@ public class ApplicantUI extends BaseUI {
         this.applicationController = Objects.requireNonNull(appCtrl);
         this.enquiryController = Objects.requireNonNull(enqCtrl);
         this.authController = Objects.requireNonNull(authCtrl);
+        this.accountUIHelper = new AccountUIHelper(this, authCtrl); // Initialize helper
         this.projectUIHelper = new ProjectUIHelper(this); // Initialize helper
     }
 
@@ -85,6 +87,7 @@ public class ApplicantUI extends BaseUI {
                         break;
                     case 5:
                         handleChangePassword();
+                        keepRunning = false; // Could just remove the break here, but this is clearer
                         break;
                     case 0:
                         keepRunning = false;
@@ -143,10 +146,17 @@ public class ApplicantUI extends BaseUI {
             FlatType preference = null; // Placeholder - GET PREFERENCE HERE
             // ----------
 
-            if (promptForConfirmation("Confirm application submission? (yes/no): ")) {
-                Application app = applicationController.submitApplication(this.user, projectId, preference);
-                displayMessage("Application submitted successfully! ID: " + app.getApplicationId() + ", Status: "
-                        + app.getStatus());
+            if (promptForConfirmation("Confirm application submission?")) {
+                try {
+                    Application app = applicationController.submitApplication(this.user, projectId, preference);
+                    displayMessage("Application submitted successfully! ID: " + app.getApplicationId() + ", Status: "
+                            + app.getStatus());
+                } catch (ApplicationException e) {
+                    // Handle specific application exceptions
+                    displayError("Application submission failed: " + e.getMessage());
+                } catch (Exception e) { // Catch other exceptions
+                    displayError("An error occurred while submitting the application: " + e.getMessage());
+                }
             } else {
                 displayMessage("Application cancelled.");
             }
@@ -261,12 +271,6 @@ public class ApplicantUI extends BaseUI {
     }
 
     private void handleChangePassword() {
-        displayHeader("Change Password");
-        System.out.println("Calling authController.changePassword...");
-        // TODO: Implement logic:
-        // 1. Prompt for new password and confirmation.
-        // 2. Validate. Call authController.changePassword(user, newPassword);
-        // 3. Display result.
-        System.out.println("[Placeholder: Change user's password]");
+        accountUIHelper.handlePasswordChange(this.user);
     }
 }

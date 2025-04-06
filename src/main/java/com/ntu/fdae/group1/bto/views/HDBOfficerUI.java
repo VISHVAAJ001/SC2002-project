@@ -32,6 +32,7 @@ public class HDBOfficerUI extends BaseUI {
     private final EnquiryController enquiryController;
     private final AuthenticationController authController;
     private final ProjectUIHelper projectUIHelper; // Use the helper
+    private AccountUIHelper accountUIHelper;
 
     public HDBOfficerUI(HDBOfficer user,
             ProjectController projCtrl,
@@ -52,6 +53,7 @@ public class HDBOfficerUI extends BaseUI {
         this.enquiryController = Objects.requireNonNull(enqCtrl);
         this.authController = Objects.requireNonNull(authCtrl);
         this.projectUIHelper = new ProjectUIHelper(this); // Initialize helper
+        this.accountUIHelper = new AccountUIHelper(this, authController); // Initialize account helper
     }
 
     public void displayMainMenu() {
@@ -112,6 +114,7 @@ public class HDBOfficerUI extends BaseUI {
                     // Account
                     case 8:
                         handleChangePassword();
+                        keepRunning = false; // Change password, then exit
                         break;
                     case 0:
                         keepRunning = false;
@@ -285,8 +288,6 @@ public class HDBOfficerUI extends BaseUI {
     // ------------------------------------------------
 
     private void handleChangePassword() {
-        displayHeader("Change Password");
-        // TODO: Implement logic (same as other UIs)
-        System.out.println("[Placeholder: Change user's password]");
+        accountUIHelper.handlePasswordChange(this.user);
     }
 }
