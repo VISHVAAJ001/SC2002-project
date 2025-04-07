@@ -10,14 +10,17 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class ProjectRepository implements IProjectRepository {
     private static final String PROJECT_FILE_PATH = "resources/projects.csv";
     private static final String FLAT_INFO_FILE_PATH = "resources/projects_flat_info.csv";
 
     private Map<String, Project> projects;
+    private Set<String> loadedFlatInfoIds = new HashSet<>();
 
     public ProjectRepository() {
         this.projects = new HashMap<>();
@@ -55,14 +58,25 @@ public class ProjectRepository implements IProjectRepository {
 
     @Override
     public Map<String, Project> loadAll() throws DataAccessException {
+        this.projects.clear();
+        this.loadedFlatInfoIds.clear();
+
         try {
             List<String[]> projectData = FileUtil.readCsvLines(PROJECT_FILE_PATH);
             List<String[]> flatInfoData = FileUtil.readCsvLines(FLAT_INFO_FILE_PATH);
-            projects = deserializeProjects(projectData, flatInfoData);
+            projects = deserializeProjects(projectData, flatInfoData, this.loadedFlatInfoIds);
         } catch (IOException e) {
             throw new DataAccessException("Error loading projects from file: " + e.getMessage(), e);
         }
         return projects;
+    }
+
+    @Override
+    public Set<String> findAllFlatInfoIds() throws DataAccessException {
+        if (projects.isEmpty() && loadedFlatInfoIds.isEmpty()) {
+            loadAll();
+        }
+        return new HashSet<>(this.loadedFlatInfoIds);
     }
 
     // Helper methods for serialization/deserialization
@@ -79,7 +93,8 @@ public class ProjectRepository implements IProjectRepository {
         };
     }
 
-    private Map<String, Project> deserializeProjects(List<String[]> projectData, List<String[]> flatInfoData) {
+    private Map<String, Project> deserializeProjects(List<String[]> projectData, List<String[]> flatInfoData,
+            Set<String> foundFlatInfoIds) {
         Map<String, Project> projectMap = new HashMap<>();
         Map<String, Map<FlatType, ProjectFlatInfo>> flatInfoMap = new HashMap<>();
 
@@ -90,11 +105,14 @@ public class ProjectRepository implements IProjectRepository {
                     continue; // Skip invalid rows
 
                 try {
+                    String flatInfoId = row[0];
                     String projectId = row[1];
                     FlatType flatType = FileUtil.parseEnum(FlatType.class, row[2]);
                     int totalUnits = FileUtil.parseIntOrDefault(row[3], 0);
                     int remainingUnits = FileUtil.parseIntOrDefault(row[4], 0);
                     double price = FileUtil.parseDoubleOrDefault(row[5], 0.0);
+
+                    foundFlatInfoIds.add(flatInfoId);
 
                     ProjectFlatInfo flatInfo = new ProjectFlatInfo(flatType, totalUnits, remainingUnits, price);
 
@@ -197,5 +215,52 @@ public class ProjectRepository implements IProjectRepository {
         }
 
         return serializedData;
+    }
+
+    @Override
+    public void deleteById(String projectId) throws DataAccessException {
+        // 1. Basic validation
+        if (projectId == null || projectId.trim().isEmpty()) {
+            System.err.println("Warning: Attempted to delete project with null or empty ID.");
+            return;
+        }
+
+        // 2. Remove project from the in-memory map
+        Project removedProject = this.projects.remove(projectId);
+
+        // 3. Check if the project existed in the map
+        if (removedProject != null) {
+            System.out.println("Project deleted from memory: " + projectId);
+
+            // 4. Persist the changes to BOTH files
+            try {
+                // a) Save the updated projects map (excluding the deleted one)
+                // We can reuse the existing serialize/save logic, as it writes the current map
+                // state.
+                FileUtil.writeCsvLines(PROJECT_FILE_PATH, serializeProjects(), getProjectCsvHeader());
+
+                // b) *** CRITICAL: Update and save the flat info data ***
+                // We need to filter out the flat infos related to the deleted project
+                // and then save the remaining ones.
+
+                // Get all current flat infos (from all *remaining* projects)
+                List<String[]> remainingFlatInfos = serializeFlatInfos(); // This already iterates over the *current*
+                                                                          // `projects` map
+
+                // Write the filtered flat info data back to the file
+                FileUtil.writeCsvLines(FLAT_INFO_FILE_PATH, remainingFlatInfos, getFlatInfoCsvHeader());
+
+            } catch (IOException e) {
+                // If saving fails, the in-memory state might be inconsistent with files.
+                // Consider rolling back the in-memory deletion? (More complex)
+                // For now, propagate the error.
+                System.err.println("Error persisting deletion for project: " + projectId);
+                throw new DataAccessException(
+                        "Error saving state after deleting project " + projectId + ": " + e.getMessage(), e);
+            }
+        } else {
+            System.out.println("Project not found for deletion: " + projectId);
+            // No changes to persist if project wasn't found
+        }
     }
 }

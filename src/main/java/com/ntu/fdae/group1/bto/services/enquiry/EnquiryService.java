@@ -29,16 +29,6 @@ public class EnquiryService implements IEnquiryService {
     public boolean editEnquiry(String enquiryId, String newContent, User user) {
         Enquiry enquiry = enquiryRepo.findById(enquiryId);
 
-        // Check if enquiry exists and belongs to the user
-        if (enquiry == null || !enquiry.getUserNric().equals(user.getNric())) {
-            return false;
-        }
-
-        // Check if enquiry has already been replied to
-        if (enquiry.isReplied()) {
-            return false;
-        }
-
         enquiry.editContent(newContent);
         enquiryRepo.save(enquiry);
         return true;
@@ -46,30 +36,11 @@ public class EnquiryService implements IEnquiryService {
 
     @Override
     public boolean deleteEnquiry(String enquiryId, User user) {
-        Enquiry enquiry = enquiryRepo.findById(enquiryId);
-
-        // Check if enquiry exists and belongs to the user
-        if (enquiry == null || !enquiry.getUserNric().equals(user.getNric())) {
+        try {
+            enquiryRepo.deleteById(enquiryId);
+        } catch (Exception e) {
             return false;
         }
-
-        // Check if enquiry has already been replied to
-        if (enquiry.isReplied()) {
-            // Once an enquiry has been
-            // replied to, should the applicant still
-            // be able to edit or delete it?
-            // A: No. Once replied, the enquiry
-            // should not be editable or deletable
-            // by the applicant.
-            return false;
-        }
-
-        // TODO
-        // We're not actually deleting from repository, so we need a way to mark as
-        // deleted
-        // This would depend on the implementation of the repository.
-        // For now, we'll just assume we have a method to delete by ID
-        // enquiryRepo.deleteById(enquiryId);
         return true;
     }
 
