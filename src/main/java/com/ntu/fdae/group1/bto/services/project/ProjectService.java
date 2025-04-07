@@ -2,53 +2,84 @@ package com.ntu.fdae.group1.bto.services.project;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects; 
+import java.util.Objects;
 import java.util.stream.Collectors;
 
-import com.ntu.fdae.group1.bto.models.enums.FlatType;
-import com.ntu.fdae.group1.bto.models.enums.MaritalStatus;
-import com.ntu.fdae.group1.bto.models.enums.UserRole;
+import com.ntu.fdae.group1.bto.enums.*;
 import com.ntu.fdae.group1.bto.models.project.Project;
 import com.ntu.fdae.group1.bto.models.project.ProjectFlatInfo;
 import com.ntu.fdae.group1.bto.models.user.*;
-import com.ntu.fdae.group1.bto.repository.project.IProjectRepository;
-import com.ntu.fdae.group1.bto.repository.user.IUserRepository;
-import com.ntu.fdae.group1.bto.services.booking.IEligibilityService; 
-import com.ntu.fdae.group1.bto.exception.RegistrationException; 
-import com.ntu.fdae.group1.bto.util.IdGenerator;
+import com.ntu.fdae.group1.bto.models.project.Application; 
 
+import com.ntu.fdae.group1.bto.repository.project.IProjectRepository;
+import com.ntu.fdae.group1.bto.repository.project.IApplicationRepository;
+import com.ntu.fdae.group1.bto.repository.user.IUserRepository;
+
+import com.ntu.fdae.group1.bto.services.booking.IEligibilityService;
+
+import com.ntu.fdae.group1.bto.utils.*; 
 
 public class ProjectService implements IProjectService {
     private final IProjectRepository projectRepo;
-    private final IUserRepository userRepo; // Keep if needed for manager validation, otherwise remove
+    private final IUserRepository userRepo; 
     private final IEligibilityService eligibilityService;
+    private final IApplicationRepository applicationRepo; 
 
-    public ProjectService(IProjectRepository projectRepo, IUserRepository userRepo,
-                          IEligibilityService eligibilityService) {
+    public ProjectService(IProjectRepository projectRepo,
+                          IUserRepository userRepo, 
+                          IEligibilityService eligibilityService,
+                          IApplicationRepository applicationRepo) { 
         this.projectRepo = Objects.requireNonNull(projectRepo, "Project Repository cannot be null");
-        this.userRepo = userRepo; // Can be null if not strictly needed here
+        this.userRepo = userRepo; // Assign if kept
         this.eligibilityService = Objects.requireNonNull(eligibilityService, "Eligibility Service cannot be null");
+        this.applicationRepo = Objects.requireNonNull(applicationRepo, "Application Repository cannot be null"); // <<< ASSIGN FIELD HERE >>>
     }
 
     @Override
-    public Project createProject(HDBManager manager, String name, String neighborhood, Map<FlatType, ProjectFlatInfo> flatInfoMap, 
-                                 LocalDate openDate, LocalDate closeDate, int officerSlots) throws RegistrationException { 
+    public Project createProject(HDBManager manager, String name, String neighborhood,
+                                 Map<String, ProjectFlatInfo> flatInfoMap,
+                                 LocalDate openDate, LocalDate closeDate, int officerSlots) {
 
-        // SRP: Eligibility check delegated
-        // Assuming IEligibilityService has checkManagerProjectHandlingEligibility method
-        // You might need to adapt the signature based on your IEligibilityService interface
-        if (!eligibilityService.checkManagerProjectHandlingEligibility(manager, openDate, closeDate, projectRepo.findAll().values())) {
-            throw new RegistrationException("Manager " + manager.getNric() + " is already handling another project during this application period.");
+        // Eligibility Check
+        // Need to handle Collection<Project> type potentially returned by findAll()
+        Map<String, Project> projectMap = projectRepo.findAll();
+        Collection<Project> allProjects = (projectMap != null) ? projectMap.values() : List.of();
+        if (!eligibilityService.checkManagerProjectHandlingEligibility(manager, openDate, closeDate, allProjects)) {
+             System.err.println("Service Error: Manager " + manager.getNric() + " is already handling another project during this application period. Project creation failed.");
+             return null;
         }
-        // OCP/DIP: Using IProjectRepository interface
 
-        String projectId = IdGenerator.generateProjectId(); // Utility SRP
-        Project newProject = new Project(projectId, name, neighborhood, flatInfoMap, openDate, closeDate, manager.getNric(), officerSlots);
-        projectRepo.save(newProject); // SRP: Repository handles persistence
-        System.out.println("Service: Project " + name + " created successfully with ID: " + projectId); // Feedback
+        String projectId = IdGenerator.generateProjectId();
+
+        // Convert Map<String, ProjectFlatInfo> to Map<FlatType, ProjectFlatInfo>
+        Map<FlatType, ProjectFlatInfo> typedFlatInfoMap;
+        try {
+            typedFlatInfoMap = flatInfoMap.entrySet().stream()
+                .collect(Collectors.toMap(
+                    entry -> FlatType.valueOf(entry.getKey().trim().toUpperCase()),
+                    Map.Entry::getValue
+                ));
+        } catch (IllegalArgumentException e) {
+            System.err.println("Service Error: Invalid FlatType string found in flatInfoMap keys: " + e.getMessage());
+            return null;
+        } catch (Exception e) {
+             System.err.println("Service Error: Failed to process flatInfoMap: " + e.getMessage());
+             return null;
+        }
+
+        // Ensure both required flat types are present
+        if (typedFlatInfoMap.size() != 2 || !typedFlatInfoMap.containsKey(FlatType.TWO_ROOM) || !typedFlatInfoMap.containsKey(FlatType.THREE_ROOM)) {
+             System.err.println("Service Error: flatInfoMap must contain exactly TWO_ROOM and THREE_ROOM after conversion.");
+             return null;
+        }
+
+        Project newProject = new Project(projectId, name, neighborhood, typedFlatInfoMap, openDate, closeDate, manager.getNric(), officerSlots);
+        projectRepo.save(newProject);
+        System.out.println("Service: Project " + name + " created successfully with ID: " + projectId);
         return newProject;
     }
 
@@ -60,26 +91,29 @@ public class ProjectService implements IProjectService {
             System.err.println("Service Error: Project not found with ID: " + projectId);
             return false;
         }
-        // SRP: Authorization check
         if (!project.getManagerNric().equals(manager.getNric())) {
             System.err.println("Service Error: Manager " + manager.getNric() + " does not have permission to edit project " + projectId);
             return false;
         }
-
-        // Add validation if needed (e.g., cannot reduce slots below approved officers)
-        if (officerSlots < project.getApprovedOfficerNrics().size()) {
+        // Check officer slot constraint against the actual list in the project object
+        if (project.getApprovedOfficerNrics() != null && officerSlots < project.getApprovedOfficerNrics().size()) {
              System.err.println("Service Error: Cannot set max officer slots (" + officerSlots + ") below the current number of approved officers (" + project.getApprovedOfficerNrics().size() + ").");
              return false;
         }
-        // Add validation for dates if necessary (e.g., cannot change dates if application period started?)
 
-        project.setProjectName(name);
-        project.setNeighborhood(neighborhood);
-        project.setOpeningDate(openDate);
-        project.setClosingDate(closeDate);
-        project.setMaxOfficerSlots(officerSlots);
+        // Use try-catch for potential validation errors from setters
+        try {
+            project.setProjectName(name);
+            project.setNeighborhood(neighborhood);
+            project.setOpeningDate(openDate);
+            project.setClosingDate(closeDate);
+            project.setMaxOfficerSlots(officerSlots);
+        } catch (IllegalArgumentException e) {
+             System.err.println("Service Error: Invalid data provided for project update - " + e.getMessage());
+             return false;
+        }
 
-        projectRepo.save(project); 
+        projectRepo.save(project);
         System.out.println("Service: Project " + projectId + " updated successfully.");
         return true;
     }
@@ -96,20 +130,23 @@ public class ProjectService implements IProjectService {
             return false;
         }
 
-        // Add Business Rule: Check if project has active applications/bookings? (Depends on requirements)
-        // Example: if (applicationRepo.findByProjectId(projectId).stream().anyMatch(a -> a.getStatus() != ApplicationStatus.UNSUCCESSFUL && a.getStatus() != ApplicationStatus.WITHDRAWN )) { // Assuming WITHDRAWN status exists
-        //    System.err.println("Service Error: Cannot delete project " + projectId + " with active/successful applications or bookings.");
-        //    return false;
-        // }
+        List<Application> projectApps = this.applicationRepo.findByProjectId(projectId);
+        boolean hasActiveApps = projectApps.stream()
+            .anyMatch(app -> app.getStatus() == ApplicationStatus.PENDING ||
+                             app.getStatus() == ApplicationStatus.SUCCESSFUL);
 
-        // Check if your IProjectRepository interface has a deleteById method
-        // If not, you'll need to add it and implement it in the concrete repository.
+        if (hasActiveApps) {
+             System.err.println("Service Error: Cannot delete project " + projectId + " because it has PENDING or SUCCESSFUL (unbooked) applications.");
+             return false;
+        }
+
+        // Deletion attempt
         try {
-             projectRepo.deleteById(projectId); // Assuming this method exists
+             projectRepo.deleteById(projectId);
              System.out.println("Service: Project " + projectId + " deleted successfully.");
              return true;
         } catch (UnsupportedOperationException e) {
-             System.err.println("Service Error: Deleting projects is not supported by the repository implementation.");
+             System.err.println("Service Error: Deleting projects is not supported by the repository: " + e.getMessage());
              return false;
         } catch (Exception e) {
              System.err.println("Service Error: An error occurred while deleting project " + projectId + ": " + e.getMessage());
@@ -128,7 +165,8 @@ public class ProjectService implements IProjectService {
              System.err.println("Service Error: Manager " + manager.getNric() + " does not have permission to change visibility for project " + projectId);
              return false;
          }
-         project.setVisibility(!project.isVisible()); // Toggle the boolean flag
+         // Use the setter from Project.java
+         project.setVisibility(!project.isVisible());
          projectRepo.save(project);
          System.out.println("Service: Project " + projectId + " visibility set to: " + (project.isVisible() ? "ON" : "OFF"));
          return true;
@@ -136,7 +174,6 @@ public class ProjectService implements IProjectService {
 
     @Override
     public List<Project> getAllProjects() {
-        // DIP: Returns list from repository interface method
         Map<String, Project> projectMap = projectRepo.findAll();
         return (projectMap == null) ? new ArrayList<>() : new ArrayList<>(projectMap.values());
     }
@@ -146,7 +183,11 @@ public class ProjectService implements IProjectService {
         if (managerNRIC == null || managerNRIC.isBlank()) {
             return new ArrayList<>();
         }
-        return projectRepo.findAll().values().stream()
+        Map<String, Project> projectMap = projectRepo.findAll();
+        if (projectMap == null || projectMap.isEmpty()) {
+             return new ArrayList<>();
+        }
+        return projectMap.values().stream()
                 .filter(p -> managerNRIC.equals(p.getManagerNric()))
                 .collect(Collectors.toList());
     }
@@ -159,35 +200,40 @@ public class ProjectService implements IProjectService {
         return projectRepo.findById(projectId);
     }
 
-    // Keep your existing getVisibleProjectsForUser and isProjectEligibleForApplicant methods
-    // as they handle the logic for viewing projects from an Applicant's perspective.
     @Override
     public List<Project> getVisibleProjectsForUser(User user) {
         LocalDate currentDate = LocalDate.now();
-        List<Project> allProjects = new ArrayList<>(projectRepo.findAll().values());
+        Map<String, Project> projectMap = projectRepo.findAll();
+         if (projectMap == null || projectMap.isEmpty()) {
+             return new ArrayList<>();
+         }
+        List<Project> allProjects = new ArrayList<>(projectMap.values());
 
         return allProjects.stream()
                 .filter(Project::isVisible)
-                .filter(project -> !currentDate.isAfter(project.getClosingDate()))
+                .filter(project -> project.getClosingDate() != null && !currentDate.isAfter(project.getClosingDate()))
                 .filter(project -> isProjectEligibleForApplicant(user, project))
                 .sorted(Comparator.comparing(Project::getProjectName, String.CASE_INSENSITIVE_ORDER))
                 .collect(Collectors.toList());
     }
 
+    // Helper method for eligibility check
     private boolean isProjectEligibleForApplicant(User user, Project project) {
+        if (user == null || project == null) return false;
         if (user.getRole() == UserRole.HDB_MANAGER) {
             return false;
         }
         if (user.getRole() == UserRole.APPLICANT || user.getRole() == UserRole.HDB_OFFICER) {
             int age = user.getAge();
             MaritalStatus status = user.getMaritalStatus();
-            if (project.getFlatTypes() == null || project.getFlatTypes().isEmpty()) {
+            Map<FlatType, ProjectFlatInfo> flats = project.getFlatTypes();
+            if (flats == null || flats.isEmpty()) {
                 return false;
             }
             if (status == MaritalStatus.SINGLE && age >= 35) {
-                return project.getFlatTypes().containsKey(FlatType.TWO_ROOM);
+                return flats.containsKey(FlatType.TWO_ROOM);
             } else if (status == MaritalStatus.MARRIED && age >= 21) {
-                return true; // Eligible for any project with flats
+                return true;
             } else {
                 return false;
             }

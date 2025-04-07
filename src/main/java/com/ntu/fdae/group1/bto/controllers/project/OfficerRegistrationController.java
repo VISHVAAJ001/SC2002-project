@@ -5,11 +5,11 @@ import java.util.List;
 import com.ntu.fdae.group1.bto.exceptions.AuthenticationException;
 import com.ntu.fdae.group1.bto.exceptions.RegistrationException;
 import com.ntu.fdae.group1.bto.enums.OfficerRegStatus;
-import com.ntu.fdae.group1.bto.models.project.OfficerRegistration;
+import com.ntu.fdae.group1.bto.models.user.OfficerRegistration;
 import com.ntu.fdae.group1.bto.models.user.HDBManager;
 import com.ntu.fdae.group1.bto.models.user.HDBOfficer;
 import com.ntu.fdae.group1.bto.models.user.HDBStaff;
-import com.ntu.fdae.group1.bto.services.project.IOfficerRegistrationService;
+import com.ntu.fdae.group1.bto.services.user.IOfficerRegistrationService;
 
 /**
  * Controller for officer registration operations

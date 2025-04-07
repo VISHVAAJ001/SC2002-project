@@ -4,10 +4,9 @@ import java.util.List;
 import java.util.Objects;
 
 // Adjust imports as needed for your project structure
-import com.ntu.fdae.group1.bto.exception.ApplicationException;
+import com.ntu.fdae.group1.bto.exceptions.*;
 import com.ntu.fdae.group1.bto.models.project.Application;
-import com.ntu.fdae.group1.bto.models.enums.ApplicationStatus;
-import com.ntu.fdae.group1.bto.models.enums.FlatType;
+import com.ntu.fdae.group1.bto.enums.*;
 import com.ntu.fdae.group1.bto.models.user.Applicant;
 import com.ntu.fdae.group1.bto.models.user.HDBManager;
 import com.ntu.fdae.group1.bto.models.user.HDBStaff; // Needed for updated methods

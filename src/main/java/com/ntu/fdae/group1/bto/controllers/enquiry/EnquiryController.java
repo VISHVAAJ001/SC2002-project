@@ -8,8 +8,7 @@ import com.ntu.fdae.group1.bto.models.enquiry.Enquiry;
 import com.ntu.fdae.group1.bto.models.user.HDBStaff;
 import com.ntu.fdae.group1.bto.models.user.User;
 import com.ntu.fdae.group1.bto.services.enquiry.IEnquiryService;
-import com.ntu.fdae.group1.bto.exception.InvalidInputException; 
-
+import com.ntu.fdae.group1.bto.exceptions.*;
 /**
  * Controller for enquiry-related operations, aligned with UML diagram.
  */
