@@ -12,13 +12,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.ConcurrentHashMap; // Using ConcurrentHashMap for thread-safety
+import java.util.concurrent.ConcurrentHashMap; 
 import java.util.stream.Collectors;
 
 public class OfficerRegistrationRepository implements IOfficerRegistrationRepository {
 
-    // ****** CORRECTION: Adjust path if needed ******
-    private static final String OFFICER_REGISTRATION_FILE_PATH = "data/officer_registrations.csv"; // Ensure this path is correct relative to execution
+    private static final String OFFICER_REGISTRATION_FILE_PATH = "data/officer_registrations.csv"; 
     private static final String[] HEADERS = {"registrationId", "officerNric", "projectId", "requestDate", "status"};
 
     private final Map<String, OfficerRegistration> registrations; // Use final for the map reference
@@ -34,20 +33,17 @@ public class OfficerRegistrationRepository implements IOfficerRegistrationReposi
         }
     }
 
-    // ****** CORRECTION: Add @Override, ensure return type matches interface ******
     @Override
     public OfficerRegistration findById(String registrationId) {
         return registrations.get(registrationId);
     }
 
-    // ****** CORRECTION: Add @Override, ensure return type matches interface ******
     @Override
     public Map<String, OfficerRegistration> findAll() {
         // Return a defensive copy to prevent external modification of the internal map
         return new ConcurrentHashMap<>(registrations);
     }
 
-    // ****** CORRECTION: Add @Override, ensure parameter types match interface ******
     @Override
     public void save(OfficerRegistration registration) {
         // Add null checks for safety
@@ -63,11 +59,11 @@ public class OfficerRegistrationRepository implements IOfficerRegistrationReposi
     @Override
     public void saveAll(Map<String, OfficerRegistration> entities) {
         // Replace the internal map completely and persist
-         Objects.requireNonNull(entities, "Cannot save a null map of entities");
-         // Use ConcurrentHashMap if multi-threaded access is possible
-         this.registrations.clear();
-         this.registrations.putAll(entities);
-         saveAllInternal(); // Call internal save method
+        Objects.requireNonNull(entities, "Cannot save a null map of entities");
+        // Use ConcurrentHashMap if multi-threaded access is possible
+        this.registrations.clear();
+        this.registrations.putAll(entities);
+        saveAllInternal(); // Call internal save method
     }
 
     @Override
@@ -105,16 +101,16 @@ public class OfficerRegistrationRepository implements IOfficerRegistrationReposi
                         System.err.println("WARN: Skipping invalid officer registration line: " + String.join(",", fields));
                         }
                 } else {
-                     System.err.println("WARN: Skipping malformed officer registration line (fields=" + fields.length + ", expected=" + HEADERS.length + "): " + String.join(",", fields));
+                    System.err.println("WARN: Skipping malformed officer registration line (fields=" + fields.length + ", expected=" + HEADERS.length + "): " + String.join(",", fields));
                 }
             }
-             System.out.println("INFO: Loaded " + registrations.size() + " officer registrations from " + OFFICER_REGISTRATION_FILE_PATH);
+            System.out.println("INFO: Loaded " + registrations.size() + " officer registrations from " + OFFICER_REGISTRATION_FILE_PATH);
         } catch (IOException e) {
             // If file doesn't exist on first load, treat as empty, don't throw error unless required
-             System.err.println("INFO: Officer registrations file not found or failed to read, starting empty: " + OFFICER_REGISTRATION_FILE_PATH + " (" + e.getMessage() + ")");
-             // Optional: throw new DataAccessException("Failed to load officer registrations from file: " + OFFICER_REGISTRATION_FILE_PATH, e);
+            System.err.println("INFO: Officer registrations file not found or failed to read, starting empty: " + OFFICER_REGISTRATION_FILE_PATH + " (" + e.getMessage() + ")");
+            // Optional: throw new DataAccessException("Failed to load officer registrations from file: " + OFFICER_REGISTRATION_FILE_PATH, e);
         } catch (Exception e) { // Catch other potential parsing errors
-             System.err.println("ERROR: Error parsing officer registration data: " + e.getMessage());
+            System.err.println("ERROR: Error parsing officer registration data: " + e.getMessage());
              // Optional: throw new DataAccessException("Error parsing officer registration data: " + e.getMessage(), e);
         }
         // Return a defensive copy
@@ -175,7 +171,6 @@ public class OfficerRegistrationRepository implements IOfficerRegistrationReposi
 
     private List<String[]> serializeRegistrations() {
         List<String[]> serializedData = new ArrayList<>();
-        // No need for header here, writeCsvLines adds it
 
         for (OfficerRegistration registration : registrations.values()) {
             serializedData.add(new String[] {
@@ -189,7 +184,7 @@ public class OfficerRegistrationRepository implements IOfficerRegistrationReposi
         return serializedData;
     }
 
-     // Deserialization is handled within loadAll now
+    // Deserialization is handled within loadAll now
     // private Map<String, OfficerRegistration> deserializeRegistrations(List<String[]> registrationData) { ... }
 
 }

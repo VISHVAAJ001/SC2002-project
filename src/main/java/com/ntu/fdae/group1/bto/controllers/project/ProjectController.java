@@ -82,7 +82,7 @@ public class ProjectController {
      * @param projectId ID of the project to toggle
      * @return true if toggle was successful, false otherwise
      */
-    public boolean toggleProjectVisibility(HDBManager manager, String projectId) {
+    public boolean toggleVisibility(HDBManager manager, String projectId) {
         return projectService.toggleVisibility(manager, projectId);
     }
 
@@ -121,7 +121,7 @@ public class ProjectController {
      */
     public List<Project> getProjectsManagedBy(String managerNRIC) {
         return projectService.getProjectsManagedBy(managerNRIC);
-    }
+    } 
 
     /**
      * Finds a project by its ID
@@ -132,7 +132,7 @@ public class ProjectController {
     public Project findProjectById(String projectId) {
         return projectService.findProjectById(projectId);
     }
-    
+
     /**
      * Gets projects managed by a specific HDB Manager.
      * @param manager The HDBManager object.
@@ -141,7 +141,7 @@ public class ProjectController {
     public List<Project> getManagedProjects(HDBManager manager) {
         if (manager == null) {
             System.err.println("Controller Warning: Manager object is required to get managed projects.");
-            return List.of(); // Return empty list or throw?
+            return List.of(); 
         }
         return projectService.getProjectsManagedBy(manager.getNric());
     }

@@ -38,47 +38,47 @@ public class Project {
     }
 
     public String getProjectId() {
-         return projectId; 
+        return projectId; 
     }
 
     public String getProjectName() {
-         return projectName; 
+        return projectName; 
     }
 
     public String getNeighborhood() {
-         return neighborhood; 
+        return neighborhood; 
     }
     
     public Map<FlatType, ProjectFlatInfo> getFlatTypes() {
-         return flatTypes; 
+        return flatTypes; 
     }
 
     public LocalDate getOpeningDate() {
-         return openingDate; 
+        return openingDate; 
     }
 
     public LocalDate getClosingDate() {
-         return closingDate; 
+        return closingDate; 
     }
 
     public String getManagerNric() {
-         return managerNric; 
+        return managerNric; 
     }
 
     public int getMaxOfficerSlots() {
-         return maxOfficerSlots; 
+        return maxOfficerSlots; 
     }
 
     public boolean isVisible() {
-         return isVisible; 
+        return isVisible; 
     }
 
     public List<String> getApprovedOfficerNrics() {
-         return approvedOfficerNrics; 
+        return approvedOfficerNrics; 
     }
 
     public ProjectFlatInfo getFlatInfo(FlatType flatType) {
-         return flatTypes.get(flatType); 
+        return flatTypes.get(flatType); 
     }
 
 
@@ -102,7 +102,7 @@ public class Project {
      * @throws IllegalArgumentException if neighborhood is null or blank.
      */
     public void setNeighborhood(String neighborhood) {
-         if (neighborhood == null || neighborhood.trim().isEmpty()) {
+        if (neighborhood == null || neighborhood.trim().isEmpty()) {
             throw new IllegalArgumentException("Neighborhood cannot be null or empty.");
         }
         this.neighborhood = neighborhood.trim(); // Trim whitespace
@@ -185,7 +185,7 @@ public class Project {
             approvedOfficerNrics.size() < maxOfficerSlots &&
             !approvedOfficerNrics.contains(officerNric))
         {
-            return approvedOfficerNrics.add(officerNric); // Use the return value of add
+            return approvedOfficerNrics.add(officerNric); 
         }
         return false; // Not added
     }
@@ -194,35 +194,33 @@ public class Project {
         return approvedOfficerNrics.remove(officerNric); // remove returns boolean
     }
 
-     // --- equals, hashCode, toString ---
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Project project = (Project) o;
+        return projectId.equals(project.projectId); // Equality based on ID
+    }
 
-     @Override
-     public boolean equals(Object o) {
-         if (this == o) return true;
-         if (o == null || getClass() != o.getClass()) return false;
-         Project project = (Project) o;
-         return projectId.equals(project.projectId); // Equality based on ID
-     }
+    @Override
+    public int hashCode() {
+        return Objects.hash(projectId); // Hash based on ID
+    }
 
-     @Override
-     public int hashCode() {
-         return Objects.hash(projectId); // Hash based on ID
-     }
-
-     @Override
-     public String toString() {
-         return "Project{" +
-                 "projectId='" + projectId + '\'' +
-                 ", projectName='" + projectName + '\'' +
-                 ", neighborhood='" + neighborhood + '\'' +
-                 // Avoid printing large collections/maps directly in toString if they can be huge
-                 ", flatTypesCount=" + (flatTypes != null ? flatTypes.size() : 0) +
-                 ", openingDate=" + openingDate +
-                 ", closingDate=" + closingDate +
-                 ", managerNric='" + managerNric + '\'' +
-                 ", maxOfficerSlots=" + maxOfficerSlots +
-                 ", isVisible=" + isVisible +
-                 ", approvedOfficerCount=" + (approvedOfficerNrics != null ? approvedOfficerNrics.size() : 0) +
-                 '}';
-     }
+    @Override
+    public String toString() {
+        return "Project{" +
+                "projectId='" + projectId + '\'' +
+                ", projectName='" + projectName + '\'' +
+                ", neighborhood='" + neighborhood + '\'' +
+                // Avoid printing large collections/maps directly in toString if they can be huge
+                ", flatTypesCount=" + (flatTypes != null ? flatTypes.size() : 0) +
+                ", openingDate=" + openingDate +
+                ", closingDate=" + closingDate +
+                ", managerNric='" + managerNric + '\'' +
+                ", maxOfficerSlots=" + maxOfficerSlots +
+                ", isVisible=" + isVisible +
+                ", approvedOfficerCount=" + (approvedOfficerNrics != null ? approvedOfficerNrics.size() : 0) +
+                '}';
+    }
 }

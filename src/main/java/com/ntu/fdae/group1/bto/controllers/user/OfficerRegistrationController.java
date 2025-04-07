@@ -3,13 +3,10 @@ package com.ntu.fdae.group1.bto.controllers.user;
 import java.util.List;
 import java.util.Objects;
 
-// Import necessary Exceptions
 import com.ntu.fdae.group1.bto.exceptions.RegistrationException;
 
-// Import necessary Enums
 import com.ntu.fdae.group1.bto.enums.OfficerRegStatus;
 
-// Import necessary Models
 import com.ntu.fdae.group1.bto.models.user.OfficerRegistration;
 import com.ntu.fdae.group1.bto.models.user.HDBManager;
 import com.ntu.fdae.group1.bto.models.user.HDBOfficer;
@@ -93,9 +90,8 @@ public class OfficerRegistrationController {
      *         for this officer and project combination, or if input parameters are invalid.
      */
     public OfficerRegStatus getMyRegistrationStatus(HDBOfficer officer, String projectId) {
-        // Basic input checks
         if (officer == null || projectId == null || projectId.isBlank()) {
-             System.err.println("Controller Warning: Officer and valid Project ID are required for getMyRegistrationStatus.");
+            System.err.println("Controller Warning: Officer and valid Project ID are required for getMyRegistrationStatus.");
             return null;
         }
         return registrationService.getRegistrationStatus(officer, projectId);
@@ -142,20 +138,19 @@ public class OfficerRegistrationController {
         // Input validation
         Objects.requireNonNull(staff, "Staff context cannot be null for getProjectRegistrations");
         if (projectId == null || projectId.isBlank()) {
-             System.err.println("Controller Warning: Project ID cannot be null or blank for getProjectRegistrations.");
-             return List.of(); // Return empty list for invalid project ID
+            System.err.println("Controller Warning: Project ID cannot be null or blank for getProjectRegistrations.");
+            return List.of(); // Return empty list for invalid project ID
         }
 
         try {
             // Delegate to the service. Service method should not throw checked exceptions here.
-             List<OfficerRegistration> registrations = registrationService.getRegistrationsByProject(projectId);
-             return registrations != null ? List.copyOf(registrations) : List.of();
+            List<OfficerRegistration> registrations = registrationService.getRegistrationsByProject(projectId);
+            return registrations != null ? List.copyOf(registrations) : List.of();
         } catch (Exception e) {
-             // Catch unexpected runtime errors from the service/repo layer
-             System.err.println("Controller ERROR: Failed to retrieve project registrations for " + projectId + ": " + e.getMessage());
-             // Re-throw as a runtime exception to signal a system problem
-             throw new RuntimeException("Failed to retrieve project registrations due to an internal error.", e);
-              // Alternative: return Collections.emptyList(); // Return empty on failure
+            // Catch unexpected runtime errors from the service/repo layer
+            System.err.println("Controller ERROR: Failed to retrieve project registrations for " + projectId + ": " + e.getMessage());
+            // Re-throw as a runtime exception to signal a system problem
+            throw new RuntimeException("Failed to retrieve project registrations due to an internal error.", e);
         }
     }
 }

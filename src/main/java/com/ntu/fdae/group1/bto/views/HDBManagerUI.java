@@ -120,22 +120,22 @@ public class HDBManagerUI extends BaseUI {
         }
     }
     private void handleManageProjects() throws RegistrationException, InvalidInputException {
-         displayHeader("Manage BTO Projects");
-         System.out.println("1. Create New Project");
-         System.out.println("2. Edit Existing Project");
-         System.out.println("3. Delete Project"); 
-         System.out.println("4. Toggle Project Visibility");
-         System.out.println("0. Back to Main Menu");
-         int choice = promptForInt("Enter choice: ");
+        displayHeader("Manage BTO Projects");
+        System.out.println("1. Create New Project");
+        System.out.println("2. Edit Existing Project");
+        System.out.println("3. Delete Project"); 
+        System.out.println("4. Toggle Project Visibility");
+        System.out.println("0. Back to Main Menu");
+        int choice = promptForInt("Enter choice: ");
 
-         switch(choice) {
-             case 1: handleCreateProject(); break;
-             case 2: handleEditProject(); break;
-             case 3: handleDeleteProject(); break;
-             case 4: handleToggleVisibility(); break;
-             case 0: break;
-             default: displayError("Invalid choice.");
-         }
+        switch(choice) {
+            case 1: handleCreateProject(); break;
+            case 2: handleEditProject(); break;
+            case 3: handleDeleteProject(); break;
+            case 4: handleToggleVisibility(); break;
+            case 0: break;
+            default: displayError("Invalid choice.");
+        }
     }
 
     private void handleCreateProject() throws RegistrationException, InvalidInputException { // Consider if these exceptions are really thrown by controller/service
@@ -146,14 +146,12 @@ public class HDBManagerUI extends BaseUI {
         LocalDate closeDate = promptForDate("Enter Application Closing Date (YYYY-MM-DD): ");
         int officerSlots = promptForInt("Enter Max HDB Officer Slots (1-10): ");
    
-        // ****** RE-APPLY CORRECTION: Use String as key ******
-        Map<String, ProjectFlatInfo> flatInfoMap = new HashMap<>(); // KEY IS STRING
+        Map<String, ProjectFlatInfo> flatInfoMap = new HashMap<>(); 
         System.out.println("--- Enter Flat Details ---");
         for (FlatType type : List.of(FlatType.TWO_ROOM, FlatType.THREE_ROOM)) {
             int totalUnits = promptForInt("Enter Total Units for " + type.name() + ": ");
             // Assuming price is not needed at creation or defaults to 0
             ProjectFlatInfo info = new ProjectFlatInfo(type, totalUnits, totalUnits, 0.0);
-            // ****** RE-APPLY CORRECTION: Use type.name() as the String key ******
             flatInfoMap.put(type.name(), info); // Use enum name as String key
         }
    
@@ -163,96 +161,100 @@ public class HDBManagerUI extends BaseUI {
         if (createdProject != null) {
             displayMessage("Project '" + createdProject.getProjectName() + "' created successfully with ID: " + createdProject.getProjectId());
         } else {
-            // Controller/Service should have printed error or thrown exception handled in main loop
             displayError("Project creation failed (check previous errors).");
         }
     }
 
      private void handleEditProject() throws InvalidInputException {
-         displayHeader("Edit Existing Project");
-         List<Project> myProjects = projectController.getManagedProjects(user);
-         Project projectToEdit = selectProjectFromList(myProjects, "Select Project to Edit");
-         if (projectToEdit == null) return;
+        displayHeader("Edit Existing Project");
+        List<Project> myProjects = projectController.getManagedProjects(user);
+        Project projectToEdit = selectProjectFromList(myProjects, "Select Project to Edit");
+        if (projectToEdit == null) return;
 
-         displayStaffProjectDetails(projectToEdit);
+        displayStaffProjectDetails(projectToEdit);
 
-         displayMessage("Enter new details (leave blank or enter ' ' to keep current):"); 
-         String name = promptForInput("New Project Name ["+projectToEdit.getProjectName()+"]: ");
-         String neighborhood = promptForInput("New Neighborhood ["+projectToEdit.getNeighborhood()+"]: ");
+        displayMessage("Enter new details (leave blank or enter ' ' to keep current):"); 
+        String name = promptForInput("New Project Name ["+projectToEdit.getProjectName()+"]: ");
+        String neighborhood = promptForInput("New Neighborhood ["+projectToEdit.getNeighborhood()+"]: ");
 
-         LocalDate openDate = promptForDateOrKeep("New Opening Date (YYYY-MM-DD) ["+projectToEdit.getOpeningDate()+"]:", projectToEdit.getOpeningDate());
-         LocalDate closeDate = promptForDateOrKeep("New Closing Date (YYYY-MM-DD) ["+projectToEdit.getClosingDate()+"]:", projectToEdit.getClosingDate());
+        LocalDate openDate = promptForDateOrKeep("New Opening Date (YYYY-MM-DD) ["+projectToEdit.getOpeningDate()+"]:", projectToEdit.getOpeningDate());
+        LocalDate closeDate = promptForDateOrKeep("New Closing Date (YYYY-MM-DD) ["+projectToEdit.getClosingDate()+"]:", projectToEdit.getClosingDate());
 
-         int officerSlots = promptForIntOrKeep("New Max Officer Slots ["+projectToEdit.getMaxOfficerSlots()+"] (1-10):", projectToEdit.getMaxOfficerSlots());
+        int officerSlots = promptForIntOrKeep("New Max Officer Slots ["+projectToEdit.getMaxOfficerSlots()+"] (1-10):", projectToEdit.getMaxOfficerSlots());
 
 
-         boolean success = projectController.editProject(user, projectToEdit.getProjectId(),
-                 name.isBlank() ? projectToEdit.getProjectName() : name.trim(),
-                 neighborhood.isBlank() ? projectToEdit.getNeighborhood() : neighborhood.trim(),
-                 openDate, // Use the potentially kept date
-                 closeDate, // Use the potentially kept date
-                 officerSlots); // Use the potentially kept slots
+        boolean success = projectController.editProject(user, projectToEdit.getProjectId(),
+                name.isBlank() ? projectToEdit.getProjectName() : name.trim(),
+                neighborhood.isBlank() ? projectToEdit.getNeighborhood() : neighborhood.trim(),
+                openDate, // Use the potentially kept date
+                closeDate, // Use the potentially kept date
+                officerSlots); // Use the potentially kept slots
 
-         if(success){
+        if(success){
             displayMessage("Project updated successfully.");
-         } else {
-            displayError("Project update failed."); // Ideally, Controller/Service should provide reason
-         }
+        } 
+        else {
+            displayError("Project update failed."); 
+        }
      }
 
      private void handleDeleteProject() {
-          displayHeader("Delete Project");
-          List<Project> myProjects = projectController.getManagedProjects(user);
-          Project projectToDelete = selectProjectFromList(myProjects, "Select Project to Delete");
-          if (projectToDelete == null) return;
+        displayHeader("Delete Project");
+        List<Project> myProjects = projectController.getManagedProjects(user);
+        Project projectToDelete = selectProjectFromList(myProjects, "Select Project to Delete");
+        if (projectToDelete == null) return;
 
-          if (promptForConfirmation("WARNING: Deleting a project might be irreversible and subject to rules (e.g., no active applications). Proceed? (yes/no): ")) {
-              boolean success = projectController.deleteProject(user, projectToDelete.getProjectId());
-              if (success) {
-                  displayMessage("Project deletion request processed."); // Depend on repo implementation
-              } else {
-                  displayError("Project deletion failed or not allowed (check logs/previous errors).");
-              }
-          } else {
-              displayMessage("Deletion cancelled.");
-          }
+        if (promptForConfirmation("WARNING: Deleting a project might be irreversible and subject to rules (e.g., no active applications). Proceed? (yes/no): ")) {
+            boolean success = projectController.deleteProject(user, projectToDelete.getProjectId());
+            if (success) {
+                displayMessage("Project deletion request processed."); // Depend on repo implementation
+            } 
+            else {
+                displayError("Project deletion failed or not allowed (check logs/previous errors).");
+            }
+        } 
+        else {
+            displayMessage("Deletion cancelled.");
+        }
      }
 
      private void handleToggleVisibility() {
-           displayHeader("Toggle Project Visibility");
-           List<Project> myProjects = projectController.getManagedProjects(user);
-           Project projectToToggle = selectProjectFromList(myProjects, "Select Project to Toggle Visibility");
-           if (projectToToggle == null) return;
+            displayHeader("Toggle Project Visibility");
+            List<Project> myProjects = projectController.getManagedProjects(user);
+            Project projectToToggle = selectProjectFromList(myProjects, "Select Project to Toggle Visibility");
+            if (projectToToggle == null) return;
 
-           displayMessage("Current visibility: " + (projectToToggle.isVisible() ? "ON" : "OFF"));
+            displayMessage("Current visibility: " + (projectToToggle.isVisible() ? "ON" : "OFF"));
             if (promptForConfirmation("Toggle visibility for project '" + projectToToggle.getProjectName() + "'? (yes/no): ")) {
-                 boolean success = projectController.toggleVisibility(user, projectToToggle.getProjectId());
-                 if(success) {
-                     displayMessage("Visibility toggled successfully.");
-                 } else {
-                     displayError("Failed to toggle visibility.");
-                 }
-            } else {
+                boolean success = projectController.toggleVisibility(user, projectToToggle.getProjectId());
+                if(success) {
+                    displayMessage("Visibility toggled successfully.");
+                } 
+                else {
+                    displayError("Failed to toggle visibility.");
+                }
+            } 
+            else {
                 displayMessage("Operation cancelled.");
             }
-     }
+    }
 
-     private void handleViewAllProjects() {
+    private void handleViewAllProjects() {
         displayHeader("All BTO Projects - View & Filter");
         // 1. Get all projects initially
-        List<Project> allProjects = projectController.getAllProjects(); // Call the correct controller method
+        List<Project> allProjects = projectController.getAllProjects(); 
 
         if (allProjects.isEmpty()) {
             displayMessage("No projects found in the system.");
             return; // Exit early if nothing to show/filter
         }
 
-        List<Project> projectsToDisplay = allProjects; // Start with all
+        List<Project> projectsToDisplay = allProjects; 
 
         // 2. Offer Filtering 
         if (promptForConfirmation("Apply filters? (yes/no): ")) {
             displayMessage("Enter filter criteria (leave blank to skip a filter):");
-            List<Project> currentlyFiltered = new ArrayList<>(allProjects); // Work on a copy
+            List<Project> currentlyFiltered = new ArrayList<>(allProjects); // Copy
 
             // --- Apply Neighborhood Filter ---
             String neighborhoodFilter = promptForInput("Filter by Neighborhood (contains, case-insensitive): ");
@@ -285,34 +287,37 @@ public class HDBManagerUI extends BaseUI {
 
         // 3. Display the results (either all or filtered)
         if (projectsToDisplay.isEmpty()) {
-             if (projectsToDisplay != allProjects) { // Check if filtering actually happened
+            if (projectsToDisplay != allProjects) { // Check if filtering actually happened
                 displayMessage("No projects match the specified filters.");
-             } else {
+            } 
+            else {
                 // This case shouldn't be reached if initial check passed, but as a safeguard:
                 displayMessage("No projects found to display.");
-             }
-         } else {
-              // Determine title based on whether filtering occurred
-              String listTitle = (projectsToDisplay == allProjects) ? "All Projects" : "Filtered Projects (" + projectsToDisplay.size() + " found)";
-              Project selected = selectProjectFromList(projectsToDisplay, listTitle);
-              if(selected != null) {
-                  displayStaffProjectDetails(selected);
-              }
-         }
+            }
+        } 
+        else {
+            // Determine title based on whether filtering occurred
+            String listTitle = (projectsToDisplay == allProjects) ? "All Projects" : "Filtered Projects (" + projectsToDisplay.size() + " found)";
+            Project selected = selectProjectFromList(projectsToDisplay, listTitle);
+            if(selected != null) {
+                displayStaffProjectDetails(selected);
+            }
+        }
     } 
      
 
     private void handleViewMyProjects() {
-          displayHeader("My Managed BTO Projects");
-          List<Project> myProjects = projectController.getManagedProjects(user);
-           if (myProjects.isEmpty()) {
-              displayMessage("You are not managing any projects.");
-          } else {
-               Project selected = selectProjectFromList(myProjects, "My Managed Projects");
-               if(selected != null) {
-                   displayStaffProjectDetails(selected);
-               }
-          }
+        displayHeader("My Managed BTO Projects");
+        List<Project> myProjects = projectController.getManagedProjects(user);
+        if (myProjects.isEmpty()) {
+            displayMessage("You are not managing any projects.");
+        } 
+        else {
+            Project selected = selectProjectFromList(myProjects, "My Managed Projects");
+            if(selected != null) {
+                displayStaffProjectDetails(selected);
+            }
+        }
      }
 
 
@@ -326,7 +331,7 @@ public class HDBManagerUI extends BaseUI {
         }
 
         Map<Integer, OfficerRegistration> regMap = displayOfficerRegList(pendingRegs, "Pending Officer Registrations");
-        if (regMap.isEmpty()) return; // Nothing to select
+        if (regMap.isEmpty()) return; 
 
         int choice = promptForInt("Select registration number to review (or 0 to go back): ");
         if (choice == 0 || !regMap.containsKey(choice)) {
@@ -347,123 +352,124 @@ public class HDBManagerUI extends BaseUI {
         displayHeader("Review Pending BTO Applications");
         List<Application> pendingApps = appController.getApplicationsByStatus(user, ApplicationStatus.PENDING);
 
-         if (pendingApps.isEmpty()) {
-             displayMessage("No pending applications found globally.");
-             return;
-         }
-         // Filter only applications for projects managed by this manager
-         List<Project> myProjects = projectController.getManagedProjects(user);
-         Set<String> myProjectIds = myProjects.stream().map(Project::getProjectId).collect(Collectors.toSet());
-         List<Application> relevantApps = pendingApps.stream()
+        if (pendingApps.isEmpty()) {
+            displayMessage("No pending applications found globally.");
+            return;
+        }
+        // Filter only applications for projects managed by this manager
+        List<Project> myProjects = projectController.getManagedProjects(user);
+        Set<String> myProjectIds = myProjects.stream().map(Project::getProjectId).collect(Collectors.toSet());
+        List<Application> relevantApps = pendingApps.stream()
                                             .filter(app -> myProjectIds.contains(app.getProjectId()))
                                             .collect(Collectors.toList());
 
-         if (relevantApps.isEmpty()) {
-             displayMessage("No pending applications found for the projects you manage.");
-             return;
-         }
+        if (relevantApps.isEmpty()) {
+            displayMessage("No pending applications found for the projects you manage.");
+            return;
+        }
 
-         Map<Integer, Application> appMap = displayApplicationList(relevantApps, "Pending Applications for Your Projects");
-         if (appMap.isEmpty()) return;
+        Map<Integer, Application> appMap = displayApplicationList(relevantApps, "Pending Applications for Your Projects");
+        if (appMap.isEmpty()) return;
 
-         int choice = promptForInt("Select application number to review (or 0 to go back): ");
-         if (choice == 0 || !appMap.containsKey(choice)) {
-              if(choice != 0) displayError("Invalid selection.");
-             return;
-         }
+        int choice = promptForInt("Select application number to review (or 0 to go back): ");
+        if (choice == 0 || !appMap.containsKey(choice)) {
+            if(choice != 0) displayError("Invalid selection.");
+            return;
+        }
 
-         Application selectedApp = appMap.get(choice);
-         boolean approve = promptForConfirmation("Approve application " + selectedApp.getApplicationId() + " for Applicant " + selectedApp.getApplicantNric() + "? (yes/no): ");
+        Application selectedApp = appMap.get(choice);
+        boolean approve = promptForConfirmation("Approve application " + selectedApp.getApplicationId() + " for Applicant " + selectedApp.getApplicantNric() + "? (yes/no): ");
 
-         boolean success = appController.reviewApplication(user, selectedApp.getApplicationId(), approve);
-         if(success) {
+        boolean success = appController.reviewApplication(user, selectedApp.getApplicationId(), approve);
+        if(success) {
             displayMessage("Application review processed successfully.");
-         } 
+        } 
     }
 
     private void handleReviewWithdrawals() throws ApplicationException {
-         displayHeader("Review Pending Application Withdrawals");
-         // Fetch apps that *could* have withdrawals (PENDING or SUCCESSFUL)
-         List<Application> allPotentialApps = new ArrayList<>(appController.getApplicationsByStatus(user, ApplicationStatus.PENDING));
-         allPotentialApps.addAll(appController.getApplicationsByStatus(user, ApplicationStatus.SUCCESSFUL));
+        displayHeader("Review Pending Application Withdrawals");
+        // Fetch apps that *could* have withdrawals (PENDING or SUCCESSFUL)
+        List<Application> allPotentialApps = new ArrayList<>(appController.getApplicationsByStatus(user, ApplicationStatus.PENDING));
+        allPotentialApps.addAll(appController.getApplicationsByStatus(user, ApplicationStatus.SUCCESSFUL));
 
-         // Filter for those with withdrawal requests AND managed by this manager
-          List<Project> myProjects = projectController.getManagedProjects(user);
-          Set<String> myProjectIds = myProjects.stream().map(Project::getProjectId).collect(Collectors.toSet());
+        // Filter for those with withdrawal requests AND managed by this manager
+        List<Project> myProjects = projectController.getManagedProjects(user);
+        Set<String> myProjectIds = myProjects.stream().map(Project::getProjectId).collect(Collectors.toSet());
 
-         List<Application> pendingWithdrawals = allPotentialApps.stream()
-                 .filter(app -> app.getRequestedWithdrawalDate() != null && myProjectIds.contains(app.getProjectId()))
-                 .collect(Collectors.toList());
+        List<Application> pendingWithdrawals = allPotentialApps.stream()
+                .filter(app -> app.getRequestedWithdrawalDate() != null && myProjectIds.contains(app.getProjectId()))
+                .collect(Collectors.toList());
 
-         if (pendingWithdrawals.isEmpty()) {
-             displayMessage("No pending withdrawal requests found for the projects you manage.");
-             return;
-         }
+        if (pendingWithdrawals.isEmpty()) {
+            displayMessage("No pending withdrawal requests found for the projects you manage.");
+            return;
+        }
 
-         Map<Integer, Application> appMap = displayApplicationList(pendingWithdrawals, "Pending Withdrawal Requests for Your Projects");
-         if(appMap.isEmpty()) return;
+        Map<Integer, Application> appMap = displayApplicationList(pendingWithdrawals, "Pending Withdrawal Requests for Your Projects");
+        if(appMap.isEmpty()) return;
 
-          int choice = promptForInt("Select application number to review withdrawal (or 0 to go back): ");
-          if (choice == 0 || !appMap.containsKey(choice)) {
-               if(choice != 0) displayError("Invalid selection.");
-              return;
-          }
+        int choice = promptForInt("Select application number to review withdrawal (or 0 to go back): ");
+        if (choice == 0 || !appMap.containsKey(choice)) {
+            if(choice != 0) displayError("Invalid selection.");
+            return;
+        }
 
-          Application selectedApp = appMap.get(choice);
-          boolean approve = promptForConfirmation("Approve withdrawal for application " + selectedApp.getApplicationId() + "? (yes/no): ");
+        Application selectedApp = appMap.get(choice);
+        boolean approve = promptForConfirmation("Approve withdrawal for application " + selectedApp.getApplicationId() + "? (yes/no): ");
 
-          boolean success = appController.reviewWithdrawal(user, selectedApp.getApplicationId(), approve);
-          if(success) {
-             displayMessage("Withdrawal review processed successfully.");
-          } 
+        boolean success = appController.reviewWithdrawal(user, selectedApp.getApplicationId(), approve);
+        if(success) {
+            displayMessage("Withdrawal review processed successfully.");
+        } 
     }
 
     private void handleViewReplyEnquiries() throws InvalidInputException {
-         displayHeader("View/Reply Enquiries");
-         List<Enquiry> allEnquiries = enquiryController.viewAllEnquiries(user); // Manager sees all
+        displayHeader("View/Reply Enquiries");
+        List<Enquiry> allEnquiries = enquiryController.viewAllEnquiries(user); // Manager sees all
 
-          if (allEnquiries.isEmpty()) {
-             displayMessage("No enquiries found in the system.");
-             return;
-         }
+        if (allEnquiries.isEmpty()) {
+            displayMessage("No enquiries found in the system.");
+            return;
+        }
 
-         Map<Integer, Enquiry> enquiryMap = displayEnquiryList(allEnquiries, "All Enquiries (Sorted by Unreplied First)");
-         if(enquiryMap.isEmpty()) return;
+        Map<Integer, Enquiry> enquiryMap = displayEnquiryList(allEnquiries, "All Enquiries (Sorted by Unreplied First)");
+        if(enquiryMap.isEmpty()) return;
 
-          int choice = promptForInt("Select enquiry number to reply (or 0 to go back): ");
-          if (choice == 0 || !enquiryMap.containsKey(choice)) {
-               if(choice != 0) displayError("Invalid selection.");
-              return;
-          }
-
-          Enquiry selectedEnq = enquiryMap.get(choice);
-
-          if (selectedEnq.isReplied()) {
-              displayMessage("This enquiry has already been replied to.");
-              return; 
-          }
-
-          // Preliminary permission check (Service layer does final check)
-           boolean canReply = false;
-            if(selectedEnq.getProjectId() == null) {
-                canReply = true; // General enquiry
-            } else {
-                Project proj = projectController.findProjectById(selectedEnq.getProjectId());
-                if(proj != null && proj.getManagerNric().equals(user.getNric())) {
-                    canReply = true; // Manager in charge
-                }
-            }
-            if (!canReply) {
-                 displayError("You may not have permission to reply to this specific enquiry.");
-                 return; 
+        int choice = promptForInt("Select enquiry number to reply (or 0 to go back): ");
+        if (choice == 0 || !enquiryMap.containsKey(choice)) {
+            if(choice != 0) displayError("Invalid selection.");
+                return;
             }
 
+        Enquiry selectedEnq = enquiryMap.get(choice);
 
-          String reply = promptForInput("Enter your reply: ");
-          boolean success = enquiryController.replyToEnquiry(user, selectedEnq.getEnquiryId(), reply);
-          if(success) {
-             displayMessage("Reply submitted successfully.");
-          } 
+        if (selectedEnq.isReplied()) {
+            displayMessage("This enquiry has already been replied to.");
+            return; 
+        }
+
+        // Preliminary permission check (Service layer does final check)
+        boolean canReply = false;
+        if(selectedEnq.getProjectId() == null) {
+            canReply = true; // General enquiry
+        } 
+        else {
+            Project proj = projectController.findProjectById(selectedEnq.getProjectId());
+            if(proj != null && proj.getManagerNric().equals(user.getNric())) {
+                canReply = true; // Manager in charge
+            }
+        }
+        if (!canReply) {
+            displayError("You may not have permission to reply to this specific enquiry.");
+            return; 
+        }
+
+
+        String reply = promptForInput("Enter your reply: ");
+        boolean success = enquiryController.replyToEnquiry(user, selectedEnq.getEnquiryId(), reply);
+        if(success) {
+            displayMessage("Reply submitted successfully.");
+        } 
     }
 
     private void handleGenerateReport() {
@@ -473,35 +479,37 @@ public class HDBManagerUI extends BaseUI {
         displayMessage("Enter filter criteria (leave blank to ignore):");
         // --- Flat Type Filter ---
         String flatTypeInput = promptForInput("Filter by Flat Type (TWO_ROOM, THREE_ROOM): ").toUpperCase();
-         if (!flatTypeInput.isBlank()) {
-             try {
-                 filters.put("FLAT_TYPE", FlatType.valueOf(flatTypeInput).name());
-             } catch (IllegalArgumentException e) {
-                  displayError("Invalid flat type '" + flatTypeInput + "'. Ignoring filter.");
-             }
-         }
+        if (!flatTypeInput.isBlank()) {
+            try {
+                filters.put("FLAT_TYPE", FlatType.valueOf(flatTypeInput).name());
+            } catch (IllegalArgumentException e) {
+                displayError("Invalid flat type '" + flatTypeInput + "'. Ignoring filter.");
+            }
+        }
          // --- Project Name Filter ---
         String projectNameFilter = promptForInput("Filter by Project Name (exact match): ");
-         if (!projectNameFilter.isBlank()) filters.put("PROJECT_NAME", projectNameFilter);
-         // --- Age Filter ---
+        if (!projectNameFilter.isBlank()) filters.put("PROJECT_NAME", projectNameFilter);
+        
+        // --- Age Filter ---
         String ageFilter = promptForInput("Filter by Applicant Age (exact match): ");
-         if (!ageFilter.isBlank()) {
-             try {
-                 Integer.parseInt(ageFilter); 
-                 filters.put("AGE", ageFilter);
-             } catch (NumberFormatException e){
-                 displayError("Invalid age '" + ageFilter + "'. Ignoring filter.");
-             }
-         }
-         // --- Marital Status Filter ---
+        if (!ageFilter.isBlank()) {
+            try {
+                Integer.parseInt(ageFilter); 
+                filters.put("AGE", ageFilter);
+            } catch (NumberFormatException e){
+                displayError("Invalid age '" + ageFilter + "'. Ignoring filter.");
+            }
+        }
+        
+        // --- Marital Status Filter ---
         String maritalStatusInput = promptForInput("Filter by Marital Status (SINGLE, MARRIED): ").toUpperCase();
-         if (!maritalStatusInput.isBlank()) {
-             try {
-                 filters.put("MARITAL_STATUS", MaritalStatus.valueOf(maritalStatusInput).name());
-             } catch (IllegalArgumentException e) {
-                 displayError("Invalid marital status '" + maritalStatusInput + "'. Ignoring filter.");
-             }
-         }
+        if (!maritalStatusInput.isBlank()) {
+            try {
+                filters.put("MARITAL_STATUS", MaritalStatus.valueOf(maritalStatusInput).name());
+            } catch (IllegalArgumentException e) {
+                displayError("Invalid marital status '" + maritalStatusInput + "'. Ignoring filter.");
+            }
+        }
 
         displayMessage("Generating report with filters: " + filters);
         String report = reportController.generateBookingReport(filters);
@@ -512,18 +520,18 @@ public class HDBManagerUI extends BaseUI {
     }
 
      private void handleChangePassword() {
-         displayHeader("Change Password");
-         String newPassword = promptForInput("Enter new password: ");
-         String confirmPassword = promptForInput("Confirm new password: ");
+        displayHeader("Change Password");
+        String newPassword = promptForInput("Enter new password: ");
+        String confirmPassword = promptForInput("Confirm new password: ");
 
-         if (!newPassword.equals(confirmPassword)) {
-             displayError("Passwords do not match.");
-             return;
-         }
-         if (newPassword.isEmpty()) {
-              displayError("Password cannot be empty.");
-              return;
-         }
+        if (!newPassword.equals(confirmPassword)) {
+            displayError("Passwords do not match.");
+            return;
+        }
+        if (newPassword.isEmpty()) {
+            displayError("Password cannot be empty.");
+            return;
+        }
 
         try {
             boolean success = authController.changePassword(user, newPassword);
@@ -538,71 +546,71 @@ public class HDBManagerUI extends BaseUI {
     }
 
     // --- Helper Methods for Displaying Lists and Details ---
-     private Project selectProjectFromList(List<Project> projects, String listTitle) {
-         if (projects == null || projects.isEmpty()) {
-             displayMessage("No projects found matching the criteria.");
-             return null;
-         }
-         displayHeader(listTitle);
-         Map<Integer, Project> projectMap = new HashMap<>();
-         int index = 1;
-         for (Project p : projects) {
-             System.out.printf("%d. %s (%s) - %s [%s]%n", index,
-                     p.getProjectName(), p.getProjectId(), p.getNeighborhood(), p.isVisible() ? "Visible" : "Hidden");
-             projectMap.put(index, p);
-             index++;
-         }
-         System.out.println("0. Cancel");
+    private Project selectProjectFromList(List<Project> projects, String listTitle) {
+        if (projects == null || projects.isEmpty()) {
+            displayMessage("No projects found matching the criteria.");
+            return null;
+        }
+        displayHeader(listTitle);
+        Map<Integer, Project> projectMap = new HashMap<>();
+        int index = 1;
+        for (Project p : projects) {
+            System.out.printf("%d. %s (%s) - %s [%s]%n", index,
+                    p.getProjectName(), p.getProjectId(), p.getNeighborhood(), p.isVisible() ? "Visible" : "Hidden");
+            projectMap.put(index, p);
+            index++;
+        }
+        System.out.println("0. Cancel");
 
-         int choice = -1;
-         while (choice < 0 || choice >= index) {
-             choice = promptForInt("Select project number (or 0 to cancel):");
-             if (choice == 0) return null;
-             if (choice < 0 || choice >= index || !projectMap.containsKey(choice)) {
-                 displayError("Invalid selection.");
-                 choice = -1; // Reset choice to loop again
-             }
-         }
-         return projectMap.get(choice);
+        int choice = -1;
+        while (choice < 0 || choice >= index) {
+            choice = promptForInt("Select project number (or 0 to cancel):");
+            if (choice == 0) return null;
+            if (choice < 0 || choice >= index || !projectMap.containsKey(choice)) {
+                displayError("Invalid selection.");
+                choice = -1; // Reset choice to loop again
+            }
+        }
+        return projectMap.get(choice);
      }
 
-     private void displayStaffProjectDetails(Project project) {
-         if (project == null) {
-             displayError("Cannot display details for null project.");
-             return;
-         }
-         displayHeader("Project Details: " + project.getProjectName());
-         System.out.println("ID            : " + project.getProjectId());
-         System.out.println("Neighborhood  : " + project.getNeighborhood());
-         System.out.println("Manager NRIC  : " + project.getManagerNric());
-         System.out.println("Visibility    : " + (project.isVisible() ? "ON" : "OFF"));
-         System.out.println("Opening Date  : " + formatDate(project.getOpeningDate()));
-         System.out.println("Closing Date  : " + formatDate(project.getClosingDate()));
-         System.out.println("Max Officers  : " + project.getMaxOfficerSlots());
-         System.out.println("Approved Off. : " + project.getApprovedOfficerNrics().size() + " / " + project.getMaxOfficerSlots());
-         if(!project.getApprovedOfficerNrics().isEmpty()){
-             System.out.println("  NRICs       : " + String.join(", ", project.getApprovedOfficerNrics()));
-         }
-         displayFlatInfoSection(project);
-     }
+    private void displayStaffProjectDetails(Project project) {
+        if (project == null) {
+            displayError("Cannot display details for null project.");
+            return;
+        }
+        displayHeader("Project Details: " + project.getProjectName());
+        System.out.println("ID            : " + project.getProjectId());
+        System.out.println("Neighborhood  : " + project.getNeighborhood());
+        System.out.println("Manager NRIC  : " + project.getManagerNric());
+        System.out.println("Visibility    : " + (project.isVisible() ? "ON" : "OFF"));
+        System.out.println("Opening Date  : " + formatDate(project.getOpeningDate()));
+        System.out.println("Closing Date  : " + formatDate(project.getClosingDate()));
+        System.out.println("Max Officers  : " + project.getMaxOfficerSlots());
+        System.out.println("Approved Off. : " + project.getApprovedOfficerNrics().size() + " / " + project.getMaxOfficerSlots());
+        if(!project.getApprovedOfficerNrics().isEmpty()){
+            System.out.println("  NRICs       : " + String.join(", ", project.getApprovedOfficerNrics()));
+        }
+        displayFlatInfoSection(project);
+    }
 
-     private void displayFlatInfoSection(Project project) {
-          System.out.println("--- Flat Information ---");
-          if (project.getFlatTypes() == null || project.getFlatTypes().isEmpty()) {
-              System.out.println("  No flat information available.");
-              return;
-          }
-          List<FlatType> displayOrder = List.of(FlatType.TWO_ROOM, FlatType.THREE_ROOM);
-          for (FlatType type : displayOrder) {
-               ProjectFlatInfo info = project.getFlatTypes().get(type);
-               if (info != null) {
-                    System.out.printf("  Type: %-10s | Total Units: %-4d | Remaining: %-4d%n", // | Price: $%.2f (Add if needed)
-                            info.getFlatType(), info.getTotalUnits(), info.getRemainingUnits()
+    private void displayFlatInfoSection(Project project) {
+        System.out.println("--- Flat Information ---");
+        if (project.getFlatTypes() == null || project.getFlatTypes().isEmpty()) {
+            System.out.println("  No flat information available.");
+            return;
+        }
+        List<FlatType> displayOrder = List.of(FlatType.TWO_ROOM, FlatType.THREE_ROOM);
+        for (FlatType type : displayOrder) {
+            ProjectFlatInfo info = project.getFlatTypes().get(type);
+            if (info != null) {
+                System.out.printf("  Type: %-10s | Total Units: %-4d | Remaining: %-4d%n", // | Price: $%.2f (Add if needed)
+                        info.getFlatType(), info.getTotalUnits(), info.getRemainingUnits()
                     );
-               }
-          }
-          System.out.println("------------------------");
-     }
+                }
+            }
+        System.out.println("------------------------");
+    }
 
     // Helper to display a list of Applications and return a map for selection
     private Map<Integer, Application> displayApplicationList(List<Application> apps, String title) {
@@ -681,38 +689,35 @@ public class HDBManagerUI extends BaseUI {
         return enquiryMap;
     }
    
-   // Make protected if BaseUI doesn't have this exact logic
-   protected LocalDate promptForDateOrKeep(String prompt, LocalDate currentValue) { // Changed from private
+   private LocalDate promptForDateOrKeep(String prompt, LocalDate currentValue) { 
         while (true) {
-           String input = promptForInput(prompt + " (Enter YYYY-MM-DD or leave blank to keep '" + formatDate(currentValue) + "'): ");
-           if (input.isBlank()) {
+            String input = promptForInput(prompt + " (Enter YYYY-MM-DD or leave blank to keep '" + formatDate(currentValue) + "'): ");
+            if (input.isBlank()) {
                 return currentValue; // Keep current
-           }
-           try {
-                // DATE_FORMATTER must be declared in this class or BaseUI
+            }
+            try {
                 return LocalDate.parse(input, DATE_FORMATTER);
-           } catch (DateTimeParseException e) {
+            } catch (DateTimeParseException e) {
                 displayError("Invalid date format. Please use YYYY-MM-DD.");
-           }
+            }
         }
     }
    
-    private int promptForIntOrKeep(String prompt, int currentValue) { // Changed from private
-       while(true) {
-           String input = promptForInput(prompt + " (Enter number or leave blank to keep '" + currentValue + "'): ");
-           if(input.isBlank()) {
+    private int promptForIntOrKeep(String prompt, int currentValue) { 
+        while(true) {
+            String input = promptForInput(prompt + " (Enter number or leave blank to keep '" + currentValue + "'): ");
+            if(input.isBlank()) {
                return currentValue;
-           }
-           try {
-               return Integer.parseInt(input);
-           } catch (NumberFormatException e) {
-               displayError("Invalid number format.");
-           }
-       }
-   }
+            }
+            try {
+                return Integer.parseInt(input);
+            } catch (NumberFormatException e) {
+                displayError("Invalid number format.");
+            }
+        }
+    }
    
     private String formatDate(LocalDate date) { 
-        // DATE_FORMATTER must be declared in this class or BaseUI
         return (date == null) ? "N/A" : DATE_FORMATTER.format(date);
     }
 
