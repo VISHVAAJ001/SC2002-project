@@ -132,4 +132,20 @@ public class ProjectController {
     public Project findProjectById(String projectId) {
         return projectService.findProjectById(projectId);
     }
+    
+    /**
+     * Gets projects managed by a specific HDB Manager.
+     * @param manager The HDBManager object.
+     * @return List of projects managed by the manager.
+     */
+    public List<Project> getManagedProjects(HDBManager manager) {
+        if (manager == null) {
+            System.err.println("Controller Warning: Manager object is required to get managed projects.");
+            return List.of(); // Return empty list or throw?
+        }
+        return projectService.getProjectsManagedBy(manager.getNric());
+    }
+
 }
+
+

@@ -8,27 +8,30 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Objects;
+import java.util.Scanner;
 import java.util.stream.Collectors;
+import java.time.format.DateTimeFormatter;
 
-import com.ntu.fdae.group1.bto.controllers.*;
 import com.ntu.fdae.group1.bto.controllers.enquiry.EnquiryController;
 import com.ntu.fdae.group1.bto.models.enquiry.Enquiry;
 import com.ntu.fdae.group1.bto.models.project.Application;
-import com.ntu.fdae.group1.bto.models.project.OfficerRegistration;
+import com.ntu.fdae.group1.bto.models.user.OfficerRegistration;
 import com.ntu.fdae.group1.bto.models.project.Project;
 import com.ntu.fdae.group1.bto.models.project.ProjectFlatInfo;
 import com.ntu.fdae.group1.bto.models.user.HDBManager;
 import com.ntu.fdae.group1.bto.controllers.project.ApplicationController;
+import com.ntu.fdae.group1.bto.controllers.user.AuthenticationController;
 import com.ntu.fdae.group1.bto.controllers.project.ProjectController;
 import com.ntu.fdae.group1.bto.controllers.project.ReportController;
-import com.ntu.fdae.group1.bto.controllers.project.OfficerRegistrationController;
+import com.ntu.fdae.group1.bto.controllers.user.OfficerRegistrationController;
 import com.ntu.fdae.group1.bto.enums.ApplicationStatus;
 import com.ntu.fdae.group1.bto.enums.FlatType;
 import com.ntu.fdae.group1.bto.enums.MaritalStatus;
 import com.ntu.fdae.group1.bto.exceptions.ApplicationException;
 import com.ntu.fdae.group1.bto.exceptions.InvalidInputException;
 import com.ntu.fdae.group1.bto.exceptions.RegistrationException;
-import com.ntu.fdae.group1.bto.services.*;
+
 
 public class HDBManagerUI extends BaseUI {
     private HDBManager user;
@@ -37,18 +40,25 @@ public class HDBManagerUI extends BaseUI {
     private OfficerRegistrationController officerRegController;
     private EnquiryController enquiryController;
     private ReportController reportController;
+    private final AuthenticationController authController;
+    private final Scanner scanner;
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE;
 
     public HDBManagerUI(HDBManager user, ProjectController projectController, ApplicationController appController,
-            OfficerRegistrationController officerRegController,
-            EnquiryController enquiryController, ReportController reportController) {
+        OfficerRegistrationController officerRegController,
+        EnquiryController enquiryController, ReportController reportController, AuthenticationController authController) { 
 
-        this.user = user;
-        this.projectController = projectController;
-        this.appController = appController;
-        this.officerRegController = officerRegController;
-        this.enquiryController = enquiryController;
-        this.reportController = reportController;
-    }
+            super(new Scanner(System.in)); // <<< CREATE AND PASS SCANNER >>>
+            this.scanner = super.scanner; // <<< OPTIONAL: Store scanner if needed locally >>>
+
+            this.user = user;   
+            this.projectController = projectController;
+            this.appController = appController;
+            this.officerRegController = officerRegController;
+            this.enquiryController = enquiryController;
+            this.reportController = reportController;
+            this.authController = Objects.requireNonNull(authController, "Authentication Controller cannot be null");    
+        }
 
     public void displayMainMenu() {
         boolean keepRunning = true;
@@ -128,31 +138,35 @@ public class HDBManagerUI extends BaseUI {
          }
     }
 
-     private void handleCreateProject() throws RegistrationException, InvalidInputException {
-         displayHeader("Create New BTO Project");
-         String name = promptForInput("Enter Project Name: ");
-         String neighborhood = promptForInput("Enter Neighborhood: ");
-         LocalDate openDate = promptForDate("Enter Application Opening Date (YYYY-MM-DD): ");
-         LocalDate closeDate = promptForDate("Enter Application Closing Date (YYYY-MM-DD): ");
-         int officerSlots = promptForInt("Enter Max HDB Officer Slots (1-10): ");
-
-         Map<FlatType, ProjectFlatInfo> flatInfoMap = new HashMap<>();
-          System.out.println("--- Enter Flat Details ---");
-          for (FlatType type : List.of(FlatType.TWO_ROOM, FlatType.THREE_ROOM)) {
-                int totalUnits = promptForInt("Enter Total Units for " + type.name() + ": ");
-                double price = promptForDouble("Enter Price for " + type.name() + ": "); 
-                flatInfoMap.put(type, new ProjectFlatInfo(type, totalUnits, totalUnits, 0.0)); // Initial remaining = total
-          }
-
-         // Call controller, which validates and calls service
-         Project createdProject = projectController.createProject(user, name, neighborhood, flatInfoMap, openDate, closeDate, officerSlots);
-         // Service layer should print success message, or controller can return status
-         if (createdProject != null) {
-             displayMessage("Project '" + createdProject.getProjectName() + "' created successfully with ID: " + createdProject.getProjectId());
-         } else {
-             displayError("Project creation failed (check logs or previous errors)."); // Should ideally not happen if exception is thrown
-         }
-     }
+    private void handleCreateProject() throws RegistrationException, InvalidInputException { // Consider if these exceptions are really thrown by controller/service
+        displayHeader("Create New BTO Project");
+        String name = promptForInput("Enter Project Name: ");
+        String neighborhood = promptForInput("Enter Neighborhood: ");
+        LocalDate openDate = promptForDate("Enter Application Opening Date (YYYY-MM-DD): ");
+        LocalDate closeDate = promptForDate("Enter Application Closing Date (YYYY-MM-DD): ");
+        int officerSlots = promptForInt("Enter Max HDB Officer Slots (1-10): ");
+   
+        // ****** RE-APPLY CORRECTION: Use String as key ******
+        Map<String, ProjectFlatInfo> flatInfoMap = new HashMap<>(); // KEY IS STRING
+        System.out.println("--- Enter Flat Details ---");
+        for (FlatType type : List.of(FlatType.TWO_ROOM, FlatType.THREE_ROOM)) {
+            int totalUnits = promptForInt("Enter Total Units for " + type.name() + ": ");
+            // Assuming price is not needed at creation or defaults to 0
+            ProjectFlatInfo info = new ProjectFlatInfo(type, totalUnits, totalUnits, 0.0);
+            // ****** RE-APPLY CORRECTION: Use type.name() as the String key ******
+            flatInfoMap.put(type.name(), info); // Use enum name as String key
+        }
+   
+        // Call controller with the Map<String, ProjectFlatInfo>
+        Project createdProject = projectController.createProject(user, name, neighborhood, flatInfoMap, openDate, closeDate, officerSlots);
+   
+        if (createdProject != null) {
+            displayMessage("Project '" + createdProject.getProjectName() + "' created successfully with ID: " + createdProject.getProjectId());
+        } else {
+            // Controller/Service should have printed error or thrown exception handled in main loop
+            displayError("Project creation failed (check previous errors).");
+        }
+    }
 
      private void handleEditProject() throws InvalidInputException {
          displayHeader("Edit Existing Project");
@@ -224,20 +238,71 @@ public class HDBManagerUI extends BaseUI {
      }
 
      private void handleViewAllProjects() {
-         displayHeader("All BTO Projects");
-         List<Project> allProjects = projectController.getAllProjects(user); // Pass user for potential authorization check
-         // TODO: Add Filtering options here based on PDF (location, flat types etc) - requires more UI logic
-          if (allProjects.isEmpty()) {
-              displayMessage("No projects found in the system.");
-          } else {
-               Project selected = selectProjectFromList(allProjects, "All Projects");
-               if(selected != null) {
-                   displayStaffProjectDetails(selected);
-               }
-          }
-     }
+        displayHeader("All BTO Projects - View & Filter");
+        // 1. Get all projects initially
+        List<Project> allProjects = projectController.getAllProjects(); // Call the correct controller method
 
-     private void handleViewMyProjects() {
+        if (allProjects.isEmpty()) {
+            displayMessage("No projects found in the system.");
+            return; // Exit early if nothing to show/filter
+        }
+
+        List<Project> projectsToDisplay = allProjects; // Start with all
+
+        // 2. Offer Filtering 
+        if (promptForConfirmation("Apply filters? (yes/no): ")) {
+            displayMessage("Enter filter criteria (leave blank to skip a filter):");
+            List<Project> currentlyFiltered = new ArrayList<>(allProjects); // Work on a copy
+
+            // --- Apply Neighborhood Filter ---
+            String neighborhoodFilter = promptForInput("Filter by Neighborhood (contains, case-insensitive): ");
+            if (!neighborhoodFilter.isBlank()) {
+                currentlyFiltered = currentlyFiltered.stream()
+                    .filter(p -> p.getNeighborhood().toLowerCase().contains(neighborhoodFilter.toLowerCase()))
+                    .collect(Collectors.toList());
+                displayMessage("Filtered by neighborhood. Found: " + currentlyFiltered.size());
+            }
+
+            // --- Apply Flat Type Filter ---
+            // Only proceed if the list isn't already empty
+            if (!currentlyFiltered.isEmpty()) {
+                String flatTypeFilterInput = promptForInput("Filter by Flat Type (TWO_ROOM, THREE_ROOM): ").toUpperCase();
+                if (!flatTypeFilterInput.isBlank()) {
+                    try {
+                        FlatType selectedType = FlatType.valueOf(flatTypeFilterInput);
+                        currentlyFiltered = currentlyFiltered.stream()
+                            .filter(p -> p.getFlatTypes() != null && p.getFlatTypes().containsKey(selectedType))
+                            .collect(Collectors.toList());
+                        displayMessage("Filtered by flat type. Found: " + currentlyFiltered.size());
+                    } catch (IllegalArgumentException e) {
+                        displayError("Invalid flat type '" + flatTypeFilterInput + "'. Flat type filter skipped.");
+                    }
+                }
+            }
+
+            projectsToDisplay = currentlyFiltered; // Update the list to display with the final filtered results
+        }
+
+        // 3. Display the results (either all or filtered)
+        if (projectsToDisplay.isEmpty()) {
+             if (projectsToDisplay != allProjects) { // Check if filtering actually happened
+                displayMessage("No projects match the specified filters.");
+             } else {
+                // This case shouldn't be reached if initial check passed, but as a safeguard:
+                displayMessage("No projects found to display.");
+             }
+         } else {
+              // Determine title based on whether filtering occurred
+              String listTitle = (projectsToDisplay == allProjects) ? "All Projects" : "Filtered Projects (" + projectsToDisplay.size() + " found)";
+              Project selected = selectProjectFromList(projectsToDisplay, listTitle);
+              if(selected != null) {
+                  displayStaffProjectDetails(selected);
+              }
+         }
+    } 
+     
+
+    private void handleViewMyProjects() {
           displayHeader("My Managed BTO Projects");
           List<Project> myProjects = projectController.getManagedProjects(user);
            if (myProjects.isEmpty()) {
@@ -439,7 +504,7 @@ public class HDBManagerUI extends BaseUI {
          }
 
         displayMessage("Generating report with filters: " + filters);
-        String report = reportController.generateBookingReport(user, filters);
+        String report = reportController.generateBookingReport(filters);
         displayMessage("\n--- Report Start ---");
         System.out.println(report); 
         displayMessage("--- Report End ---");
@@ -460,17 +525,17 @@ public class HDBManagerUI extends BaseUI {
               return;
          }
 
-         // Consider adding complexity rules here 
-
-         boolean success = authController.changePassword(user, newPassword); // Assuming authController exists and has this method
-
-         if (success) {
-             displayMessage("Password changed successfully.");
-         } else {
-             displayError("Password change failed. Please try again later.");
-         }
-         // pause(); 
-     }
+        try {
+            boolean success = authController.changePassword(user, newPassword);
+            if (success) {
+                displayMessage("Password changed successfully.");
+            } else {
+                displayError("Password change failed. Please try again later.");
+            }
+        } catch (Exception e) { 
+            displayError("An unexpected error occurred during password change: " + e.getMessage());
+        }
+    }
 
     // --- Helper Methods for Displaying Lists and Details ---
      private Project selectProjectFromList(List<Project> projects, String listTitle) {
@@ -615,57 +680,40 @@ public class HDBManagerUI extends BaseUI {
         System.out.println("0. Back");
         return enquiryMap;
     }
-
-     // Helper method for parsing date, assuming it exists in BaseUI or needs implementation
-     private LocalDate promptForDate(String prompt) {
-         // Placeholder - implement robust date parsing in BaseUI/here
-         while (true) {
-            String input = promptForInput(prompt + " (YYYY-MM-DD): ");
-            if (input.isBlank()) {
-                displayError("Date cannot be blank.");
-                continue;
-            }
-            try {
-                 return LocalDate.parse(input, DATE_FORMATTER);
-            } catch (DateTimeParseException e) {
-                 displayError("Invalid date format. Please use YYYY-MM-DD.");
-            }
-         }
-     }
-
-      // Helper method for parsing date OR allowing user to keep existing date
-     private LocalDate promptForDateOrKeep(String prompt, LocalDate currentValue) {
-         while (true) {
-            String input = promptForInput(prompt + " (Enter YYYY-MM-DD or leave blank to keep '" + formatDate(currentValue) + "'): ");
-            if (input.isBlank()) {
-                 return currentValue; // Keep current
-            }
-            try {
-                 return LocalDate.parse(input, DATE_FORMATTER);
-            } catch (DateTimeParseException e) {
-                 displayError("Invalid date format. Please use YYYY-MM-DD.");
-            }
-         }
-     }
-
-    // Helper to prompt for int or keep current value
-    private int promptForIntOrKeep(String prompt, int currentValue) {
-        while(true) {
-            String input = promptForInput(prompt + " (Enter number or leave blank to keep '" + currentValue + "'): ");
-            if(input.isBlank()) {
-                return currentValue;
-            }
-            try {
-                return Integer.parseInt(input);
-            } catch (NumberFormatException e) {
-                displayError("Invalid number format.");
-            }
+   
+   // Make protected if BaseUI doesn't have this exact logic
+   protected LocalDate promptForDateOrKeep(String prompt, LocalDate currentValue) { // Changed from private
+        while (true) {
+           String input = promptForInput(prompt + " (Enter YYYY-MM-DD or leave blank to keep '" + formatDate(currentValue) + "'): ");
+           if (input.isBlank()) {
+                return currentValue; // Keep current
+           }
+           try {
+                // DATE_FORMATTER must be declared in this class or BaseUI
+                return LocalDate.parse(input, DATE_FORMATTER);
+           } catch (DateTimeParseException e) {
+                displayError("Invalid date format. Please use YYYY-MM-DD.");
+           }
         }
     }
-
-     // Helper for consistent date formatting
-     private String formatDate(LocalDate date) {
-         return (date == null) ? "N/A" : DATE_FORMATTER.format(date);
-     }
+   
+    private int promptForIntOrKeep(String prompt, int currentValue) { // Changed from private
+       while(true) {
+           String input = promptForInput(prompt + " (Enter number or leave blank to keep '" + currentValue + "'): ");
+           if(input.isBlank()) {
+               return currentValue;
+           }
+           try {
+               return Integer.parseInt(input);
+           } catch (NumberFormatException e) {
+               displayError("Invalid number format.");
+           }
+       }
+   }
+   
+    private String formatDate(LocalDate date) { 
+        // DATE_FORMATTER must be declared in this class or BaseUI
+        return (date == null) ? "N/A" : DATE_FORMATTER.format(date);
+    }
 
 }

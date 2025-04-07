@@ -26,6 +26,7 @@ public class ReportController {
      * @return The generated report as a formatted string
      */
     public String generateBookingReport(Map<String, String> filters) {
+        // The service layer handles generating the report based on filters
         return reportService.generateBookingReport(filters);
     }
 }
