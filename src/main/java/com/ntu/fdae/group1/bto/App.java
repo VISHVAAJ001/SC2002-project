@@ -24,6 +24,7 @@ import com.ntu.fdae.group1.bto.controllers.enquiry.*;
 
 // Services (Interfaces and Concrete implementations needed for initialisation)
 import com.ntu.fdae.group1.bto.services.user.*;
+import com.ntu.fdae.group1.bto.utils.IdGenerator;
 import com.ntu.fdae.group1.bto.services.project.*;
 import com.ntu.fdae.group1.bto.services.booking.*;
 import com.ntu.fdae.group1.bto.services.enquiry.*;
@@ -78,6 +79,13 @@ public class App {
                 bookingRepository.loadAll();
                 enquiryRepository.loadAll();
                 officerRegRepository.loadAll();
+
+                IdGenerator.initialise(
+                        projectRepository,
+                        applicationRepository,
+                        bookingRepository,
+                        enquiryRepository,
+                        officerRegRepository);
                 // System.out.println("Data loaded successfully.");
             } catch (DataAccessException e) {
                 System.err.println("FATAL: Failed to load initial data: " + e.getMessage());

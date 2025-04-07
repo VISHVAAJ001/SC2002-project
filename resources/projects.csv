@@ -1,5 +1,5 @@
 projectId,projectName,neighborhood,openingDate,closingDate,managerNric,maxOfficerSlots,isVisible,approvedOfficerNrics
-PROJ001,Acacia Breeze,Yishun,2025-02-15,2025-03-20,S5678901G,3,true,"T2109876H;S6543210I"
+PROJ001,Acacia Breeze,Yishun,2025-02-15,2025-04-20,S5678901G,3,true,"T2109876H;S6543210I"
 PROJ002,Maple Grove,Boon Lay,2025-04-01,2025-04-30,T4000001F,3,true,
 PROJ003,Cedar Valley,Tampines,2025-04-10,2025-05-10,T4000002G,4,true,
-PROJ004,Pine Heights,Woodlands,2025-02-01,2025-02-28,T4000002G,2,false,
+PROJ004,Pine Heights,Woodlands,2025-02-01,2025-04-28,T4000002G,2,false,

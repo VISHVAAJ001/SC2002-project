@@ -150,4 +150,41 @@ public class EnquiryRepository implements IEnquiryRepository {
 
         return serializedData;
     }
+
+    @Override
+    public void deleteById(String enquiryId) throws DataAccessException {
+        // 1. Ensure data is loaded (redundant if loaded in constructor, but safe)
+        // ensureLoaded(); // Optional defensive check
+
+        if (enquiryId == null || enquiryId.trim().isEmpty()) {
+            // Optional: Log a warning or throw IllegalArgumentException
+            System.err.println("Warning: Attempted to delete enquiry with null or empty ID.");
+            return;
+        }
+
+        // 2. Remove from the in-memory map
+        // The remove method returns the value associated with the key,
+        // or null if the key was not found.
+        Enquiry removedEnquiry = enquiries.remove(enquiryId);
+
+        // 3. Check if an entry was actually removed
+        if (removedEnquiry != null) {
+            // 4. If removed, persist the changes back to the file
+            System.out.println("Deleted enquiry from memory: " + enquiryId); // Optional log
+            try {
+                // Reuse the saveAll logic, which writes the current state of the map
+                saveAll(this.enquiries); // Save the modified map
+            } catch (DataAccessException e) {
+                // If saving fails, should we add the item back to the map for consistency?
+                // Or let the exception propagate? Propagating is usually better.
+                System.err.println("Error persisting deletion for enquiry: " + enquiryId);
+                // Re-throw or wrap if needed, but DataAccessException is often sufficient
+                throw e;
+            }
+        } else {
+            // Optional: Log that the ID wasn't found
+            System.out.println("Enquiry with ID '" + enquiryId + "' not found for deletion.");
+            // No need to save if nothing changed in the map
+        }
+    }
 }

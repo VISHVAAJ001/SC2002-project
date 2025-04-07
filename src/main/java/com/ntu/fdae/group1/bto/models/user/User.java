@@ -49,4 +49,8 @@ public abstract class User {
     public MaritalStatus getMaritalStatus() {
         return maritalStatus;
     }
+
+    public void updatePasswordHash(String newHash) {
+        this.passwordHash = newHash;
+    }
 }

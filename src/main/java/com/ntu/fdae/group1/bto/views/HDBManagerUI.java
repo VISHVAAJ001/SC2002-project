@@ -39,6 +39,7 @@ public class HDBManagerUI extends BaseUI {
     private final ReportController reportController;
     private final AuthenticationController authController;
     private final ProjectUIHelper projectUIHelper; // Use the helper
+    private final AccountUIHelper accountUIHelper;
 
     public HDBManagerUI(HDBManager user,
             ProjectController projCtrl,
@@ -57,6 +58,7 @@ public class HDBManagerUI extends BaseUI {
         this.reportController = Objects.requireNonNull(reportCtrl);
         this.authController = Objects.requireNonNull(authCtrl);
         this.projectUIHelper = new ProjectUIHelper(this); // Initialize helper
+        this.accountUIHelper = new AccountUIHelper(this, authCtrl); // Initialize account helper
     }
 
     public void displayMainMenu() {
@@ -112,6 +114,7 @@ public class HDBManagerUI extends BaseUI {
                         break;
                     case 8:
                         handleChangePassword();
+                        keepRunning = false; // Could just remove the break here, but this is clearer
                         break;
                     case 0:
                         keepRunning = false;
@@ -274,8 +277,6 @@ public class HDBManagerUI extends BaseUI {
     }
 
     private void handleChangePassword() {
-        displayHeader("Change Password");
-        // TODO: Implement logic (same as other UIs)
-        System.out.println("[Placeholder: Change user's password]");
+        accountUIHelper.handlePasswordChange(this.user);
     }
 }

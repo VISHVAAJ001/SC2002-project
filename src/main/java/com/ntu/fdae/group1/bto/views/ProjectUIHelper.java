@@ -56,13 +56,11 @@ public class ProjectUIHelper {
             // Customize the basic info shown in the list as needed
             // Show visibility status as it's relevant for staff and implicitly determines
             // applicant view
-            String basicInfo = String.format("[%d] ID: %-8s | Name: %-20s (%-12s) | Closing: %s | Visible: %s",
+            String basicInfo = String.format("[%d] Name: %-20s (%-12s) | Closing: %s",
                     counter.getAndIncrement(),
-                    p.getProjectId(),
                     p.getProjectName(),
                     p.getNeighborhood(),
-                    p.getClosingDate().format(DATE_FORMATTER),
-                    p.isVisible() ? "Yes" : "No");
+                    p.getClosingDate().format(DATE_FORMATTER));
             baseUI.displayMessage(basicInfo);
         });
         baseUI.displayMessage("[0] Back");

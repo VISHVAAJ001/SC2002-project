@@ -6,6 +6,7 @@ import com.ntu.fdae.group1.bto.controllers.enquiry.EnquiryController;
 import com.ntu.fdae.group1.bto.controllers.user.AuthenticationController; // Added
 import com.ntu.fdae.group1.bto.enums.ApplicationStatus;
 import com.ntu.fdae.group1.bto.enums.FlatType;
+import com.ntu.fdae.group1.bto.models.enquiry.Enquiry;
 import com.ntu.fdae.group1.bto.models.project.Application;
 import com.ntu.fdae.group1.bto.models.project.Project;
 import com.ntu.fdae.group1.bto.models.project.ProjectFlatInfo;
@@ -32,6 +33,8 @@ public class ApplicantUI extends BaseUI {
     private final EnquiryController enquiryController;
     private final AuthenticationController authController;
     private final ProjectUIHelper projectUIHelper; // Use the helper
+    private final AccountUIHelper accountUIHelper; // Use the helper
+    private final EnquiryUIHelper enquiryUIHelper;
 
     public ApplicantUI(Applicant user,
             ProjectController projCtrl,
@@ -45,7 +48,9 @@ public class ApplicantUI extends BaseUI {
         this.applicationController = Objects.requireNonNull(appCtrl);
         this.enquiryController = Objects.requireNonNull(enqCtrl);
         this.authController = Objects.requireNonNull(authCtrl);
+        this.accountUIHelper = new AccountUIHelper(this, authController); // Initialize helper
         this.projectUIHelper = new ProjectUIHelper(this); // Initialize helper
+        this.enquiryUIHelper = new EnquiryUIHelper(this); // Initialize helper
     }
 
     public void displayMainMenu() {
@@ -85,6 +90,7 @@ public class ApplicantUI extends BaseUI {
                         break;
                     case 5:
                         handleChangePassword();
+                        keepRunning = false; // Could just remove the break here, but this is clearer
                         break;
                     case 0:
                         keepRunning = false;
@@ -143,10 +149,17 @@ public class ApplicantUI extends BaseUI {
             FlatType preference = null; // Placeholder - GET PREFERENCE HERE
             // ----------
 
-            if (promptForConfirmation("Confirm application submission? (yes/no): ")) {
-                Application app = applicationController.submitApplication(this.user, projectId, preference);
-                displayMessage("Application submitted successfully! ID: " + app.getApplicationId() + ", Status: "
-                        + app.getStatus());
+            if (promptForConfirmation("Confirm application submission?")) {
+                try {
+                    Application app = applicationController.submitApplication(this.user, projectId, preference);
+                    displayMessage("Application submitted successfully! ID: " + app.getApplicationId() + ", Status: "
+                            + app.getStatus());
+                } catch (ApplicationException e) {
+                    // Handle specific application exceptions
+                    displayError("Application submission failed: " + e.getMessage());
+                } catch (Exception e) { // Catch other exceptions
+                    displayError("An error occurred while submitting the application: " + e.getMessage());
+                }
             } else {
                 displayMessage("Application cancelled.");
             }
@@ -239,7 +252,25 @@ public class ApplicantUI extends BaseUI {
         // 2. Prompt for content.
         // 3. Call enquiryController.createEnquiry(user, projectId, content);
         // 4. Display result.
-        System.out.println("[Placeholder: Submit a general or project-specific enquiry]");
+
+        List<Project> projects = projectController.getVisibleProjectsForUser(this.user);
+
+        Project selectedProject = projectUIHelper.selectProjectFromList(projects,
+                "Select Project to Submit Enquiry");
+
+        if (selectedProject != null) {
+            String content = promptForInput("Enter your enquiry content: ");
+            if (content != null && !content.trim().isEmpty()) {
+                try {
+                    enquiryController.createEnquiry(this.user, selectedProject.getProjectId(), content);
+                    displayMessage("Enquiry submitted successfully!");
+                } catch (Exception e) {
+                    displayError("Failed to submit enquiry: " + e.getMessage());
+                }
+            } else {
+                displayError("Enquiry content cannot be empty.");
+            }
+        }
     }
 
     private void handleManageMyEnquiries() {
@@ -257,16 +288,80 @@ public class ApplicantUI extends BaseUI {
         // enquiryController.editMyEnquiry(...).
         // f. If Delete: Confirm, call enquiryController.deleteMyEnquiry(...).
         // g. Display success/error.
-        System.out.println("[Placeholder: View, Edit, Delete own enquiries]");
+        List<Enquiry> enquiries = enquiryController.getEnquiriesByUser(this.user); // Get data
+
+        // Use helper to display list and get selection
+        Enquiry selectedEnquiry = enquiryUIHelper.selectEnquiryFromList(enquiries, "My Submitted Enquiries");
+
+        if (selectedEnquiry != null) {
+            // Use helper to display details
+            enquiryUIHelper.displayEnquiryDetails(selectedEnquiry);
+
+            // --- Applicant Contextual Actions ---
+            // Check if editable/deletable based on rules (e.g., not replied - FAQ p26)
+            boolean canManage = !selectedEnquiry.isReplied();
+
+            if (canManage) {
+                System.out.println("\nOptions:");
+                System.out.println("[1] Edit Enquiry Content");
+                System.out.println("[2] Delete Enquiry");
+                System.out.println("[0] Back");
+
+                int actionChoice = promptForInt("Enter option: ");
+                switch (actionChoice) {
+                    case 1:
+                        handleEditEnquiryAction(selectedEnquiry.getEnquiryId());
+                        break;
+                    case 2:
+                        handleDeleteEnquiryAction(selectedEnquiry.getEnquiryId());
+                        break;
+                    // Default or 0: Do nothing
+                }
+            } else {
+                displayMessage("This enquiry has been replied to and cannot be modified.");
+                displayMessage("\n[0] Back");
+                promptForInt("Enter 0 to go back: ");
+            }
+            System.out.println("[Placeholder: View, Edit, Delete own enquiries]");
+        }
+    }
+
+    // Helper method to handle actual edit action
+    private void handleEditEnquiryAction(String enquiryId) {
+        String newContent = promptForInput("Enter new content for the enquiry: ");
+        if (newContent != null && !newContent.trim().isEmpty()) {
+            try {
+                boolean success = enquiryController.editEnquiry(enquiryId, newContent, this.user);
+                if (success) {
+                    displayMessage("Enquiry edited successfully!");
+                } else {
+                    displayError("Failed to edit enquiry. It may not exist or you may not have permission.");
+                }
+            } catch (Exception e) {
+                displayError("Failed to edit enquiry: " + e.getMessage());
+            }
+        } else {
+            displayError("New content cannot be empty.");
+        }
+    }
+
+    // Helper method to handle actual delete action
+    private void handleDeleteEnquiryAction(String enquiryId) {
+        try {
+            boolean success = enquiryController.deleteEnquiry(enquiryId, this.user);
+
+            if (success) {
+                displayMessage("Enquiry deleted successfully!");
+            } else {
+                displayError("Failed to delete enquiry. It may not exist or you may not have permission.");
+            }
+        } catch (Exception e) {
+            displayError("Failed to delete enquiry: " + e.getMessage());
+            return;
+        }
     }
 
     private void handleChangePassword() {
-        displayHeader("Change Password");
-        System.out.println("Calling authController.changePassword...");
-        // TODO: Implement logic:
-        // 1. Prompt for new password and confirmation.
-        // 2. Validate. Call authController.changePassword(user, newPassword);
-        // 3. Display result.
-        System.out.println("[Placeholder: Change user's password]");
+        accountUIHelper.handlePasswordChange(this.user);
     }
 }
