@@ -43,6 +43,28 @@ public class EnquiryController {
      * @return true if edit was successful, false otherwise
      */
     public boolean editEnquiry(String enquiryId, String newContent, User user) {
+        if (newContent == null || newContent.trim().isEmpty()) {
+            return false; // Invalid content
+        }
+
+        // Check if the user is allowed to edit the enquiry
+        Enquiry enquiry = enquiryService.findEnquiryById(enquiryId);
+        if (enquiry == null || !enquiry.getUserNric().equals(user.getNric())) {
+            return false; // User not authorized to edit this enquiry
+        }
+
+        // Check if enquiry has already been replied to
+        if (enquiry.isReplied()) {
+            // Once an enquiry has been
+            // replied to, should the applicant still
+            // be able to edit or delete it?
+            // A: No. Once replied, the enquiry
+            // should not be editable or deletable
+            // by the applicant.
+            return false;
+        }
+
+        // Proceed with the edit
         return enquiryService.editEnquiry(enquiryId, newContent, user);
     }
 
@@ -54,6 +76,23 @@ public class EnquiryController {
      * @return true if deletion was successful, false otherwise
      */
     public boolean deleteEnquiry(String enquiryId, User user) {
+        // Check if the user is allowed to edit the enquiry
+        Enquiry enquiry = enquiryService.findEnquiryById(enquiryId);
+        if (enquiry == null || !enquiry.getUserNric().equals(user.getNric())) {
+            return false; // User not authorized to edit this enquiry
+        }
+
+        // Check if enquiry has already been replied to
+        if (enquiry.isReplied()) {
+            // Once an enquiry has been
+            // replied to, should the applicant still
+            // be able to edit or delete it?
+            // A: No. Once replied, the enquiry
+            // should not be editable or deletable
+            // by the applicant.
+            return false;
+        }
+
         return enquiryService.deleteEnquiry(enquiryId, user);
     }
 
