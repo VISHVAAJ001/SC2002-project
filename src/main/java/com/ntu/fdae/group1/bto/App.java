@@ -95,7 +95,7 @@ public class App {
             }
 
             // 2. initialise Services (Inject Repositories and other Services)
-            EligibilityService eligibilityService = new EligibilityService(); //
+            EligibilityService eligibilityService = new EligibilityService(projectRepository); //
 
             // Standalone or simple dependencies
             AuthenticationService authService = new AuthenticationService(userRepository);
