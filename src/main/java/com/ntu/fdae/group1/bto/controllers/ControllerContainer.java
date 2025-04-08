@@ -4,10 +4,10 @@ import com.ntu.fdae.group1.bto.controllers.booking.BookingController;
 import com.ntu.fdae.group1.bto.controllers.booking.ReceiptController;
 import com.ntu.fdae.group1.bto.controllers.enquiry.EnquiryController;
 import com.ntu.fdae.group1.bto.controllers.project.ApplicationController;
-import com.ntu.fdae.group1.bto.controllers.project.OfficerRegistrationController;
 import com.ntu.fdae.group1.bto.controllers.project.ProjectController;
 import com.ntu.fdae.group1.bto.controllers.project.ReportController;
 import com.ntu.fdae.group1.bto.controllers.user.AuthenticationController;
+import com.ntu.fdae.group1.bto.controllers.project.OfficerRegistrationController;
 
 public class ControllerContainer {
     public AuthenticationController authController;

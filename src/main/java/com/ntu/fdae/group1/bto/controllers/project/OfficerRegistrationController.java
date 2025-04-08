@@ -1,6 +1,7 @@
 package com.ntu.fdae.group1.bto.controllers.project;
 
 import java.util.List;
+import java.util.Objects;
 
 import com.ntu.fdae.group1.bto.exceptions.AuthenticationException;
 import com.ntu.fdae.group1.bto.exceptions.RegistrationException;
@@ -69,13 +70,17 @@ public class OfficerRegistrationController {
      * @param manager The manager requesting pending registrations
      * @return List of pending registrations
      */
-    public List<OfficerRegistration> getPendingRegistrations(HDBManager manager) throws AuthenticationException {
-        // 1. Authorization Check
-        if (manager == null) { // Or more robust check if needed
-            throw new AuthenticationException("Authentication required.");
-        }
+    public List<OfficerRegistration> getPendingRegistrations(HDBManager manager){
 
-        return registrationService.getPendingRegistrations();
+        Objects.requireNonNull(manager, "HDBManager context cannot be null when calling getPendingRegistrations.");
+        
+        try {
+            // Call the service method, which doesn't throw checked exceptions
+            return registrationService.getPendingRegistrations();
+        } catch (Exception e) { // Optional: Catch unexpected runtime errors
+            System.err.println("Controller ERROR: Failed to retrieve pending registrations: " + e.getMessage());
+            throw new RuntimeException("Failed to retrieve pending registrations due to an internal error.", e);
+        }
     }
 
     /**
