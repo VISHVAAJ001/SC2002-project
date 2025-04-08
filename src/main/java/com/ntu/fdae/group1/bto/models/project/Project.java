@@ -180,7 +180,7 @@ public class Project {
 
     public boolean addApprovedOfficer(String officerNric) {
         // Consider null/blank check for officerNric
-        if (officerNric != null && !officerNric.isBlank() &&
+        if (officerNric != null && !officerNric.trim().isEmpty() &&
             approvedOfficerNrics.size() < maxOfficerSlots &&
             !approvedOfficerNrics.contains(officerNric))
         {

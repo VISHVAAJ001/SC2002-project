@@ -1,6 +1,7 @@
 package com.ntu.fdae.group1.bto.services.project;
 
 import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
@@ -47,7 +48,7 @@ public class ProjectService implements IProjectService {
         // Eligibility Check
         // Need to handle Collection<Project> type potentially returned by findAll()
         Map<String, Project> projectMap = projectRepo.findAll();
-        Collection<Project> allProjects = (projectMap != null) ? projectMap.values() : List.of();
+        Collection<Project> allProjects = (projectMap != null) ? projectMap.values() : Arrays.asList();
         if (!eligibilityService.checkManagerProjectHandlingEligibility(manager, openDate, closeDate, allProjects)) {
              System.err.println("Service Error: Manager " + manager.getNric() + " is already handling another project during this application period. Project creation failed.");
              return null;
@@ -180,7 +181,7 @@ public class ProjectService implements IProjectService {
 
     @Override
     public List<Project> getProjectsManagedBy(String managerNRIC) {
-        if (managerNRIC == null || managerNRIC.isBlank()) {
+        if (managerNRIC == null || managerNRIC.trim().isEmpty()) {
             return new ArrayList<>();
         }
         Map<String, Project> projectMap = projectRepo.findAll();
@@ -194,7 +195,7 @@ public class ProjectService implements IProjectService {
 
     @Override
     public Project findProjectById(String projectId) {
-         if (projectId == null || projectId.isBlank()) {
+         if (projectId == null || projectId.trim().isEmpty()) {
             return null;
         }
         return projectRepo.findById(projectId);
