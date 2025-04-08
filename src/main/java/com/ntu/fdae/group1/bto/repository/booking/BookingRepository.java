@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 public class BookingRepository implements IBookingRepository {
     private static final String BOOKING_FILE_PATH = "resources/bookings.csv";
@@ -76,6 +77,19 @@ public class BookingRepository implements IBookingRepository {
             }
         }
         return null;
+    }
+
+    @Override
+    public void deleteById(String id) {
+        Objects.requireNonNull(id, "Booking ID cannot be null for deletion");
+        Booking removedBooking = bookings.remove(id);
+
+        if (removedBooking != null) {
+            System.out.println("INFO: Removing Booking with ID: " + id);
+            saveAll(this.bookings); // Call existing saveAll to write updated map to file
+        } else {
+            System.err.println("WARN: Attempted to delete non-existent Booking with ID: " + id);
+        }
     }
 
     // Helper methods for serialization/deserialization

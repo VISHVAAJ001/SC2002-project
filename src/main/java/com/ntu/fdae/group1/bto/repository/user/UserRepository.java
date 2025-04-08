@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 public class UserRepository implements IUserRepository {
     private static final String USER_FILE_PATH = "resources/users.csv";
@@ -60,6 +61,20 @@ public class UserRepository implements IUserRepository {
             // Consider adding more robust error handling here
         }
         return users;
+    }
+
+    @Override
+    public void deleteById(String id) {
+        Objects.requireNonNull(id, "User NRIC cannot be null for deletion");
+        User removedUser = users.remove(id); // remove returns the removed value or null
+
+        if (removedUser != null) {
+            // User was found and removed, now persist the changes
+            System.out.println("INFO: Removing User with NRIC: " + id);
+            saveAll(this.users); // Call existing saveAll to write the updated map to file
+        } else {
+            System.err.println("WARN: Attempted to delete non-existent User with NRIC: " + id);
+        }
     }
 
     // Helper methods for serialization/deserialization
@@ -127,4 +142,5 @@ public class UserRepository implements IUserRepository {
         }
         return serializedData;
     }
+
 }

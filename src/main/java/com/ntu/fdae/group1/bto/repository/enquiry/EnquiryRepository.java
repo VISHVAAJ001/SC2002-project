@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.Objects;
 
 public class EnquiryRepository implements IEnquiryRepository {
     private static final String ENQUIRY_FILE_PATH = "resources/enquiries.csv";
@@ -76,6 +77,19 @@ public class EnquiryRepository implements IEnquiryRepository {
         return enquiries.values().stream()
                 .filter(enquiry -> projectId.equals(enquiry.getProjectId()))
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public void deleteById(String id) {
+        Objects.requireNonNull(id, "Enquiry ID cannot be null for deletion");
+        Enquiry removedEnquiry = enquiries.remove(id);
+
+        if (removedEnquiry != null) {
+            System.out.println("INFO: Removing Enquiry with ID: " + id);
+            saveAll(this.enquiries); // Call existing saveAll to write updated map to file
+        } else {
+            System.err.println("WARN: Attempted to delete non-existent Enquiry with ID: " + id);
+        }
     }
 
     // Helper methods for serialization/deserialization
