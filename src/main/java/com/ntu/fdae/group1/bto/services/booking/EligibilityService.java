@@ -19,7 +19,12 @@ import java.util.Objects;
 
 public class EligibilityService implements IEligibilityService {
 
-    
+    private final IProjectRepository projectRepository;
+
+    public EligibilityService(IProjectRepository projectRepository) {
+        this.projectRepository = Objects.requireNonNull(projectRepository, "Project Repository cannot be null for EligibilityService");
+    }
+
     @Override
     public boolean canApplicantApply(Applicant applicant, Project project) {
         // ... (Implementation remains the same) ...
