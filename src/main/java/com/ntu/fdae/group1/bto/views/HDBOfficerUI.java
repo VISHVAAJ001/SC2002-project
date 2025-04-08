@@ -2,7 +2,7 @@ package com.ntu.fdae.group1.bto.views;
 
 import com.ntu.fdae.group1.bto.controllers.project.ApplicationController;
 import com.ntu.fdae.group1.bto.controllers.project.ProjectController;
-import com.ntu.fdae.group1.bto.controllers.project.OfficerRegistrationController;
+import com.ntu.fdae.group1.bto.controllers.user.OfficerRegistrationController;
 import com.ntu.fdae.group1.bto.controllers.booking.BookingController;
 import com.ntu.fdae.group1.bto.controllers.booking.ReceiptController;
 import com.ntu.fdae.group1.bto.controllers.enquiry.EnquiryController;
@@ -12,9 +12,12 @@ import com.ntu.fdae.group1.bto.models.project.*; // Import project models
 import com.ntu.fdae.group1.bto.models.user.HDBOfficer;
 import com.ntu.fdae.group1.bto.models.user.User; // Needed for receipt generation
 import com.ntu.fdae.group1.bto.exceptions.*; // Import custom exceptions
+import com.ntu.fdae.group1.bto.enums.FlatType;
+import com.ntu.fdae.group1.bto.enums.MaritalStatus;
 import com.ntu.fdae.group1.bto.enums.OfficerRegStatus;
 
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -161,8 +164,96 @@ public class HDBOfficerUI extends BaseUI {
         }
     }
 
-    private void handleSubmitApplicationAction(String projectId) {
+    private void handleSubmitApplicationAction(Project projectToApply) {
         // TODO: Implement identical flow as ApplicantUI.handleSubmitApplicationAction
+
+        Objects.requireNonNull(projectToApply, "Project to apply for cannot be null.");
+        String projectId = projectToApply.getProjectId();
+
+        // CRITICAL OFFICER CHECK: Cannot apply if handling this project
+        OfficerRegStatus handlingStatus = officerRegController.getMyRegistrationStatus(this.user, projectId);
+        if (handlingStatus == OfficerRegStatus.APPROVED) {
+            throw new ApplicationException("You cannot apply for a project you are approved to handle.");
+        }
+        // Check PENDING status too
+        if (handlingStatus == OfficerRegStatus.PENDING) {
+            throw new ApplicationException("You cannot apply for a project you have a pending registration for.");
+        }
+
+        /* 
+        cannot directly pass an HDBOfficer where an Applicant is required
+        controller method getMyApplication is designed for an Applicant viewing their own application
+        modify to take in nric instead? 
+
+
+        // Check if already has an application
+        if (applicationController.getMyApplication(this.user) != null) {
+            throw new ApplicationException("You already have an existing BTO application.");
+        }
+        
+        Application myApp = applicationController.getApplicationForUser(this.user.getNric());
+
+        */
+
+
+        displayMessage("Applying for project: " + projectToApply.getProjectName());
+
+        // Determine applicable flat types based on user and project
+        Map<FlatType, ProjectFlatInfo> availableFlats = projectToApply.getFlatTypes();
+        List<FlatType> eligibleTypes = new ArrayList<>();
+        if (availableFlats != null) { // Check if map exists
+            if (user.getMaritalStatus() == MaritalStatus.SINGLE && user.getAge() >= 35) {
+                if (availableFlats.containsKey(FlatType.TWO_ROOM)) eligibleTypes.add(FlatType.TWO_ROOM);
+            } else if (user.getMaritalStatus() == MaritalStatus.MARRIED && user.getAge() >= 21) {
+                // Check both types explicitly
+                if (availableFlats.containsKey(FlatType.TWO_ROOM)) eligibleTypes.add(FlatType.TWO_ROOM);
+                if (availableFlats.containsKey(FlatType.THREE_ROOM)) eligibleTypes.add(FlatType.THREE_ROOM);
+            }
+        }
+
+        if (eligibleTypes.isEmpty()) {
+            throw new ApplicationException("No eligible flat types available for you in this project based on your profile.");
+        }
+
+
+        FlatType preferredType = null;
+        if (eligibleTypes.size() > 1) { 
+            boolean validInput = false;
+            while(!validInput) {
+                FlatType tempSelection = promptForEnum("Select preferred flat type", FlatType.class); // Use BaseUI method
+
+                if (tempSelection == null) {
+                    if (!promptForConfirmation("Invalid type entered. Try again? (Y/N)")) {
+                        displayMessage("Application cancelled."); return;
+                    }
+                    continue;
+                }
+                if (eligibleTypes.contains(tempSelection)) {
+                    preferredType = tempSelection;
+                    validInput = true;
+                } else {
+                    displayError("Selected flat type '" + tempSelection + "' is not eligible/available for you in this project.");
+                     if (!promptForConfirmation("Try again? (Y/N)")) {
+                        displayMessage("Application cancelled."); return;
+                    }
+                }
+            }
+        } else { // Auto-select if only one option (size must be 1)
+            preferredType = eligibleTypes.get(0);
+            displayMessage("Auto-selecting eligible flat type: " + preferredType);
+        }
+        // preferredType should now be valid and non-null if we reached here
+
+        if (promptForConfirmation("Confirm application for " + projectToApply.getProjectName() + " (Preference: " + preferredType + ")? (Y/N)")) {
+
+        if (promptForConfirmation("Confirm application for " + projectToApply.getProjectName() + " (Preference: " + preferredType + ")? (Y/N)")) {
+            Application submittedApp = applicationController.submitApplication(this.user, projectId, preferredType);
+            // Service layer should handle throwing exception on failure
+            displayMessage("Application submitted successfully! Application ID: " + submittedApp.getApplicationId());
+        } else {
+            displayMessage("Application cancelled.");
+        }
+
         System.out.println("[Placeholder: Officer submitting application like Applicant]");
         // Prompt for preference etc. Call appController.submitApplication(...)
     }

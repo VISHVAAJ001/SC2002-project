@@ -46,7 +46,7 @@ public class HDBManagerUI extends BaseUI {
 
     public HDBManagerUI(HDBManager user, ProjectController projectController, ApplicationController appController,
         OfficerRegistrationController officerRegController,
-        EnquiryController enquiryController, ReportController reportController, AuthenticationController authController) { 
+        EnquiryController enquiryController, ReportController reportController, AuthenticationController authController, Scanner scanner) { 
 
             super(new Scanner(System.in)); // <<< CREATE AND PASS SCANNER >>>
             this.scanner = super.scanner; // <<< OPTIONAL: Store scanner if needed locally >>>

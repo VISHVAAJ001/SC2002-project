@@ -8,6 +8,7 @@ import com.ntu.fdae.group1.bto.models.user.User;
 import com.ntu.fdae.group1.bto.models.user.Applicant;
 import com.ntu.fdae.group1.bto.models.user.HDBOfficer;
 import com.ntu.fdae.group1.bto.models.user.HDBManager;
+import com.ntu.fdae.group1.bto.models.user.OfficerRegistration;
 
 // Views
 import com.ntu.fdae.group1.bto.views.LoginUI;
@@ -21,7 +22,6 @@ import com.ntu.fdae.group1.bto.controllers.user.*;
 import com.ntu.fdae.group1.bto.controllers.project.*;
 import com.ntu.fdae.group1.bto.controllers.booking.*;
 import com.ntu.fdae.group1.bto.controllers.enquiry.*;
-
 // Services (Interfaces and Concrete implementations needed for initialisation)
 import com.ntu.fdae.group1.bto.services.user.*;
 import com.ntu.fdae.group1.bto.services.project.*;
@@ -87,12 +87,12 @@ public class App {
             }
 
             // 2. initialise Services (Inject Repositories and other Services)
-            EligibilityService eligibilityService = new EligibilityService(); //
+            EligibilityService eligibilityService = new EligibilityService(projectRepository);
 
             // Standalone or simple dependencies
             AuthenticationService authService = new AuthenticationService(userRepository);
             ProjectService projectService = new ProjectService(projectRepository,
-                    userRepository, eligibilityService);
+                    userRepository, eligibilityService, applicationRepository);
             EnquiryService enquiryService = new EnquiryService(enquiryRepository);
             ApplicationService applicationService = new ApplicationService(
                     applicationRepository, projectRepository, eligibilityService,
