@@ -486,8 +486,6 @@ public class HDBOfficerUI extends BaseUI {
 
         // 3. Check if user selected an enquiry or went back
         if (selectedEnquiry == null) {
-            // Message ("No enquiries" or "Invalid selection") handled by helper or loop
-            // continues
             return;
         }
 
@@ -506,7 +504,6 @@ public class HDBOfficerUI extends BaseUI {
                 String replyContent = promptForInput("Enter your reply: ");
                 if (replyContent.trim().isEmpty()) {
                     displayError("Reply content cannot be empty.");
-                    // Pause to allow user to see error before returning to sub-menu
                     pause();
                     return;
                 }
@@ -515,8 +512,6 @@ public class HDBOfficerUI extends BaseUI {
                 try {
                     if (enquiryController.replyToEnquiry(this.user, selectedEnquiry.getEnquiryId(), replyContent)) {
                         displayMessage("Reply sent successfully.");
-                        // Optionally: You might want to immediately re-fetch and re-display the detail
-                        // view to show the updated status, or just let the user see it next time.
                     } else {
                         displayError("Failed to send reply. Please check or try again.");
                     }
@@ -526,16 +521,11 @@ public class HDBOfficerUI extends BaseUI {
                 // Pause after action before potentially re-displaying sub-menu
                 pause();
             }
-            // If 0 or invalid, do nothing, loop in handleManageHandlingProject will show
-            // sub-menu again.
-
         } else {
             // Already replied, just offer to go back
             System.out.println("\n[0] Back");
             promptForInt("Enter 0 to go back: "); // Just wait for back input
         }
-        // After handling the selected enquiry, control returns to the loop in
-        // handleManageHandlingProject
     }
 
     private void handleChangePassword() {

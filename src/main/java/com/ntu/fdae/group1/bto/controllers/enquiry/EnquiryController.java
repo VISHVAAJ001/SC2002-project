@@ -113,6 +113,28 @@ public class EnquiryController {
      * @return true if reply was successful, false otherwise
      */
     public boolean replyToEnquiry(HDBStaff staff, String enquiryId, String replyContent) {
+        // Check if the staff member is allowed to reply to the enquiry
+        Enquiry enquiry = enquiryService.findEnquiryById(enquiryId);
+        if (enquiry == null) {
+            return false; // Enquiry not found
+        }
+
+        // Check if the staff member is authorized to reply
+        if (staff.getRole() == UserRole.HDB_OFFICER) {
+            // Officers can only reply to enquiries they are registered for
+            try {
+                HDBOfficer officer = (HDBOfficer) staff;
+                OfficerRegStatus status = registrationService.getRegistrationStatus(officer, enquiry.getProjectId());
+                if (status != OfficerRegStatus.APPROVED) {
+                    return false; // Not authorized to reply
+                }
+            } catch (ClassCastException e) {
+                // Should not happen if role check is correct, but handle defensively
+                System.err.println("Authorization Error: User role mismatch during officer check.");
+                return false;
+            }
+        }
+
         return enquiryService.replyToEnquiry(enquiryId, replyContent, staff);
     }
 
