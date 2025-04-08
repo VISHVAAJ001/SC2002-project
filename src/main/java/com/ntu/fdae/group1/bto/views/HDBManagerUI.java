@@ -3,6 +3,7 @@ package com.ntu.fdae.group1.bto.views;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -148,7 +149,7 @@ public class HDBManagerUI extends BaseUI {
    
         Map<String, ProjectFlatInfo> flatInfoMap = new HashMap<>(); 
         System.out.println("--- Enter Flat Details ---");
-        for (FlatType type : List.of(FlatType.TWO_ROOM, FlatType.THREE_ROOM)) {
+        for (FlatType type : Arrays.asList(FlatType.TWO_ROOM, FlatType.THREE_ROOM)) {
             int totalUnits = promptForInt("Enter Total Units for " + type.name() + ": ");
             // Assuming price is not needed at creation or defaults to 0
             ProjectFlatInfo info = new ProjectFlatInfo(type, totalUnits, totalUnits, 0.0);
@@ -184,8 +185,8 @@ public class HDBManagerUI extends BaseUI {
 
 
         boolean success = projectController.editProject(user, projectToEdit.getProjectId(),
-                name.isBlank() ? projectToEdit.getProjectName() : name.trim(),
-                neighborhood.isBlank() ? projectToEdit.getNeighborhood() : neighborhood.trim(),
+                name.trim().isEmpty() ? projectToEdit.getProjectName() : name.trim(),
+                neighborhood.trim().isEmpty() ? projectToEdit.getNeighborhood() : neighborhood.trim(),
                 openDate, // Use the potentially kept date
                 closeDate, // Use the potentially kept date
                 officerSlots); // Use the potentially kept slots
@@ -258,7 +259,7 @@ public class HDBManagerUI extends BaseUI {
 
             // --- Apply Neighborhood Filter ---
             String neighborhoodFilter = promptForInput("Filter by Neighborhood (contains, case-insensitive): ");
-            if (!neighborhoodFilter.isBlank()) {
+            if (!neighborhoodFilter.trim().isEmpty()) {
                 currentlyFiltered = currentlyFiltered.stream()
                     .filter(p -> p.getNeighborhood().toLowerCase().contains(neighborhoodFilter.toLowerCase()))
                     .collect(Collectors.toList());
@@ -269,7 +270,7 @@ public class HDBManagerUI extends BaseUI {
             // Only proceed if the list isn't already empty
             if (!currentlyFiltered.isEmpty()) {
                 String flatTypeFilterInput = promptForInput("Filter by Flat Type (TWO_ROOM, THREE_ROOM): ").toUpperCase();
-                if (!flatTypeFilterInput.isBlank()) {
+                if (!flatTypeFilterInput.trim().isEmpty()) {
                     try {
                         FlatType selectedType = FlatType.valueOf(flatTypeFilterInput);
                         currentlyFiltered = currentlyFiltered.stream()
@@ -479,7 +480,7 @@ public class HDBManagerUI extends BaseUI {
         displayMessage("Enter filter criteria (leave blank to ignore):");
         // --- Flat Type Filter ---
         String flatTypeInput = promptForInput("Filter by Flat Type (TWO_ROOM, THREE_ROOM): ").toUpperCase();
-        if (!flatTypeInput.isBlank()) {
+        if (!flatTypeInput.trim().isEmpty()) {
             try {
                 filters.put("FLAT_TYPE", FlatType.valueOf(flatTypeInput).name());
             } catch (IllegalArgumentException e) {
@@ -488,11 +489,11 @@ public class HDBManagerUI extends BaseUI {
         }
          // --- Project Name Filter ---
         String projectNameFilter = promptForInput("Filter by Project Name (exact match): ");
-        if (!projectNameFilter.isBlank()) filters.put("PROJECT_NAME", projectNameFilter);
+        if (!projectNameFilter.trim().isEmpty()) filters.put("PROJECT_NAME", projectNameFilter);
         
         // --- Age Filter ---
         String ageFilter = promptForInput("Filter by Applicant Age (exact match): ");
-        if (!ageFilter.isBlank()) {
+        if (!ageFilter.trim().isEmpty()) {
             try {
                 Integer.parseInt(ageFilter); 
                 filters.put("AGE", ageFilter);
@@ -503,7 +504,7 @@ public class HDBManagerUI extends BaseUI {
         
         // --- Marital Status Filter ---
         String maritalStatusInput = promptForInput("Filter by Marital Status (SINGLE, MARRIED): ").toUpperCase();
-        if (!maritalStatusInput.isBlank()) {
+        if (!maritalStatusInput.trim().isEmpty()) {
             try {
                 filters.put("MARITAL_STATUS", MaritalStatus.valueOf(maritalStatusInput).name());
             } catch (IllegalArgumentException e) {
@@ -600,7 +601,7 @@ public class HDBManagerUI extends BaseUI {
             System.out.println("  No flat information available.");
             return;
         }
-        List<FlatType> displayOrder = List.of(FlatType.TWO_ROOM, FlatType.THREE_ROOM);
+        List<FlatType> displayOrder = Arrays.asList(FlatType.TWO_ROOM, FlatType.THREE_ROOM);
         for (FlatType type : displayOrder) {
             ProjectFlatInfo info = project.getFlatTypes().get(type);
             if (info != null) {
@@ -692,7 +693,7 @@ public class HDBManagerUI extends BaseUI {
    private LocalDate promptForDateOrKeep(String prompt, LocalDate currentValue) { 
         while (true) {
             String input = promptForInput(prompt + " (Enter YYYY-MM-DD or leave blank to keep '" + formatDate(currentValue) + "'): ");
-            if (input.isBlank()) {
+            if (input.trim().isEmpty()) {
                 return currentValue; // Keep current
             }
             try {
@@ -706,7 +707,7 @@ public class HDBManagerUI extends BaseUI {
     private int promptForIntOrKeep(String prompt, int currentValue) { 
         while(true) {
             String input = promptForInput(prompt + " (Enter number or leave blank to keep '" + currentValue + "'): ");
-            if(input.isBlank()) {
+            if(input.trim().isEmpty()) {
                return currentValue;
             }
             try {
