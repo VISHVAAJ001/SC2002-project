@@ -1,11 +1,14 @@
 package com.ntu.fdae.group1.bto.services.booking;
 
 import java.time.LocalDate;
+import java.util.Collections;
+import java.util.List;
 
 import com.ntu.fdae.group1.bto.enums.ApplicationStatus;
 import com.ntu.fdae.group1.bto.enums.FlatType;
 import com.ntu.fdae.group1.bto.enums.UserRole;
 import com.ntu.fdae.group1.bto.exceptions.BookingException;
+import com.ntu.fdae.group1.bto.exceptions.DataAccessException;
 import com.ntu.fdae.group1.bto.models.booking.Booking;
 import com.ntu.fdae.group1.bto.models.project.Application;
 import com.ntu.fdae.group1.bto.models.project.Project;
@@ -151,5 +154,25 @@ public class BookingService implements IBookingService {
 
         // 12. Return the newly created booking object
         return newBooking;
+    }
+
+    @Override
+    public List<Booking> getBookingsByProject(String projectId) throws BookingException {
+        if (projectId == null || projectId.trim().isEmpty()) {
+            // Or throw InvalidInputException
+            return Collections.emptyList();
+        }
+        try {
+            // Delegate directly to repository
+            List<Booking> bookings = bookingRepo.findByProjectId(projectId);
+            return bookings != null ? bookings : Collections.emptyList();
+        } catch (DataAccessException e) {
+            // Log error if needed
+            System.err.println("Error fetching bookings for project " + projectId + ": " + e.getMessage());
+            throw new BookingException("Error fetching bookings for project " + projectId);
+        } catch (Exception e) {
+            System.err.println("Unexpected error fetching bookings for project " + projectId + ": " + e.getMessage());
+            throw new RuntimeException("Unexpected error fetching bookings", e); // Wrap unexpected errors
+        }
     }
 }

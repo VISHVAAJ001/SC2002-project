@@ -1,5 +1,7 @@
 package com.ntu.fdae.group1.bto.controllers.booking;
 
+import java.util.List;
+
 import com.ntu.fdae.group1.bto.enums.FlatType;
 import com.ntu.fdae.group1.bto.exceptions.BookingException;
 import com.ntu.fdae.group1.bto.exceptions.InvalidInputException;
@@ -24,5 +26,9 @@ public class BookingController {
     public Booking createBooking(HDBOfficer officer, String applicantNric, FlatType flatType)
             throws BookingException, InvalidInputException {
         return bookingService.performBooking(officer, applicantNric, flatType);
+    }
+
+    public List<Booking> getBookingsForProject(String projectId) throws BookingException {
+        return bookingService.getBookingsByProject(projectId);
     }
 }

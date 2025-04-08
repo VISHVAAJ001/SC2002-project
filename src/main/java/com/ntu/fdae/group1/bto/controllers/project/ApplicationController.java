@@ -8,6 +8,7 @@ import com.ntu.fdae.group1.bto.enums.ApplicationStatus;
 import com.ntu.fdae.group1.bto.enums.FlatType;
 import com.ntu.fdae.group1.bto.models.user.Applicant;
 import com.ntu.fdae.group1.bto.models.user.HDBManager;
+import com.ntu.fdae.group1.bto.models.user.HDBStaff;
 import com.ntu.fdae.group1.bto.services.project.IApplicationService;
 
 /**
@@ -28,8 +29,9 @@ public class ApplicationController {
     /**
      * Submits a new application
      * 
-     * @param applicant The applicant submitting the application
-     * @param projectId ID of the project to apply for
+     * @param applicant         The applicant submitting the application
+     * @param projectId         ID of the project to apply for
+     * @param preferredFlatType The preferred flat type
      * @return The created application
      * @throws ApplicationException if submission fails
      */
@@ -76,30 +78,33 @@ public class ApplicationController {
     /**
      * Gets the application for a specific applicant
      * 
-     * @param applicantNRIC NRIC of the applicant
+     * @param applicant The applicant
      * @return The application, or null if not found
      */
-    public Application getApplicationForUser(String applicantNRIC) {
-        return applicationService.getApplicationForUser(applicantNRIC);
+    public Application getMyApplication(Applicant applicant) {
+        return applicationService.getApplicationForUser(applicant.getNric());
     }
 
     /**
      * Gets all applications for a specific project
      * 
+     * @param staff     HDB staff member requesting the information
      * @param projectId ID of the project
      * @return List of applications for the project
      */
-    public List<Application> getApplicationsByProject(String projectId) {
+    public List<Application> getProjectApplications(HDBStaff staff, String projectId) {
+
         return applicationService.getApplicationsByProject(projectId);
     }
 
     /**
      * Gets all applications with a specific status
      * 
+     * @param staff  HDB staff member requesting the information
      * @param status Status to filter by
      * @return List of applications with the specified status
      */
-    public List<Application> getApplicationsByStatus(ApplicationStatus status) {
+    public List<Application> getApplicationsByStatus(HDBStaff staff, ApplicationStatus status) {
         return applicationService.getApplicationsByStatus(status);
     }
 }

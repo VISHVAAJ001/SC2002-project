@@ -1,6 +1,7 @@
 package com.ntu.fdae.group1.bto.services.project;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.ntu.fdae.group1.bto.enums.OfficerRegStatus;
 import com.ntu.fdae.group1.bto.exceptions.RegistrationException;
@@ -57,4 +58,10 @@ public class OfficerRegistrationService implements IOfficerRegistrationService {
         throw new UnsupportedOperationException("Unimplemented method 'getRegistrationsByProject'");
     }
 
+    @Override
+    public List<OfficerRegistration> getRegistrationsByOfficer(String officerNric) {
+        return officerRepository.findAll().values().stream() // Adjust if findAll() returns List
+                .filter(reg -> reg.getOfficerNric().equals(officerNric))
+                .collect(Collectors.toList());
+    }
 }

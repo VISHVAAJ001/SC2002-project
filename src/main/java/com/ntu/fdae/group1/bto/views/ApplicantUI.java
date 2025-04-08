@@ -4,6 +4,7 @@ import com.ntu.fdae.group1.bto.controllers.project.ApplicationController;
 import com.ntu.fdae.group1.bto.controllers.project.ProjectController;
 import com.ntu.fdae.group1.bto.controllers.enquiry.EnquiryController;
 import com.ntu.fdae.group1.bto.controllers.user.AuthenticationController; // Added
+import com.ntu.fdae.group1.bto.controllers.user.UserController;
 import com.ntu.fdae.group1.bto.enums.ApplicationStatus;
 import com.ntu.fdae.group1.bto.enums.FlatType;
 import com.ntu.fdae.group1.bto.models.enquiry.Enquiry;
@@ -28,6 +29,7 @@ import java.util.Objects;
 
 public class ApplicantUI extends BaseUI {
     private final Applicant user;
+    private final UserController userController;
     private final ProjectController projectController;
     private final ApplicationController applicationController;
     private final EnquiryController enquiryController;
@@ -37,6 +39,7 @@ public class ApplicantUI extends BaseUI {
     private final EnquiryUIHelper enquiryUIHelper;
 
     public ApplicantUI(Applicant user,
+            UserController userCtrl,
             ProjectController projCtrl,
             ApplicationController appCtrl,
             EnquiryController enqCtrl,
@@ -44,13 +47,14 @@ public class ApplicantUI extends BaseUI {
             Scanner scanner) {
         super(scanner);
         this.user = Objects.requireNonNull(user);
+        this.userController = Objects.requireNonNull(userCtrl);
         this.projectController = Objects.requireNonNull(projCtrl);
         this.applicationController = Objects.requireNonNull(appCtrl);
         this.enquiryController = Objects.requireNonNull(enqCtrl);
         this.authController = Objects.requireNonNull(authCtrl);
-        this.accountUIHelper = new AccountUIHelper(this, authController); // Initialize helper
-        this.projectUIHelper = new ProjectUIHelper(this); // Initialize helper
-        this.enquiryUIHelper = new EnquiryUIHelper(this); // Initialize helper
+        this.accountUIHelper = new AccountUIHelper(this, authCtrl);
+        this.projectUIHelper = new ProjectUIHelper(this, userCtrl);
+        this.enquiryUIHelper = new EnquiryUIHelper(this, userCtrl);
     }
 
     public void displayMainMenu() {
@@ -275,20 +279,7 @@ public class ApplicantUI extends BaseUI {
 
     private void handleManageMyEnquiries() {
         displayHeader("Manage My Enquiries");
-        // TODO: Implement View->Select->Detail->Action flow
-        // 1. Call enquiryController.viewMyEnquiries(user).
-        // 2. Display list with numbers.
-        // 3. Prompt for selection (or 0 to back).
-        // 4. If selected:
-        // a. Display full details of the Enquiry.
-        // b. Check if editable/deletable (e.g., not replied - FAQ p26).
-        // c. If yes, display options: "[1] Edit", "[2] Delete", "[0] Back".
-        // d. Get action choice.
-        // e. If Edit: Prompt for new content, call
-        // enquiryController.editMyEnquiry(...).
-        // f. If Delete: Confirm, call enquiryController.deleteMyEnquiry(...).
-        // g. Display success/error.
-        List<Enquiry> enquiries = enquiryController.getEnquiriesByUser(this.user); // Get data
+        List<Enquiry> enquiries = enquiryController.viewMyEnquiries(this.user); // Get data
 
         // Use helper to display list and get selection
         Enquiry selectedEnquiry = enquiryUIHelper.selectEnquiryFromList(enquiries, "My Submitted Enquiries");

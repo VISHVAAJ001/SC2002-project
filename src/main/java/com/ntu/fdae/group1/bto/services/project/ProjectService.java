@@ -69,8 +69,15 @@ public class ProjectService implements IProjectService {
 
     @Override
     public Project findProjectById(String projectId) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'findProjectById'");
+        // Find the project by ID in the repository
+        Project project = projectRepo.findById(projectId);
+        if (project == null) {
+            // Handle the case where the project is not found
+            throw new IllegalArgumentException("Project with ID " + projectId + " not found.");
+        }
+
+        // Return the found project
+        return project;
     }
 
     /**

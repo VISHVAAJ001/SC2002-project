@@ -99,6 +99,7 @@ public class App {
 
             // Standalone or simple dependencies
             AuthenticationService authService = new AuthenticationService(userRepository);
+            UserService userService = new UserService(userRepository);
             ProjectService projectService = new ProjectService(projectRepository,
                     userRepository, eligibilityService);
             EnquiryService enquiryService = new EnquiryService(enquiryRepository);
@@ -118,18 +119,20 @@ public class App {
 
             // 3. initialise Controllers (Inject Services)
             AuthenticationController authController = new AuthenticationController(authService);
+            UserController userController = new UserController(userService);
             ProjectController projectController = new ProjectController(projectService);
             ApplicationController appController = new ApplicationController(applicationService);
-            OfficerRegistrationController officerRegController = new OfficerRegistrationController(officerRegService);
+            OfficerRegistrationController officerRegController = new OfficerRegistrationController(officerRegService,
+                    projectService);
             BookingController bookingController = new BookingController(bookingService);
             ReceiptController receiptController = new ReceiptController(receiptService);
-            EnquiryController enquiryController = new EnquiryController(enquiryService);
+            EnquiryController enquiryController = new EnquiryController(enquiryService, officerRegService);
             ReportController reportController = new ReportController(reportService);
             // System.out.println("Controllers initialised.");
 
             // 4. Create Controller Container
             ControllerContainer container = new ControllerContainer(
-                    authController, projectController, appController, officerRegController,
+                    authController, userController, projectController, appController, officerRegController,
                     bookingController, receiptController, enquiryController, reportController);
 
             // System.out.println("Initialisation complete.");
@@ -186,6 +189,7 @@ public class App {
                 case APPLICANT:
                     ApplicantUI applicantUI = new ApplicantUI(
                             (Applicant) user,
+                            controllerContainer.userController,
                             controllerContainer.projectController,
                             controllerContainer.appController,
                             controllerContainer.enquiryController,
@@ -196,6 +200,7 @@ public class App {
                 case HDB_OFFICER:
                     HDBOfficerUI officerUI = new HDBOfficerUI(
                             (HDBOfficer) user, // Cast user to HDBOfficer
+                            controllerContainer.userController,
                             controllerContainer.projectController,
                             controllerContainer.appController,
                             controllerContainer.officerRegController,
@@ -210,6 +215,7 @@ public class App {
                 case HDB_MANAGER:
                     HDBManagerUI managerUI = new HDBManagerUI(
                             (HDBManager) user,
+                            controllerContainer.userController,
                             controllerContainer.projectController,
                             controllerContainer.appController,
                             controllerContainer.officerRegController,

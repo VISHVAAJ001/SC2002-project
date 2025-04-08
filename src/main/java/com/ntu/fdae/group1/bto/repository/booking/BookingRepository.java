@@ -61,7 +61,7 @@ public class BookingRepository implements IBookingRepository {
     @Override
     public Booking findByApplicantNric(String nric) {
         for (Booking booking : bookings.values()) {
-            if (booking.getApplicantNRIC().equals(nric)) {
+            if (booking.getApplicantNric().equals(nric)) {
                 return booking;
             }
         }
@@ -76,6 +76,17 @@ public class BookingRepository implements IBookingRepository {
             }
         }
         return null;
+    }
+
+    @Override
+    public List<Booking> findByProjectId(String projectId) {
+        List<Booking> projectBookings = new ArrayList<>();
+        for (Booking booking : bookings.values()) {
+            if (booking.getProjectId().equals(projectId)) {
+                projectBookings.add(booking);
+            }
+        }
+        return projectBookings;
     }
 
     // Helper methods for serialization/deserialization
@@ -130,7 +141,7 @@ public class BookingRepository implements IBookingRepository {
             serializedData.add(new String[] {
                     booking.getBookingId(),
                     booking.getApplicationId(),
-                    booking.getApplicantNRIC(),
+                    booking.getApplicantNric(),
                     booking.getProjectId(),
                     booking.getBookedFlatType().toString(),
                     FileUtil.formatLocalDate(booking.getBookingDate())

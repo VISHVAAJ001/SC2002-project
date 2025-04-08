@@ -52,4 +52,12 @@ public interface IOfficerRegistrationService {
      * @return List of registrations for the project
      */
     List<OfficerRegistration> getRegistrationsByProject(String projectId);
+
+    /**
+     * Gets all registrations for a specific officer
+     * 
+     * @param officerId ID of the officer
+     * @return List of registrations for the officer
+     */
+    List<OfficerRegistration> getRegistrationsByOfficer(String officerId);
 }
