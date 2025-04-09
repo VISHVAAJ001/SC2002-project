@@ -6,16 +6,16 @@ import java.time.LocalDate;
 public class Booking {
     private String bookingId;
     private String applicationId;
-    private String applicantNRIC;
+    private String applicantNric;
     private String projectId;
     private FlatType bookedFlatType;
     private LocalDate bookingDate;
 
-    public Booking(String bookingId, String applicationId, String applicantNRIC, String projectId,
+    public Booking(String bookingId, String applicationId, String applicantNric, String projectId,
             FlatType bookedFlatType, LocalDate bookingDate) {
         this.bookingId = bookingId;
         this.applicationId = applicationId;
-        this.applicantNRIC = applicantNRIC;
+        this.applicantNric = applicantNric;
         this.projectId = projectId;
         this.bookedFlatType = bookedFlatType;
         this.bookingDate = bookingDate;
@@ -29,8 +29,8 @@ public class Booking {
         return applicationId;
     }
 
-    public String getApplicantNRIC() {
-        return applicantNRIC;
+    public String getApplicantNric() {
+        return applicantNric;
     }
 
     public String getProjectId() {

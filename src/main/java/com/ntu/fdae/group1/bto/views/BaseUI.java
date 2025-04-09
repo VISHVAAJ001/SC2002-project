@@ -6,6 +6,7 @@ import java.time.format.DateTimeParseException;
 import java.util.InputMismatchException;
 import java.util.List;
 import java.util.Scanner;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 
 /**
@@ -108,35 +109,90 @@ public abstract class BaseUI {
     }
 
     /**
-     * Prompts the user for an enum value with basic error handling.
-     * 
-     * @param <E>       The enum type.
-     * @param prompt    The message to display before input.
-     * @param enumClass The class of the enum.
-     * @return The enum value entered by the user, or null if input is invalid.
+     * Prompts the user to select an enum constant from a provided list of allowed
+     * values.
+     * Optionally allows selecting a "null" or "no preference" option.
+     * Handles invalid input and loops until a valid selection is made or cancelled.
+     *
+     * @param <E>             The type of the enum.
+     * @param prompt          The message to display to the user.
+     * @param enumClass       The class of the enum (used for clarity, not strictly
+     *                        necessary here).
+     * @param allowedValues   A List containing ONLY the enum constants to be
+     *                        presented as choices.
+     * @param allowNullChoice If true, an option representing 'null' or 'no choice'
+     *                        is added.
+     * @param nullChoiceText  The text to display for the null choice option (e.g.,
+     *                        "No Preference").
+     * @return The selected enum constant, or null if the user chooses the null
+     *         option or cancels (selects 0).
      */
-    public <E extends Enum<E>> E promptForEnum(String prompt, Class<E> enumClass) {
-        System.out.print(prompt + " (Options: " + String.join(", ", getEnumNames(enumClass)) + "): ");
-        String input = scanner.nextLine().toUpperCase();
-        try {
-            return Enum.valueOf(enumClass, input);
-        } catch (IllegalArgumentException e) {
-            System.err.println("Invalid input. Please enter one of the listed options.");
-            return null;
+    public <E extends Enum<E>> E promptForEnum(String prompt, Class<E> enumClass, List<E> allowedValues) {
+        // Validate input list
+        if (allowedValues == null || allowedValues.isEmpty()) {
+            displayError("Cannot prompt for selection: No allowed enum values provided.");
+            return null; // Or throw an IllegalArgumentException
+        }
+
+        int choice;
+        final int cancelOptionNumber = 0; // Standard cancel option
+
+        while (true) { // Loop until valid input or cancel
+            displayMessage(prompt);
+            AtomicInteger counter = new AtomicInteger(1); // For 1-based display index
+
+            // Display the allowed enum values
+            allowedValues
+                    .forEach(value -> displayMessage("[" + counter.getAndIncrement() + "] " + formatEnumName(value)) // Use
+                                                                                                                     // helper
+                                                                                                                     // for
+                                                                                                                     // formatting
+                    );
+
+            // Display the cancel option
+            displayMessage("[" + cancelOptionNumber + "] Cancel / Back");
+            displayMessage("---------------------------------");
+
+            choice = promptForInt("Enter your choice:"); // Use robust promptForInt
+
+            // Process the choice
+            if (choice == cancelOptionNumber) {
+                displayMessage("Selection cancelled.");
+                return null;
+            }
+
+            if (choice > 0 && choice <= allowedValues.size()) {
+                // Valid enum choice, return the selected value (adjusting for 0-based list
+                // index)
+                return allowedValues.get(choice - 1);
+            }
+
+            // If none of the above, the choice was invalid
+            displayError("Invalid selection. Please enter a number from the list.");
+            // Loop continues
         }
     }
 
     /**
-     * Get string array of enum constant names.
-     * 
-     * @param <E>       The enum type.
-     * @param enumClass The class of the enum.
-     * @return Array of enum constant names.
+     * Helper method to potentially format enum names for display.
+     * (e.g., TWO_ROOM -> "Two Room", PENDING -> "Pending")
+     * Override or replace with simple .name() if basic display is fine.
+     *
+     * @param <E>          The enum type
+     * @param enumConstant The enum constant to format
+     * @return A user-friendly string representation.
      */
-    private <E extends Enum<E>> String[] getEnumNames(Class<E> enumClass) {
-        return java.util.Arrays.stream(enumClass.getEnumConstants())
-                .map(Enum::name)
-                .toArray(String[]::new);
+    protected <E extends Enum<E>> String formatEnumName(E enumConstant) {
+        if (enumConstant == null)
+            return "";
+        // Simple example: Replace underscore with space, title case maybe?
+        String name = enumConstant.name().replace('_', ' ');
+        // Basic title case - improve if needed
+        if (name.length() > 0) {
+            name = Character.toUpperCase(name.charAt(0)) + name.substring(1).toLowerCase();
+        }
+        return name;
+        // Or just return enumConstant.name(); for basic "TWO_ROOM" display
     }
 
     /**
