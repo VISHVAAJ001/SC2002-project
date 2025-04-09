@@ -1,17 +1,19 @@
 package com.ntu.fdae.group1.bto.services.booking;
 
+import com.ntu.fdae.group1.bto.exceptions.DataAccessException;
 import com.ntu.fdae.group1.bto.models.booking.Booking;
-import com.ntu.fdae.group1.bto.models.project.Project;
-import com.ntu.fdae.group1.bto.models.user.User;
+import com.ntu.fdae.group1.bto.models.booking.BookingReceiptInfo;
 
 public interface IReceiptService {
+
     /**
-     * Generates a receipt text for a booking
-     * 
-     * @param booking   The booking to generate a receipt for
-     * @param applicant The applicant who made the booking
-     * @param project   The project for which the booking was made
-     * @return The receipt as a formatted string
+     * Gathers necessary information and constructs a BookingReceiptInfo object
+     * based on the provided Booking details.
+     * Handles fetching related User and Project data.
+     *
+     * @param booking The core Booking object.
+     * @return A populated BookingReceiptInfo DTO.
+     * @throws DataAccessException If required User or Project data cannot be found.
      */
-    String generateBookingReceipt(Booking booking, User applicant, Project project);
+    BookingReceiptInfo generateBookingReceipt(Booking booking) throws DataAccessException;
 }

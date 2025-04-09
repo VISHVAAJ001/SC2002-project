@@ -1,5 +1,6 @@
 package com.ntu.fdae.group1.bto.views;
 
+import com.ntu.fdae.group1.bto.controllers.user.UserController;
 import com.ntu.fdae.group1.bto.enums.FlatType;
 import com.ntu.fdae.group1.bto.models.project.Project;
 import com.ntu.fdae.group1.bto.models.project.ProjectFlatInfo;
@@ -19,6 +20,7 @@ import java.util.concurrent.atomic.AtomicInteger; // For numbered lists
 public class ProjectUIHelper {
 
     private final BaseUI baseUI; // Use BaseUI for console interactions
+    private final UserController userController;
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE; // Or your preferred
                                                                                               // format
 
@@ -27,7 +29,8 @@ public class ProjectUIHelper {
      * 
      * @param baseUI An instance of BaseUI (or a subclass) to handle console I/O.
      */
-    public ProjectUIHelper(BaseUI baseUI) {
+    public ProjectUIHelper(BaseUI baseUI, UserController userController) {
+        this.userController = Objects.requireNonNull(userController);
         this.baseUI = Objects.requireNonNull(baseUI, "BaseUI cannot be null");
     }
 

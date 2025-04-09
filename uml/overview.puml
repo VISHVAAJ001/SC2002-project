@@ -353,6 +353,18 @@ package Utility <<Folder>> {
 
 ' --- Service Layer ---
 package Service <<Folder>> {
+    interface IUserService <<ISP>> {
+        + findUserById(nric: String) : User <<nullable>>
+        + findUserNames(nrics: Collection<String>) : Map<String, String>
+    }
+
+    class UserService implements IUserService {
+        - userRepository : IUserRepository
+        + UserService(userRepository: IUserRepository)
+        + findUserById(nric: String) : User <<nullable>>
+        + findUserNames(nrics: Collection<String>) : Map<String, String>
+    }
+
     interface IAuthenticationService <<ISP>> {
         + login(nric: String, password: String) : User <<throws AuthenticationException>>
         + changePassword(user: User, newPassword: String) : boolean
@@ -449,11 +461,12 @@ package Service <<Folder>> {
     }
 
     interface IOfficerRegistrationService <<ISP>> {
-         + requestProjectRegistration(officer: HDBOfficer, projectId: String) : OfficerRegistration <<throws RegistrationException>>;
-         + reviewRegistration(manager: HDBManager, registrationId: String, approve: boolean) : boolean <<throws RegistrationException>>;
-         + getRegistrationStatus(officer: HDBOfficer, projectId: String) : OfficerRegStatus <<nullable>>;
-         + getPendingRegistrations() : List<OfficerRegistration>;
-         + getRegistrationsByProject(projectId: String) : List<OfficerRegistration>;
+        + requestProjectRegistration(officer: HDBOfficer, projectId: String) : OfficerRegistration <<throws RegistrationException>>;
+        + reviewRegistration(manager: HDBManager, registrationId: String, approve: boolean) : boolean <<throws RegistrationException>>;
+        + getRegistrationStatus(officer: HDBOfficer, projectId: String) : OfficerRegStatus <<nullable>>;
+        + getPendingRegistrations() : List<OfficerRegistration>;
+        + getRegistrationsByProject(projectId: String) : List<OfficerRegistration>;
+        + getRegistrationsByOfficer(officerNric: String) : List<OfficerRegistration>;
     }
     class OfficerRegistrationService implements IOfficerRegistrationService {
         - registrationRepo : IOfficerRegistrationRepository;
@@ -508,6 +521,7 @@ package Service <<Folder>> {
 package Controller <<Folder>> {
     class ControllerContainer {
        + authController : AuthenticationController
+       + userController : UserController
        + projectController : ProjectController
        + appController : ApplicationController
        + officerRegController : OfficerRegistrationController
@@ -516,6 +530,13 @@ package Controller <<Folder>> {
        + enquiryController : EnquiryController
        + reportController : ReportController
        + ControllerContainer(auth: AuthenticationController, proj: ProjectController, app: ApplicationController, reg: OfficerRegistrationController, book: BookingController, receipt: ReceiptController, enq: EnquiryController, report: ReportController)
+    }
+
+    class UserController {
+        - userService : IUserService
+        + UserController(userService: IUserService)
+        + getUserName(nric: String) : String
+        + getUserNamesForList(nrics: Collection<String>) : Map<String, String>
     }
 
     class AuthenticationController {
@@ -552,12 +573,14 @@ package Controller <<Folder>> {
 
     class OfficerRegistrationController {
         - registrationService : IOfficerRegistrationService;
-        + OfficerRegistrationController(regService: IOfficerRegistrationService);
+        - projectService : IProjectService;
+        + OfficerRegistrationController(regService: IOfficerRegistrationService, projService: IProjectService);
         + requestRegistration(officer: HDBOfficer, projectId: String) : OfficerRegistration <<throws RegistrationException>>;
         + reviewRegistration(manager: HDBManager, registrationId: String, approve: boolean) : boolean <<throws RegistrationException>>;
         + getMyRegistrationStatus(officer: HDBOfficer, projectId: String) : OfficerRegStatus <<nullable>>;
         + getPendingRegistrations(manager: HDBManager) : List<OfficerRegistration>;
         + getProjectRegistrations(staff: HDBStaff, projectId: String) : List<OfficerRegistration>;
+        + getApprovedHandlingProject(officer: HDBOfficer) : Project;
     }
 
     class BookingController {
@@ -628,6 +651,7 @@ package Views <<Folder>> {
 
     class ApplicantUI extends BaseUI {
         - user : Applicant
+        - userController : UserController
         - projectController : ProjectController
         - appController : ApplicationController
         - enquiryController : EnquiryController
@@ -638,6 +662,7 @@ package Views <<Folder>> {
 
     class HDBOfficerUI extends BaseUI {
         - user : HDBOfficer
+        - userController : UserController
         - projectController : ProjectController
         - appController : ApplicationController
         - officerRegController : OfficerRegistrationController
@@ -651,6 +676,7 @@ package Views <<Folder>> {
 
     class HDBManagerUI extends BaseUI {
         - user : HDBManager
+        - userController : UserController
         - projectController : ProjectController
         - appController : ApplicationController
         - officerRegController : OfficerRegistrationController

@@ -1,5 +1,6 @@
 package com.ntu.fdae.group1.bto.views;
 
+import com.ntu.fdae.group1.bto.controllers.user.UserController;
 import com.ntu.fdae.group1.bto.models.enquiry.Enquiry;
 
 import java.time.format.DateTimeFormatter;
@@ -16,6 +17,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class EnquiryUIHelper {
 
     private final BaseUI baseUI; // Use BaseUI for console interactions
+    private final UserController userController;
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE; // Or your preferred
                                                                                               // format
     private static final int SNIPPET_LENGTH = 40; // Max length for content snippet in list view
@@ -25,7 +27,8 @@ public class EnquiryUIHelper {
      * 
      * @param baseUI An instance of BaseUI (or a subclass) to handle console I/O.
      */
-    public EnquiryUIHelper(BaseUI baseUI) {
+    public EnquiryUIHelper(BaseUI baseUI, UserController userController) {
+        this.userController = Objects.requireNonNull(userController);
         this.baseUI = Objects.requireNonNull(baseUI, "BaseUI cannot be null for EnquiryUIHelper");
     }
 
