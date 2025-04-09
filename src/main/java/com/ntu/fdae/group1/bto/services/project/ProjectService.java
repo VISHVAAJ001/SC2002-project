@@ -388,12 +388,20 @@ public class ProjectService implements IProjectService {
             }
         }
 
-        // Flat Type (Checks if project *offers* this type)
+        // Flat Type (Checks if project *offers* this type AND has units > 0)
         if (filters.containsKey("flatType")) {
             try {
-                FlatType flatType = (FlatType) filters.get("flatType"); // Assumes correct type in map
+                FlatType flatType = (FlatType) filters.get("flatType"); 
                 if (flatType != null) {
-                    stream = stream.filter(p -> p.getFlatTypes() != null && p.getFlatTypes().containsKey(flatType));
+                    stream = stream.filter(project -> {
+                        // Check 1: Does the project have flat info
+                        if (project.getFlatTypes() == null) return false;
+                        // Check 2: Does the project offer this specific flat type?
+                        ProjectFlatInfo info = project.getFlatTypes().get(flatType);
+                        // Check 3: Does this flat type actually have units defined?
+                        // Filter based on whether units are CURRENTLY available (remaining > 0)
+                        return info != null && info.getRemainingUnits() > 0;
+                    });
                 }
             } catch (ClassCastException e) {
                 System.err.println("Filter Error: Invalid object type for flatType filter.");
