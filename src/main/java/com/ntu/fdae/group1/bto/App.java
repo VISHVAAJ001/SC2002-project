@@ -111,8 +111,7 @@ public class App {
                     eligibilityService);
             BookingService bookingService = new BookingService(
                     applicationRepository, projectRepository, bookingRepository, userRepository);
-            ReceiptService receiptService = new ReceiptService(
-                    bookingRepository, userRepository, projectRepository);
+            ReceiptService receiptService = new ReceiptService(userRepository, projectRepository);
             ReportService reportService = new ReportService(
                     applicationRepository, bookingRepository, projectRepository, userRepository);
             // System.out.println("Services initialised.");

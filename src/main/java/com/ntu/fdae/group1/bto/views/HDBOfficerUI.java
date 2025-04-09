@@ -302,8 +302,14 @@ public class HDBOfficerUI extends BaseUI {
         displayHeader("Book Flat for Applicant (Project: " + project.getProjectId() + ")");
 
         // 1. Get ALL applications for this project
-        List<Application> allProjectApps = applicationController.getProjectApplications(this.user,
-                project.getProjectId());
+        List<Application> allProjectApps;
+        try {
+            allProjectApps = applicationController.getProjectApplications(this.user,
+                    project.getProjectId());
+        } catch (ApplicationException e) {
+            displayError("Failed to retrieve applications for project " + project.getProjectId());
+            return;
+        }
 
         // 2. Filter for SUCCESSFUL status within the UI method
         List<Application> successfulApps = allProjectApps.stream()
@@ -350,7 +356,8 @@ public class HDBOfficerUI extends BaseUI {
         if (currentProject == null)
             throw new DataAccessException("Cannot find project " + project.getProjectId() + " for booking.", null);
 
-        displayMessage("\n--- Available Flats for Project " + project.getProjectId() + " ---");
+        displayMessage("\n--- Available Flats for Project " + project.getProjectId() + "(" + project.getProjectName()
+                + ")" + " ---");
         boolean flatsAvailable = false;
         for (Map.Entry<FlatType, ProjectFlatInfo> entry : currentProject.getFlatTypes().entrySet()) {
             // Display only if remaining > 0 ? Or show all? Let's show all for clarity.
@@ -372,7 +379,14 @@ public class HDBOfficerUI extends BaseUI {
 
         // 5. Prompt Officer for the Flat Type chosen by the applicant (validated
         // against preference)
-        FlatType finalFlatType = promptForEnum("Enter FINAL Flat Type chosen by applicant: ", FlatType.class);
+        FlatType finalFlatType = promptForEnum("Enter FINAL Flat Type chosen by applicant: ", FlatType.class,
+                currentProject.getFlatTypes().keySet().stream()
+                        .filter(flatType -> applicantPreference == null || flatType == applicantPreference)
+                        .collect(Collectors.toList()));
+
+        if (finalFlatType == null) {
+            return;
+        }
 
         // 6. Confirmation
         if (!promptForConfirmation(String.format("Confirm booking of %s flat for %s in project %s? (yes/no): ",
