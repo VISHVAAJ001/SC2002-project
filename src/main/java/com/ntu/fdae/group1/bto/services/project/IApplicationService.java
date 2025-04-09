@@ -38,7 +38,7 @@ public interface IApplicationService {
      * @param approve       true to approve, false to reject
      * @return true if review was successful, false otherwise
      */
-    boolean reviewApplication(HDBManager manager, String applicationId, boolean approve);
+    boolean reviewApplication(HDBManager manager, String applicationId, boolean approve) throws ApplicationException;
 
     /**
      * Reviews a withdrawal request
@@ -48,7 +48,7 @@ public interface IApplicationService {
      * @param approve       true to approve, false to reject withdrawal
      * @return true if review was successful, false otherwise
      */
-    boolean reviewWithdrawal(HDBManager manager, String applicationId, boolean approve);
+    boolean reviewWithdrawal(HDBManager manager, String applicationId, boolean approve) throws ApplicationException;
 
     /**
      * Gets the application for a specific applicant

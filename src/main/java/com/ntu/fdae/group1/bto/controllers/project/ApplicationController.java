@@ -57,7 +57,7 @@ public class ApplicationController {
      * @param approve       true to approve, false to reject
      * @return true if review was successful, false otherwise
      */
-    public boolean reviewApplication(HDBManager manager, String applicationId, boolean approve) {
+    public boolean reviewApplication(HDBManager manager, String applicationId, boolean approve) throws ApplicationException {
         return applicationService.reviewApplication(manager, applicationId, approve);
     }
 
@@ -69,7 +69,7 @@ public class ApplicationController {
      * @param approve       true to approve, false to reject withdrawal
      * @return true if review was successful, false otherwise
      */
-    public boolean reviewWithdrawal(HDBManager manager, String applicationId, boolean approve) {
+    public boolean reviewWithdrawal(HDBManager manager, String applicationId, boolean approve) throws ApplicationException {
         return applicationService.reviewWithdrawal(manager, applicationId, approve);
     }
 
