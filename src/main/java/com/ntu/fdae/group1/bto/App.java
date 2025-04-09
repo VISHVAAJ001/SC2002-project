@@ -105,7 +105,7 @@ public class App {
             EnquiryService enquiryService = new EnquiryService(enquiryRepository);
             ApplicationService applicationService = new ApplicationService(
                     applicationRepository, projectRepository, eligibilityService,
-                    userRepository, bookingRepository);
+                    userRepository, bookingRepository, officerRegRepository);
             OfficerRegistrationService officerRegService = new OfficerRegistrationService(
                     officerRegRepository, projectRepository, applicationRepository,
                     eligibilityService);

@@ -25,34 +25,42 @@ public class EligibilityService implements IEligibilityService {
     private final IProjectRepository projectRepository;
 
     public EligibilityService(IProjectRepository projectRepository) {
-        this.projectRepository = projectRepository;
+        this.projectRepository = Objects.requireNonNull(projectRepository,
+                "Project Repository cannot be null for EligibilityService");
     }
 
     @Override
     public boolean canApplicantApply(Applicant applicant, Project project) {
-        // 1. Check Project Visibility (As per PDF Requirement pg 3)
-        if (!project.isVisible()) {
+        if (applicant == null || project == null)
+            return false;
+        int age = applicant.getAge();
+        MaritalStatus status = applicant.getMaritalStatus();
+        Map<FlatType, ProjectFlatInfo> flats = project.getFlatTypes();
+        if (flats == null || flats.isEmpty())
+            return false;
+        if (status == MaritalStatus.SINGLE && age >= 35)
+            return flats.containsKey(FlatType.TWO_ROOM);
+        else if (status == MaritalStatus.MARRIED && age >= 21)
+            return true;
+        else
+            return false;
+    }
+
+    @Override
+    public boolean isApplicantEligibleForFlatType(Applicant applicant, FlatType flatType) {
+        int age = applicant.getAge();
+        MaritalStatus status = applicant.getMaritalStatus();
+
+        if (status == MaritalStatus.SINGLE && age >= 35) {
+            // Singles >= 35 ONLY eligible for 2-Room
+            return flatType == FlatType.TWO_ROOM;
+        } else if (status == MaritalStatus.MARRIED && age >= 21) {
+            // Married >= 21 eligible for any offered flat type (2 or 3 Room)
+            return flatType == FlatType.TWO_ROOM || flatType == FlatType.THREE_ROOM;
+        } else {
+            // Not meeting either criteria
             return false;
         }
-
-        // 2. Check if project has defined flats (Defensive check)
-        if (project.getFlatTypes() == null || project.getFlatTypes().isEmpty()) {
-            return false; // Cannot apply if project offers no flats
-        }
-
-        // 3. Apply Eligibility Rules (As per PDF Requirement pg 3)
-        if (applicant.getMaritalStatus() == MaritalStatus.MARRIED && applicant.getAge() >= 21) {
-            // Married >= 21 can apply for any type (2R or 3R assumed offered if project
-            // passed check #2)
-            return true;
-        }
-
-        if (applicant.getMaritalStatus() == MaritalStatus.SINGLE && applicant.getAge() >= 35) {
-            return project.getFlatTypes().containsKey(FlatType.TWO_ROOM);
-        }
-
-        // 4. Default: Applicant doesn't meet criteria
-        return false;
     }
 
     @Override

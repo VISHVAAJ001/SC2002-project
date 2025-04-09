@@ -48,6 +48,8 @@ public class ApplicationController {
      * @throws ApplicationException if withdrawal request fails
      */
     public boolean requestWithdrawal(Applicant applicant) throws ApplicationException {
+        if (applicant == null)
+            throw new ApplicationException("Applicant cannot be null for withdrawal.");
         return applicationService.requestWithdrawal(applicant);
     }
 
@@ -58,8 +60,14 @@ public class ApplicationController {
      * @param applicationId ID of the application to review
      * @param approve       true to approve, false to reject
      * @return true if review was successful, false otherwise
+     * @throws ApplicationException if review fails
      */
-    public boolean reviewApplication(HDBManager manager, String applicationId, boolean approve) {
+    public boolean reviewApplication(HDBManager manager, String applicationId, boolean approve)
+            throws ApplicationException {
+        if (manager == null)
+            throw new ApplicationException("Manager context required for review.");
+        if (applicationId == null || applicationId.trim().isEmpty())
+            throw new ApplicationException("Application ID required for review.");
         return applicationService.reviewApplication(manager, applicationId, approve);
     }
 
@@ -70,8 +78,14 @@ public class ApplicationController {
      * @param applicationId ID of the application to withdraw
      * @param approve       true to approve, false to reject withdrawal
      * @return true if review was successful, false otherwise
+     * @throws ApplicationException if review fails
      */
-    public boolean reviewWithdrawal(HDBManager manager, String applicationId, boolean approve) {
+    public boolean reviewWithdrawal(HDBManager manager, String applicationId, boolean approve)
+            throws ApplicationException {
+        if (manager == null)
+            throw new ApplicationException("Manager context required for withdrawal review.");
+        if (applicationId == null || applicationId.trim().isEmpty())
+            throw new ApplicationException("Application ID required for withdrawal review.");
         return applicationService.reviewWithdrawal(manager, applicationId, approve);
     }
 
@@ -92,8 +106,12 @@ public class ApplicationController {
      * @param projectId ID of the project
      * @return List of applications for the project
      */
-    public List<Application> getProjectApplications(HDBStaff staff, String projectId) {
-
+    public List<Application> getProjectApplications(HDBStaff staff, String projectId) throws ApplicationException {
+        if (staff == null)
+            throw new ApplicationException("Staff context required.");
+        if (projectId == null || projectId.trim().isEmpty())
+            throw new ApplicationException("Project ID required.");
+        // Add authorization logic here or in service if needed
         return applicationService.getApplicationsByProject(projectId);
     }
 
@@ -104,7 +122,14 @@ public class ApplicationController {
      * @param status Status to filter by
      * @return List of applications with the specified status
      */
-    public List<Application> getApplicationsByStatus(HDBStaff staff, ApplicationStatus status) {
+    public List<Application> getApplicationsByStatus(HDBStaff staff, ApplicationStatus status)
+            throws ApplicationException {
+        if (staff == null)
+            throw new ApplicationException("Staff context required.");
+        if (status == null)
+            throw new ApplicationException("Status required.");
+        // Add authorization logic here or in service if needed
         return applicationService.getApplicationsByStatus(status);
     }
+
 }
