@@ -45,6 +45,22 @@ public class ProjectService implements IProjectService {
                                  Map<String, ProjectFlatInfo> flatInfoMap,
                                  LocalDate openDate, LocalDate closeDate, int officerSlots) {
 
+        // Input validation
+        if (openDate == null || closeDate == null) {
+            System.err.println("Service Error: Opening and Closing dates cannot be null.");
+            return null;
+       }
+       // 1. Check if closing date is before opening date
+       if (closeDate.isBefore(openDate)) {
+           System.err.println("Service Error: Closing date (" + closeDate + ") cannot be before opening date (" + openDate + "). Project creation failed.");
+           return null;
+       }
+       // 2. Check HDB officer slots (1-10)
+       if (officerSlots < 1 || officerSlots > 10) {
+            System.err.println("Service Error: Max HDB Officer Slots must be between 1 and 10 (was " + officerSlots + "). Project creation failed.");
+            return null;
+       }
+
         // Eligibility Check
         // Need to handle Collection<Project> type potentially returned by findAll()
         Map<String, Project> projectMap = projectRepo.findAll();
@@ -88,6 +104,23 @@ public class ProjectService implements IProjectService {
     public boolean editCoreProjectDetails(HDBManager manager, String projectId, String name, String neighborhood,
                                           LocalDate openDate, LocalDate closeDate, int officerSlots) {
         Project project = projectRepo.findById(projectId);
+        
+        // Input validation
+        if (openDate == null || closeDate == null) {
+            System.err.println("Service Error: Opening and Closing dates cannot be null.");
+            return false;
+        }
+       // 1. Check if closing date is before opening date
+        if (closeDate.isBefore(openDate)) {
+        System.err.println("Service Error: Closing date (" + closeDate + ") cannot be before opening date (" + openDate + "). Project edit failed.");
+           return false;
+        }
+       // 2. Check HDB officer slots (1-10)
+        if (officerSlots < 1 || officerSlots > 10) {
+            System.err.println("Service Error: Max HDB Officer Slots must be between 1 and 10 (was " + officerSlots + "). Project edit failed.");
+            return false;
+        }
+        
         if (project == null) {
             System.err.println("Service Error: Project not found with ID: " + projectId);
             return false;
@@ -99,6 +132,21 @@ public class ProjectService implements IProjectService {
         // Check officer slot constraint against the actual list in the project object
         if (project.getApprovedOfficerNrics() != null && officerSlots < project.getApprovedOfficerNrics().size()) {
              System.err.println("Service Error: Cannot set max officer slots (" + officerSlots + ") below the current number of approved officers (" + project.getApprovedOfficerNrics().size() + ").");
+             return false;
+        }
+
+        // Check Manager Concurrency Eligibility with NEW dates
+        Map<String, Project> projectMap = projectRepo.findAll();
+        // Exclude the current project being edited from the check list
+        final String currentProjectId = projectId; // Final variable for lambda
+        Collection<Project> otherProjects = (projectMap != null) ?
+                projectMap.values().stream()
+                          .filter(p -> !p.getProjectId().equals(currentProjectId)) // Exclude self
+                          .collect(Collectors.toList())
+                : Arrays.asList();
+
+        if (!eligibilityService.checkManagerProjectHandlingEligibility(manager, openDate, closeDate, otherProjects)) {
+             System.err.println("Service Error: The new dates for project " + projectId + " overlap with another project managed by " + manager.getNric() + ". Edit failed.");
              return false;
         }
 
