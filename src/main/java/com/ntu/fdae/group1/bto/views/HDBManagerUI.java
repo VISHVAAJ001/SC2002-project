@@ -5,6 +5,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -184,11 +185,7 @@ public class HDBManagerUI extends BaseUI {
         }
     }
 
-    private void handleCreateProject() throws RegistrationException, InvalidInputException { // Consider if these
-                                                                                             // exceptions are really
-                                                                                             // thrown by
-                                                                                             // controller/service
-        displayHeader("Create New BTO Project");
+    private void handleCreateProject() throws RegistrationException, InvalidInputException {                                            
         String name = promptForInput("Enter Project Name: ");
         String neighborhood = promptForInput("Enter Neighborhood: ");
         LocalDate openDate = promptForDate("Enter Application Opening Date: ");
@@ -196,12 +193,21 @@ public class HDBManagerUI extends BaseUI {
         int officerSlots = promptForInt("Enter Max HDB Officer Slots (1-10): ");
 
         Map<String, ProjectFlatInfo> flatInfoMap = new HashMap<>();
-        System.out.println("--- Enter Flat Details ---");
+        System.out.println("--- Enter Flat Details (Enter 0 units if type is not offered) ---");
         for (FlatType type : Arrays.asList(FlatType.TWO_ROOM, FlatType.THREE_ROOM)) {
             int totalUnits = promptForInt("Enter Total Units for " + type.name() + ": ");
-            // Assuming price is not needed at creation or defaults to 0
-            ProjectFlatInfo info = new ProjectFlatInfo(type, totalUnits, totalUnits, 0.0);
-            flatInfoMap.put(type.name(), info); // Use enum name as String key
+            if (totalUnits > 0) {
+                ProjectFlatInfo info = new ProjectFlatInfo(type, totalUnits, totalUnits, 0.0); // remaining = total
+                flatInfoMap.put(type.name(), info); // Use enum name as String key
+                displayMessage("Added " + type.name() + " with " + totalUnits + " units.");
+            } else {
+                displayMessage("Skipping " + type.name() + " as 0 units were entered.");
+            }
+        }
+
+        if (flatInfoMap.isEmpty()) {
+            displayError("Project creation failed: At least one flat type must have more than 0 units.");
+            return; 
         }
 
         // Call controller with the Map<String, ProjectFlatInfo>
@@ -373,88 +379,46 @@ public class HDBManagerUI extends BaseUI {
 
     private void handleViewMyProjects() {
         displayHeader("My Managed BTO Projects - View & Filter");
-        
-        // 1. Get ONLY the projects managed by this manager using existing controller method
-        List<Project> myManagedProjects = projectController.getProjectsManagedBy(this.user);
 
-        if (myManagedProjects.isEmpty()) {
-            displayMessage("You are not managing any projects.");
-            return;
+        // --- Prepare Filters (Identical logic to handleViewAllProjects) ---
+        Map<String, Object> filterMap = new HashMap<>();
+        boolean applyFilters = promptForConfirmation("Apply filters to your managed projects? (yes/no): ");
+        if (applyFilters) {
+            displayMessage("Enter filter criteria (leave blank to skip a filter):");
+            // Get Neighborhood Filter
+            String neighborhoodFilter = promptForInput("Filter by Neighborhood (contains, case-insensitive): ");
+            if (!neighborhoodFilter.trim().isEmpty()) filterMap.put("neighborhood", neighborhoodFilter);
+            // Get Flat Type Filter
+            String flatTypeFilterInput = promptForInput("Filter by Flat Type Offered (TWO_ROOM, THREE_ROOM): ").toUpperCase();
+            if (!flatTypeFilterInput.trim().isEmpty()) { try { filterMap.put("flatType", FlatType.valueOf(flatTypeFilterInput)); } catch (IllegalArgumentException e) { displayError("Invalid flat type. Filter skipped."); } }
+            // Get Visibility Filter
+            String visibilityInput = promptForInput("Filter by Visibility (ON, OFF): ").toUpperCase();
+            if (!visibilityInput.trim().isEmpty()) { if ("ON".equals(visibilityInput)) filterMap.put("visibility", Boolean.TRUE); else if ("OFF".equals(visibilityInput)) filterMap.put("visibility", Boolean.FALSE); else displayError("Invalid visibility. Filter skipped."); }
+
+            displayMessage("Applying filters: " + filterMap);
         }
 
-        List<Project> projectsToDisplay = myManagedProjects; // Start with the managed list
+        // --- Call Controller WITH Filters ---
+        List<Project> projectsToDisplay;
+        try {
+            // Call the controller method that handles manager + filters
+            projectsToDisplay = projectController.getManagedProjects(this.user, filterMap); // Pass user object and filters
+        } catch (Exception e) { // Catch potential runtime exceptions
+            displayError("Error retrieving managed projects: " + e.getMessage());
+            projectsToDisplay = Collections.emptyList(); // Show empty on error
+        }
 
-        // 2. Offer Optional Filtering on THIS SUBSET
-        if (promptForConfirmation("Apply filters to your managed projects?: ")) {
-            displayMessage("Enter filter criteria (leave blank to skip a filter):");
-            // Build filter map locally (same as in handleViewAllProjects)
-            Map<String, Object> filterMap = new HashMap<>();
-
-            // --- Get Neighborhood Filter ---
-            String neighborhoodFilter = promptForInput("Filter by Neighborhood (contains, case-insensitive): ");
-            if (!neighborhoodFilter.trim().isEmpty()) {
-                filterMap.put("neighborhood", neighborhoodFilter);
-            }
-
-            // --- Get Flat Type Filter ---
-            String flatTypeFilterInput = promptForInput("Filter by Flat Type Offered (TWO_ROOM, THREE_ROOM): ").toUpperCase();
-            if (!flatTypeFilterInput.trim().isEmpty()) {
-                try {
-                    FlatType selectedType = FlatType.valueOf(flatTypeFilterInput);
-                    filterMap.put("flatType", selectedType);
-                } catch (IllegalArgumentException e) {
-                    displayError("Invalid flat type '" + flatTypeFilterInput + "'. Filter skipped.");
-                }
-            }
-
-             // --- Get Visibility Filter ---
-            String visibilityInput = promptForInput("Filter by Visibility (ON, OFF): ").toUpperCase();
-            if (!visibilityInput.trim().isEmpty()) {
-                if ("ON".equals(visibilityInput)) { filterMap.put("visibility", Boolean.TRUE); }
-                else if ("OFF".equals(visibilityInput)) { filterMap.put("visibility", Boolean.FALSE); }
-                else { displayError("Invalid visibility input. Filter skipped."); }
-            }
-
-            // --- 3. Apply Filters Locally using Stream API ---
-            // Start with the stream of already managed projects
-            Stream<Project> filteredStream = myManagedProjects.stream();
-
-            // Apply filters based on the collected map (similar logic to service's applyOptionalFilters)
-            if (filterMap.containsKey("neighborhood")) {
-                 String nf = (String) filterMap.get("neighborhood");
-                 final String lowerNf = nf.toLowerCase(); // Optimize
-                 filteredStream = filteredStream.filter(p -> p.getNeighborhood().toLowerCase().contains(lowerNf));
-            }
-            if (filterMap.containsKey("flatType")) {
-                 FlatType ft = (FlatType) filterMap.get("flatType");
-                 filteredStream = filteredStream.filter(p -> p.getFlatTypes() != null && p.getFlatTypes().containsKey(ft));
-            }
-             if (filterMap.containsKey("visibility")) {
-                 Boolean vis = (Boolean) filterMap.get("visibility");
-                 filteredStream = filteredStream.filter(p -> p.isVisible() == vis);
-            }
-
-            // Collect the results of local filtering
-            projectsToDisplay = filteredStream.collect(Collectors.toList());
-
-            displayMessage("Applying filters: " + filterMap + ". Found: " + projectsToDisplay.size());
-
-        } // End if applyFilters
-
-        // 4. Display the results (either all managed or filtered managed)
+        // Display Results
         if (projectsToDisplay.isEmpty()) {
-            if (projectsToDisplay != myManagedProjects) { // Check if filtering happened
+            if (applyFilters) { // Check if filters were the reason for emptiness
                 displayMessage("No managed projects match the specified filters.");
             } else {
-                // Should be caught by initial check, but safeguard
                 displayMessage("You are not managing any projects.");
             }
         } else {
-            String listTitle = (projectsToDisplay == myManagedProjects) ? "My Managed Projects" : "Filtered Managed Projects (" + projectsToDisplay.size() + " found)";
-            // Use ProjectUIHelper to display list and select
+            String listTitle = applyFilters ? "Filtered Managed Projects (" + projectsToDisplay.size() + " found)" : "My Managed Projects";
             Project selected = this.projectUIHelper.selectProjectFromList(projectsToDisplay, listTitle);
             if (selected != null) {
-                // Use ProjectUIHelper to display details
                 this.projectUIHelper.displayStaffProjectDetails(selected);
             }
         }

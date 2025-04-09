@@ -87,6 +87,15 @@ public interface IProjectService {
         List<Project> getProjectsManagedBy(String managerNRIC);
 
         /**
+        * Gets projects managed by a specific manager, optionally applying filters.
+        *
+        * @param managerNRIC NRIC of the manager.
+        * @param filters     A map containing optional filters (e.g., "neighborhood", "flatType", "visibility").
+        * @return List of projects managed by the manager that match the filters.
+        */
+        List<Project> getProjectsManagedBy(String managerNRIC, Map<String, Object> filters);
+
+        /**
          * Finds a project by its ID
          * 
          * @param projectId ID of the project to find

@@ -92,13 +92,10 @@ public class ProjectService implements IProjectService {
             return null;
         }
 
-        // Ensure both required flat types are present
-        if (typedFlatInfoMap.size() != 2 || !typedFlatInfoMap.containsKey(FlatType.TWO_ROOM)
-                || !typedFlatInfoMap.containsKey(FlatType.THREE_ROOM)) {
-            System.err.println(
-                    "Service Error: flatInfoMap must contain exactly TWO_ROOM and THREE_ROOM after conversion.");
+        if (typedFlatInfoMap.isEmpty()) {
+            System.err.println("Service Error: Project must offer at least one flat type (TWO_ROOM or THREE_ROOM) with units > 0.");
             return null;
-        }
+       }
 
         Project newProject = new Project(projectId, name, neighborhood, typedFlatInfoMap, openDate, closeDate,
                 manager.getNric(), officerSlots);
@@ -271,6 +268,28 @@ public class ProjectService implements IProjectService {
         return projectMap.values().stream()
                 .filter(p -> managerNRIC.equals(p.getManagerNric()))
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Project> getProjectsManagedBy(String managerNRIC, Map<String, Object> filters) { // Add filters param
+        if (managerNRIC == null || managerNRIC.trim().isEmpty()) {
+            return Collections.emptyList(); // Use Collections.emptyList() for Java 8
+        }
+        Map<String, Project> projectMap = projectRepo.findAll();
+        if (projectMap == null || projectMap.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        Stream<Project> stream = projectMap.values().stream()
+                .filter(p -> managerNRIC.equals(p.getManagerNric())); // Mandatory filter first
+
+        // Apply optional filters (pass isStaffView=true as manager is staff)
+        stream = applyOptionalFilters(stream, filters, true);
+
+        // Apply default sorting (e.g., by Project ID or Name)
+        stream = stream.sorted(Comparator.comparing(Project::getProjectId));
+
+        return stream.collect(Collectors.toList());
     }
 
     @Override
