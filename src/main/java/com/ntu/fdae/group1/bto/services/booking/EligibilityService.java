@@ -13,6 +13,7 @@ import com.ntu.fdae.group1.bto.models.project.OfficerRegistration;
 import com.ntu.fdae.group1.bto.models.user.Applicant;
 import com.ntu.fdae.group1.bto.models.user.HDBManager;
 import com.ntu.fdae.group1.bto.models.user.HDBOfficer;
+import com.ntu.fdae.group1.bto.models.user.User;
 import com.ntu.fdae.group1.bto.repository.project.IProjectRepository;
 
 import java.time.LocalDate;
@@ -30,11 +31,11 @@ public class EligibilityService implements IEligibilityService {
     }
 
     @Override
-    public boolean canApplicantApply(Applicant applicant, Project project) {
-        if (applicant == null || project == null)
+    public boolean canApplicantApply(User user, Project project) {
+        if (user == null || project == null)
             return false;
-        int age = applicant.getAge();
-        MaritalStatus status = applicant.getMaritalStatus();
+        int age = user.getAge();
+        MaritalStatus status = user.getMaritalStatus();
         Map<FlatType, ProjectFlatInfo> flats = project.getFlatTypes();
         if (flats == null || flats.isEmpty())
             return false;
@@ -47,9 +48,9 @@ public class EligibilityService implements IEligibilityService {
     }
 
     @Override
-    public boolean isApplicantEligibleForFlatType(Applicant applicant, FlatType flatType) {
-        int age = applicant.getAge();
-        MaritalStatus status = applicant.getMaritalStatus();
+    public boolean isApplicantEligibleForFlatType(User user, FlatType flatType) {
+        int age = user.getAge();
+        MaritalStatus status = user.getMaritalStatus();
 
         if (status == MaritalStatus.SINGLE && age >= 35) {
             // Singles >= 35 ONLY eligible for 2-Room

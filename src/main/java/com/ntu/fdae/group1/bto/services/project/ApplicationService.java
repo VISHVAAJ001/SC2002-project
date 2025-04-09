@@ -23,6 +23,7 @@ import com.ntu.fdae.group1.bto.models.project.Project;
 import com.ntu.fdae.group1.bto.models.user.Applicant;
 import com.ntu.fdae.group1.bto.models.user.HDBManager;
 import com.ntu.fdae.group1.bto.models.user.HDBOfficer;
+import com.ntu.fdae.group1.bto.models.user.User;
 import com.ntu.fdae.group1.bto.repository.booking.IBookingRepository;
 import com.ntu.fdae.group1.bto.repository.project.IApplicationRepository;
 import com.ntu.fdae.group1.bto.repository.project.IOfficerRegistrationRepository;
@@ -51,11 +52,11 @@ public class ApplicationService implements IApplicationService {
     }
 
     @Override
-    public Application submitApplication(Applicant applicant, String projectId, FlatType preferredFlatType)
+    public Application submitApplication(User user, String projectId, FlatType preferredFlatType)
             throws ApplicationException {
 
         // --- 1. Input Validation ---
-        Objects.requireNonNull(applicant, "Applicant cannot be null.");
+        Objects.requireNonNull(user, "Applicant cannot be null.");
         if (projectId == null || projectId.trim().isEmpty()) {
             throw new ApplicationException("Project ID cannot be empty.");
         }
@@ -78,7 +79,7 @@ public class ApplicationService implements IApplicationService {
         }
 
         // --- 4. Check Existing Application ---
-        Application existingApp = applicationRepo.findByApplicantNric(applicant.getNric());
+        Application existingApp = applicationRepo.findByApplicantNric(user.getNric());
         if (existingApp != null) {
             ApplicationStatus currentStatus = existingApp.getStatus();
             if (currentStatus == ApplicationStatus.PENDING ||
@@ -91,7 +92,7 @@ public class ApplicationService implements IApplicationService {
         }
 
         // --- 5. Check Applicant Eligibility for this Project ---
-        if (!eligibilityService.canApplicantApply(applicant, project)) { // Use the service method
+        if (!eligibilityService.canApplicantApply(user, project)) { // Use the service method
             throw new ApplicationException("You are not eligible for project '" + project.getProjectName()
                     + "' based on age, marital status, or available flat types.");
         }
@@ -102,15 +103,15 @@ public class ApplicationService implements IApplicationService {
                 throw new ApplicationException("Project '" + project.getProjectName()
                         + "' does not offer the preferred flat type: " + preferredFlatType);
             }
-            if (!eligibilityService.isApplicantEligibleForFlatType(applicant, preferredFlatType)) {
+            if (!eligibilityService.isApplicantEligibleForFlatType(user, preferredFlatType)) {
                 throw new ApplicationException(
                         "You are not eligible for the preferred flat type: " + preferredFlatType);
             }
         }
 
         // --- 7. Check Officer Restrictions ---
-        if (applicant.getRole() == UserRole.HDB_OFFICER) {
-            List<OfficerRegistration> registrations = officerRegRepo.findByOfficerNric(applicant.getNric());
+        if (user.getRole() == UserRole.HDB_OFFICER) {
+            List<OfficerRegistration> registrations = officerRegRepo.findByOfficerNric(user.getNric());
             boolean isRegisteredForThisProject = registrations.stream()
                     .filter(reg -> reg.getProjectId().equals(projectId))
                     .anyMatch(reg -> reg.getStatus() == OfficerRegStatus.PENDING
@@ -124,7 +125,7 @@ public class ApplicationService implements IApplicationService {
 
         // --- 8. Create New Application ---
         String newAppId = IdGenerator.generateApplicationId();
-        Application newApplication = new Application(newAppId, applicant.getNric(), projectId, LocalDate.now());
+        Application newApplication = new Application(newAppId, user.getNric(), projectId, LocalDate.now());
         newApplication.setStatus(ApplicationStatus.PENDING);
         newApplication.setPreferredFlatType(preferredFlatType);
 
@@ -136,13 +137,13 @@ public class ApplicationService implements IApplicationService {
     }
 
     @Override
-    public boolean requestWithdrawal(Applicant applicant) throws ApplicationException {
-        Objects.requireNonNull(applicant, "Applicant cannot be null");
+    public boolean requestWithdrawal(User user) throws ApplicationException {
+        Objects.requireNonNull(user, "Applicant cannot be null");
 
-        Application app = applicationRepo.findByApplicantNric(applicant.getNric());
+        Application app = applicationRepo.findByApplicantNric(user.getNric());
         if (app == null) {
             throw new ApplicationException(
-                    "No active application found for applicant " + applicant.getNric() + " to withdraw.");
+                    "No active application found for applicant " + user.getNric() + " to withdraw.");
         }
 
         // Check if already requested or in a final state
