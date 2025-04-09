@@ -2,7 +2,9 @@ package com.ntu.fdae.group1.bto.controllers.project;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 
 import com.ntu.fdae.group1.bto.exceptions.RegistrationException;
 import com.ntu.fdae.group1.bto.enums.OfficerRegStatus;
@@ -113,7 +115,7 @@ public class OfficerRegistrationController {
             // Delegate to the service. Service method should not throw checked exceptions here.
             List<OfficerRegistration> pending = registrationService.getPendingRegistrations();
             // Return an immutable view or copy if desired, though Arrays.asList() might be sufficient if result isn't huge
-            return pending != null ? List.copyOf(pending) : Arrays.asList();
+            return pending != null ? Collections.unmodifiableList(new ArrayList<>(pending)) : Collections.emptyList();
         } catch (Exception e) {
             // Catch unexpected runtime errors from the service/repo layer
             System.err.println("Controller ERROR: Failed to retrieve pending registrations: " + e.getMessage());
@@ -143,7 +145,7 @@ public class OfficerRegistrationController {
         try {
             // Delegate to the service. Service method should not throw checked exceptions here.
             List<OfficerRegistration> registrations = registrationService.getRegistrationsByProject(projectId);
-            return registrations != null ? List.copyOf(registrations) : Arrays.asList();
+            return registrations != null ? Collections.unmodifiableList(new ArrayList<>(registrations)) : Collections.emptyList();
         } catch (Exception e) {
             // Catch unexpected runtime errors from the service/repo layer
             System.err.println("Controller ERROR: Failed to retrieve project registrations for " + projectId + ": " + e.getMessage());
