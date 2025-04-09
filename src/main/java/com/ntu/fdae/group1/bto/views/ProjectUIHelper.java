@@ -102,10 +102,6 @@ public class ProjectUIHelper {
 
         // Display Flat Type Information (relevant for applicants)
         displayFlatInfoSection(project);
-
-        // --- Applicant-specific context/eligibility display would go in ApplicantUI
-        // ---
-        // Example: baseUI.displayMessage("Eligibility Check: ...");
     }
 
     /**
@@ -131,12 +127,20 @@ public class ProjectUIHelper {
 
         // --- Staff-Specific Administrative Details ---
         baseUI.displayMessage("--- Administrative Details ---");
-        baseUI.displayMessage("Managed By (NRIC):" + project.getManagerNric());
-        baseUI.displayMessage("Visibility Status:" + (project.isVisible() ? "ON (Visible)" : "OFF (Hidden)"));
-        baseUI.displayMessage("Officer Slots Max:" + project.getMaxOfficerSlots());
+        baseUI.displayMessage("Managed By: " + project.getManagerNric() +
+                " (" + userController.getUserName(project.getManagerNric()) + ")");
+        baseUI.displayMessage("Visibility Status: " + (project.isVisible() ? "ON (Visible)" : "OFF (Hidden)"));
+        baseUI.displayMessage("Officer Slots Max: " + project.getMaxOfficerSlots());
         List<String> approvedOfficers = project.getApprovedOfficerNrics(); // Assuming getter exists
-        baseUI.displayMessage("Approved Officers:" + (approvedOfficers == null || approvedOfficers.isEmpty() ? "None"
-                : String.join(", ", approvedOfficers)));
+        if (approvedOfficers == null || approvedOfficers.isEmpty()) {
+            baseUI.displayMessage("Approved Officers: None");
+        } else {
+            String approvedOfficerNames = approvedOfficers.stream()
+                    .map(nric -> nric + " (" + userController.getUserName(nric) + ")")
+                    .reduce((a, b) -> a + ", " + b)
+                    .orElse("");
+            baseUI.displayMessage("Approved Officers: " + approvedOfficerNames);
+        }
         baseUI.displayMessage("-----------------------------");
     }
 

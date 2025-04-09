@@ -3,14 +3,10 @@ package com.ntu.fdae.group1.bto.services.project;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-import java.util.Arrays;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 import com.ntu.fdae.group1.bto.enums.ApplicationStatus;
 import com.ntu.fdae.group1.bto.enums.FlatType;
-import com.ntu.fdae.group1.bto.enums.MaritalStatus;
 import com.ntu.fdae.group1.bto.enums.OfficerRegStatus;
 import com.ntu.fdae.group1.bto.enums.UserRole;
 import com.ntu.fdae.group1.bto.exceptions.ApplicationException;
@@ -19,10 +15,7 @@ import com.ntu.fdae.group1.bto.models.project.Application;
 import com.ntu.fdae.group1.bto.models.project.Project;
 import com.ntu.fdae.group1.bto.models.project.ProjectFlatInfo;
 import com.ntu.fdae.group1.bto.models.project.OfficerRegistration;
-import com.ntu.fdae.group1.bto.models.project.Project;
-import com.ntu.fdae.group1.bto.models.user.Applicant;
 import com.ntu.fdae.group1.bto.models.user.HDBManager;
-import com.ntu.fdae.group1.bto.models.user.HDBOfficer;
 import com.ntu.fdae.group1.bto.models.user.User;
 import com.ntu.fdae.group1.bto.repository.booking.IBookingRepository;
 import com.ntu.fdae.group1.bto.repository.project.IApplicationRepository;
@@ -107,6 +100,11 @@ public class ApplicationService implements IApplicationService {
                 throw new ApplicationException(
                         "You are not eligible for the preferred flat type: " + preferredFlatType);
             }
+            if (project.getFlatInfo(preferredFlatType) == null
+                    || project.getFlatInfo(preferredFlatType).getRemainingUnits() <= 0) {
+                throw new ApplicationException("No remaining units available for the preferred flat type: "
+                        + preferredFlatType);
+            }
         }
 
         // --- 7. Check Officer Restrictions ---
@@ -158,10 +156,9 @@ public class ApplicationService implements IApplicationService {
                     + ". Manager review required.");
         }
         if (app.getStatus() == ApplicationStatus.UNSUCCESSFUL) {
-            // Arguably cannot withdraw an already unsuccessful app, but let's allow request
-            // for manager clarity.
-            System.out.println("Service INFO: Withdrawal requested for an UNSUCCESSFUL application "
-                    + app.getApplicationId() + ". Manager review required.");
+            throw new ApplicationException(
+                    "Application " + app.getApplicationId()
+                            + " is already UNSUCCESSFUL. Cannot withdraw. You may apply again.");
         }
 
         // Set withdrawal request date
@@ -237,7 +234,7 @@ public class ApplicationService implements IApplicationService {
 
     @Override
     public boolean reviewWithdrawal(HDBManager manager, String applicationId, boolean approve)
-            throws ApplicationException { // <<< ADD throws ApplicationException >>>
+            throws ApplicationException {
         Objects.requireNonNull(manager, "Manager cannot be null");
         Objects.requireNonNull(applicationId, "Application ID cannot be null");
 

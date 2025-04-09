@@ -12,7 +12,6 @@ import com.ntu.fdae.group1.bto.enums.MaritalStatus;
 import com.ntu.fdae.group1.bto.exceptions.ApplicationException;
 import com.ntu.fdae.group1.bto.models.project.Application;
 import com.ntu.fdae.group1.bto.models.project.Project;
-import com.ntu.fdae.group1.bto.models.user.Applicant;
 import com.ntu.fdae.group1.bto.models.user.User;
 
 /**
@@ -91,14 +90,13 @@ public class ApplicationUIHelper {
             if (requiresChoice) {
                 baseUI.displayMessage("This project offers multiple flat types you are eligible for.");
 
-                // Use the enhanced promptForEnum from BaseUI
-                // It returns null if user cancels or chooses the 'no preference' option
                 determinedPreference = baseUI.promptForEnum(
                         "Select your preferred flat type:",
                         FlatType.class, // Pass the Enum class
                         eligibleTypes // Pass the list of ONLY the valid choices
                 );
 
+                // If user cancels the selection, exit the submission process
                 if (determinedPreference == null) {
                     baseUI.displayMessage("Cancelling application submission.");
                     return; // Exit the submission process
@@ -109,10 +107,10 @@ public class ApplicationUIHelper {
             String confirmationPrompt = "Confirm application submission for project " + project.getProjectName() + " ("
                     + projectId + ")";
             if (determinedPreference != null) {
-                confirmationPrompt += " (Preference/Target: " + baseUI.formatEnumName(determinedPreference)
-                        + ")? (yes/no): ";
+                confirmationPrompt += " (Preference: " + baseUI.formatEnumName(determinedPreference)
+                        + ")?";
             } else {
-                confirmationPrompt += " (Specific type based on eligibility or no preference indicated)? (yes/no): ";
+                confirmationPrompt += " (Specific type based on eligibility or no preference indicated)?";
             }
 
             // If promptForConfirmation returns false, user cancelled.
@@ -199,14 +197,9 @@ public class ApplicationUIHelper {
                 if (actionChoice == 1) {
                     performWithdrawalAction(user); // Call the separate withdrawal logic
                 }
-                // If 0 or other, method ends, returning to previous menu loop
             } else {
                 baseUI.displayMessage("Withdrawal is not applicable for the current application status ("
                         + baseUI.formatEnumName(app.getStatus()) + ").");
-                // Optionally add a prompt to go back if needed, or let the main loop pause
-                // handle it.
-                // System.out.println("\n[0] Back");
-                // baseUI.promptForInt("Enter 0 to go back: ");
             }
         } catch (Exception e) {
             baseUI.displayError("Error retrieving application status: " + e.getMessage());
@@ -222,14 +215,14 @@ public class ApplicationUIHelper {
      */
     private void performWithdrawalAction(User user) {
         if (baseUI.promptForConfirmation(
-                "Are you sure you want to request withdrawal? This may change your application status to Unsuccessful. (yes/no): ")) {
+                "Are you sure you want to request withdrawal?")) {
             try {
                 boolean success = applicationController.requestWithdrawal(user);
                 // Based on FAQ, assume normal success leads to status change (handled by
                 // service)
                 if (success) {
                     baseUI.displayMessage(
-                            "Withdrawal request submitted. Your application status should now be Unsuccessful.");
+                            "Withdrawal request submitted.");
                     baseUI.displayMessage("Please check the status again if needed.");
                 } else {
                     // This might indicate an unexpected state or error in service logic
@@ -240,7 +233,6 @@ public class ApplicationUIHelper {
                 baseUI.displayError("Error requesting withdrawal: " + e.getMessage());
             } catch (Exception e) {
                 baseUI.displayError("An unexpected error occurred during withdrawal: " + e.getMessage());
-                // e.printStackTrace();
             }
         } else {
             baseUI.displayMessage("Withdrawal request cancelled.");

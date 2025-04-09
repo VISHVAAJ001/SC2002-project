@@ -6,7 +6,6 @@ import com.ntu.fdae.group1.bto.exceptions.ApplicationException;
 import com.ntu.fdae.group1.bto.models.project.Application;
 import com.ntu.fdae.group1.bto.enums.ApplicationStatus;
 import com.ntu.fdae.group1.bto.enums.FlatType;
-import com.ntu.fdae.group1.bto.models.user.Applicant;
 import com.ntu.fdae.group1.bto.models.user.HDBManager;
 import com.ntu.fdae.group1.bto.models.user.HDBStaff;
 import com.ntu.fdae.group1.bto.models.user.User;

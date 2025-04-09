@@ -17,13 +17,10 @@ import com.ntu.fdae.group1.bto.models.user.User; // Needed for receipt generatio
 import com.ntu.fdae.group1.bto.exceptions.*; // Import custom exceptions
 import com.ntu.fdae.group1.bto.enums.ApplicationStatus;
 import com.ntu.fdae.group1.bto.enums.FlatType;
-import com.ntu.fdae.group1.bto.enums.OfficerRegStatus;
 
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Scanner;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -382,7 +379,7 @@ public class HDBOfficerUI extends BaseUI {
         }
 
         // 6. Confirmation
-        if (!promptForConfirmation(String.format("Confirm booking of %s flat for %s in project %s? (yes/no): ",
+        if (!promptForConfirmation(String.format("Confirm booking of %s flat for %s in project %s?",
                 finalFlatType, selectedApplicantNric, project.getProjectId()))) {
             displayMessage("Booking cancelled.");
             return;

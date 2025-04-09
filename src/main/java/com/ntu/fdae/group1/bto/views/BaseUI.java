@@ -196,7 +196,7 @@ public abstract class BaseUI {
     }
 
     /**
-     * Prompts the user for confirmation (yes/no).
+     * Prompts the user for confirmation (Y/N).
      * 
      * @param prompt The message to display before input.
      * @return True if user confirms (Y/y), false otherwise.

@@ -67,14 +67,14 @@ public class EnquiryUIHelper {
             }
 
             String summaryInfo = String.format(
-                    "[%d] ID: %s | By: %s | Project: %s | Date: %s | Replied: %-15s | Content: \"%s\"",
+                    "[%d] ID: %s | By: %s (%s) | Project: %s | Date: %s | Replied: %-15s",
                     counter.getAndIncrement(),
                     enq.getEnquiryId(),
                     enq.getUserNric(), // Submitter NRIC
+                    userController.getUserName(enq.getUserNric()), // Submitter Name
                     projectIdDisplay,
                     enq.getSubmissionDate().format(DATE_FORMATTER),
-                    repliedStatus,
-                    contentSnippet);
+                    repliedStatus);
             baseUI.displayMessage(summaryInfo);
         });
         baseUI.displayMessage("[0] Back");
@@ -106,7 +106,8 @@ public class EnquiryUIHelper {
         }
 
         baseUI.displayHeader("Enquiry Details (ID: " + enquiry.getEnquiryId() + ")");
-        baseUI.displayMessage("Submitted By:  " + enquiry.getUserNric());
+        baseUI.displayMessage("Submitted By:  " + enquiry.getUserNric() + " ("
+                + userController.getUserName(enquiry.getUserNric()) + ")");
         baseUI.displayMessage("Project Ref:   "
                 + ((enquiry.getProjectId() == null || enquiry.getProjectId().trim().isEmpty()) ? "General Enquiry"
                         : enquiry.getProjectId()));
