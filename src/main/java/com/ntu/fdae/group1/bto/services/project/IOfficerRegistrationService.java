@@ -27,7 +27,7 @@ public interface IOfficerRegistrationService {
      * @param approve        true to approve, false to reject
      * @return true if review was successful, false otherwise
      */
-    boolean reviewRegistration(HDBManager manager, String registrationId, boolean approve);
+    boolean reviewRegistration(HDBManager manager, String registrationId, boolean approve) throws RegistrationException;
 
     /**
      * Gets the status of an officer's registration for a project
