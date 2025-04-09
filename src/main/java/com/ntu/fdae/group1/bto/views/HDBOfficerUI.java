@@ -17,13 +17,11 @@ import com.ntu.fdae.group1.bto.models.user.User; // Needed for receipt generatio
 import com.ntu.fdae.group1.bto.exceptions.*; // Import custom exceptions
 import com.ntu.fdae.group1.bto.enums.ApplicationStatus;
 import com.ntu.fdae.group1.bto.enums.FlatType;
-import com.ntu.fdae.group1.bto.enums.OfficerRegStatus;
 
-import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Scanner;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -41,6 +39,8 @@ public class HDBOfficerUI extends BaseUI {
     private final ProjectUIHelper projectUIHelper; // Use the helper
     private final AccountUIHelper accountUIHelper;
     private final EnquiryUIHelper enquiryUIHelper; // Use the helper
+    private final ApplicationUIHelper applicationUIHelper;
+    private Map<String, Object> currentProjectFilters;
 
     public HDBOfficerUI(HDBOfficer user,
             UserController userCtrl,
@@ -65,6 +65,8 @@ public class HDBOfficerUI extends BaseUI {
         this.projectUIHelper = new ProjectUIHelper(this, userController);
         this.accountUIHelper = new AccountUIHelper(this, authController);
         this.enquiryUIHelper = new EnquiryUIHelper(this, userController);
+        this.applicationUIHelper = new ApplicationUIHelper(this, applicationController, projectController);
+        this.currentProjectFilters = new HashMap<>();
     }
 
     public void displayMainMenu() {
@@ -149,39 +151,81 @@ public class HDBOfficerUI extends BaseUI {
     // Duplicated/Similar Applicant Methods (Could potentially be shared via a
     // helper if identical)
     private void handleViewAndApplyProjects() {
-        // TODO: Implement identical flow as ApplicantUI.handleViewAndApplyProjects
-        System.out.println("[Placeholder: Officer viewing/applying like Applicant]");
-        // Remember service layer needs to check Officer eligibility (e.g., not handling
-        // project applying for)
         displayHeader("View Available BTO Projects");
-        List<Project> projects = projectController.getVisibleProjectsForUser(this.user);
+
+        boolean filtersWereActive = !currentProjectFilters.isEmpty(); // Check if filters exist *before* asking
+        if (filtersWereActive) {
+            System.out.println("Current filters are active:");
+            for (Map.Entry<String, Object> entry : currentProjectFilters.entrySet()) {
+                String key = entry.getKey();
+                Object value = entry.getValue();
+                // Format the value nicely (especially for enums)
+                String valueStr = (value instanceof Enum) ? ((Enum<?>) value).name() : value.toString();
+                System.out.println("  - " + key + ": " + valueStr);
+            }
+            System.out.println("----------------------------------");
+            System.out.println("\nFilter Options:");
+            System.out.println("[1] Keep current filters");
+            System.out.println("[2] Clear current filters and view all");
+            System.out.println("[3] Change/Set new filters");
+            System.out.println("[0] Back"); // Option to back out entirely
+
+            int filterAction = promptForInt("Choose filter action: ");
+
+            switch (filterAction) {
+                case 1:
+                    // Keep filters - Do nothing, proceed with currentProjectFilters
+                    displayMessage("Keeping existing filters.");
+                    break;
+                case 2:
+                    // Clear filters and view all
+                    this.currentProjectFilters.clear();
+                    displayMessage("Filters cleared.");
+                    // Proceed with empty filters map
+                    break;
+                case 3:
+                    // Change/Set new filters
+                    displayMessage("Clearing old filters to set new ones.");
+                    this.currentProjectFilters = projectUIHelper.promptForProjectFilters(false); // Get new filters
+                    break;
+                case 0:
+                default: // Includes Back or invalid choice
+                    displayMessage("Returning to main menu.");
+                    return; // Exit the handleView method
+            }
+        } else {
+            // No filters were active, ask if they want to apply some now
+            if (promptForConfirmation("Apply filters before viewing?:")) {
+                this.currentProjectFilters = projectUIHelper.promptForProjectFilters(false);
+            } else {
+                this.currentProjectFilters.clear(); // Ensure empty if they say no
+            }
+        }
+
+        List<Project> projects = projectController.getVisibleProjectsForUser(this.user,
+                this.currentProjectFilters);
 
         Project selectedProject = projectUIHelper.selectProjectFromList(projects,
                 "Select Project to View Details & Apply");
 
         if (selectedProject != null) {
-            projectUIHelper.displayApplicantProjectDetails(selectedProject); // Show applicant view
+            // Display details using the specific applicant view helper method
+            projectUIHelper.displayApplicantProjectDetails(selectedProject); // Use the tailored view
 
+            // --- Contextual Action ---
             System.out.println("\nOptions:");
             System.out.println("[1] Apply for " + selectedProject.getProjectName());
             System.out.println("[0] Back");
+
             int actionChoice = promptForInt("Enter option: ");
             if (actionChoice == 1) {
-                handleSubmitApplicationAction(selectedProject.getProjectId());
+                applicationUIHelper.performApplicationSubmission(this.user, selectedProject.getProjectId());
             }
         }
     }
 
-    private void handleSubmitApplicationAction(String projectId) {
-        // TODO: Implement identical flow as ApplicantUI.handleSubmitApplicationAction
-        System.out.println("[Placeholder: Officer submitting application like Applicant]");
-        // Prompt for preference etc. Call appController.submitApplication(...)
-    }
-
     private void handleViewAndWithdrawApplication() {
-        // TODO: Implement identical flow as
-        // ApplicantUI.handleViewAndWithdrawApplication
-        System.out.println("[Placeholder: Officer viewing/withdrawing own application like Applicant]");
+        applicationUIHelper.performViewAndWithdraw(this.user);
     }
 
     private void handleSubmitEnquiry() {
@@ -389,7 +433,7 @@ public class HDBOfficerUI extends BaseUI {
         }
 
         // 6. Confirmation
-        if (!promptForConfirmation(String.format("Confirm booking of %s flat for %s in project %s? (yes/no): ",
+        if (!promptForConfirmation(String.format("Confirm booking of %s flat for %s in project %s?",
                 finalFlatType, selectedApplicantNric, project.getProjectId()))) {
             displayMessage("Booking cancelled.");
             return;

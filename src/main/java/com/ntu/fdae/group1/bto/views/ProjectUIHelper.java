@@ -6,6 +6,8 @@ import com.ntu.fdae.group1.bto.models.project.Project;
 import com.ntu.fdae.group1.bto.models.project.ProjectFlatInfo;
 
 import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -102,10 +104,6 @@ public class ProjectUIHelper {
 
         // Display Flat Type Information (relevant for applicants)
         displayFlatInfoSection(project);
-
-        // --- Applicant-specific context/eligibility display would go in ApplicantUI
-        // ---
-        // Example: baseUI.displayMessage("Eligibility Check: ...");
     }
 
     /**
@@ -131,12 +129,20 @@ public class ProjectUIHelper {
 
         // --- Staff-Specific Administrative Details ---
         baseUI.displayMessage("--- Administrative Details ---");
-        baseUI.displayMessage("Managed By (NRIC):" + project.getManagerNric());
-        baseUI.displayMessage("Visibility Status:" + (project.isVisible() ? "ON (Visible)" : "OFF (Hidden)"));
-        baseUI.displayMessage("Officer Slots Max:" + project.getMaxOfficerSlots());
+        baseUI.displayMessage("Managed By: " + project.getManagerNric() +
+                " (" + userController.getUserName(project.getManagerNric()) + ")");
+        baseUI.displayMessage("Visibility Status: " + (project.isVisible() ? "ON (Visible)" : "OFF (Hidden)"));
+        baseUI.displayMessage("Officer Slots Max: " + project.getMaxOfficerSlots());
         List<String> approvedOfficers = project.getApprovedOfficerNrics(); // Assuming getter exists
-        baseUI.displayMessage("Approved Officers:" + (approvedOfficers == null || approvedOfficers.isEmpty() ? "None"
-                : String.join(", ", approvedOfficers)));
+        if (approvedOfficers == null || approvedOfficers.isEmpty()) {
+            baseUI.displayMessage("Approved Officers: None");
+        } else {
+            String approvedOfficerNames = approvedOfficers.stream()
+                    .map(nric -> nric + " (" + userController.getUserName(nric) + ")")
+                    .reduce((a, b) -> a + ", " + b)
+                    .orElse("");
+            baseUI.displayMessage("Approved Officers: " + approvedOfficerNames);
+        }
         baseUI.displayMessage("-----------------------------");
     }
 
@@ -163,6 +169,62 @@ public class ProjectUIHelper {
             });
         }
         baseUI.displayMessage("-----------------------------");
+    }
+
+    /**
+     * Prompts the user for project filtering criteria (Neighbourhood, Flat Type,
+     * Visibility).
+     * Allows users to skip criteria by pressing Enter.
+     *
+     * @param allowStaffFilters Set to true if staff-specific filters (like
+     *                          visibility) should be offered.
+     * @return A Map containing the filter keys and selected values. Empty map if no
+     *         filters applied.
+     */
+    public Map<String, Object> promptForProjectFilters(boolean allowStaffFilters) {
+        Map<String, Object> filters = new HashMap<>();
+        baseUI.displayMessage("\n--- Apply Filters (Press Enter to skip) ---");
+
+        // Neighbourhood
+        String neighborhood = baseUI.promptForInput("Filter by Neighbourhood: ");
+        if (!neighborhood.trim().isEmpty()) {
+            filters.put("neighborhood", neighborhood.trim());
+        }
+
+        List<FlatType> availableFlatTypes = Arrays.asList(FlatType.values()); // Or create dynamically if needed
+        FlatType selectedFlatType = baseUI.promptForEnum(
+                "Filter by Flat Type (Choose number or 0 to cancel/skip):",
+                FlatType.class,
+                availableFlatTypes);
+
+        if (selectedFlatType != null) { // Only add filter if user didn't cancel/skip
+            filters.put("flatType", selectedFlatType);
+        }
+
+        // Visibility Filter (For Staff)
+        if (allowStaffFilters) {
+            String visibleStr = baseUI.promptForInput("Filter by Visibility (ON/OFF): ").toUpperCase();
+            if (visibleStr.equals("ON"))
+                filters.put("visibility", true);
+            else if (visibleStr.equals("OFF"))
+                filters.put("visibility", false);
+            // If input is neither ON nor OFF, the filter is simply skipped
+        }
+
+        baseUI.displayMessage("-------------------------------------------");
+        if (filters.isEmpty()) {
+            baseUI.displayMessage("No filters applied.");
+        } else {
+            baseUI.displayMessage("Filters applied: "); // Show which filters were set
+            for (Map.Entry<String, Object> entry : filters.entrySet()) {
+                String key = entry.getKey();
+                Object value = entry.getValue();
+                // Format the value nicely (especially for enums)
+                String valueStr = (value instanceof Enum) ? ((Enum<?>) value).name() : value.toString();
+                System.out.println("  - " + key + ": " + valueStr);
+            }
+        }
+        return filters;
     }
 
 }

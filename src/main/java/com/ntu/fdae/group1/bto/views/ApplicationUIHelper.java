@@ -14,7 +14,7 @@ import com.ntu.fdae.group1.bto.enums.MaritalStatus;
 import com.ntu.fdae.group1.bto.exceptions.ApplicationException;
 import com.ntu.fdae.group1.bto.models.project.Application;
 import com.ntu.fdae.group1.bto.models.project.Project;
-import com.ntu.fdae.group1.bto.models.user.Applicant;
+import com.ntu.fdae.group1.bto.models.user.User;
 
 /**
  * Helper class to manage common UI tasks related to BTO Application viewing,
@@ -38,10 +38,10 @@ public class ApplicationUIHelper {
      * including handling flat type preferences based on eligibility.
      * Assumes this is called after the user has selected a project.
      *
-     * @param applicant The applicant user submitting the application.
+     * @param user      The applicant user submitting the application.
      * @param projectId The ID of the project they are applying for.
      */
-    public void performApplicationSubmission(Applicant applicant, String projectId) {
+    public void performApplicationSubmission(User user, String projectId) {
         baseUI.displayMessage("\nPreparing application for Project ID: " + projectId + "...");
 
         try {
@@ -60,11 +60,11 @@ public class ApplicationUIHelper {
             // 2. Determine Eligible Flat Types for THIS user and THIS project
             List<FlatType> eligibleTypes = new ArrayList<>();
             if (project.getFlatTypes().containsKey(FlatType.TWO_ROOM)
-                    && isApplicantEligibleForFlatType(applicant, FlatType.TWO_ROOM)) {
+                    && isApplicantEligibleForFlatType(user, FlatType.TWO_ROOM)) {
                 eligibleTypes.add(FlatType.TWO_ROOM);
             }
             if (project.getFlatTypes().containsKey(FlatType.THREE_ROOM)
-                    && isApplicantEligibleForFlatType(applicant, FlatType.THREE_ROOM)) {
+                    && isApplicantEligibleForFlatType(user, FlatType.THREE_ROOM)) {
                 eligibleTypes.add(FlatType.THREE_ROOM);
             }
             // Add checks for other flat types if needed
@@ -92,14 +92,13 @@ public class ApplicationUIHelper {
             if (requiresChoice) {
                 baseUI.displayMessage("This project offers multiple flat types you are eligible for.");
 
-                // Use the enhanced promptForEnum from BaseUI
-                // It returns null if user cancels or chooses the 'no preference' option
                 determinedPreference = baseUI.promptForEnum(
                         "Select your preferred flat type:",
                         FlatType.class, // Pass the Enum class
                         eligibleTypes // Pass the list of ONLY the valid choices
                 );
 
+                // If user cancels the selection, exit the submission process
                 if (determinedPreference == null) {
                     baseUI.displayMessage("Cancelling application submission.");
                     return; // Exit the submission process
@@ -110,10 +109,10 @@ public class ApplicationUIHelper {
             String confirmationPrompt = "Confirm application submission for project " + project.getProjectName() + " ("
                     + projectId + ")";
             if (determinedPreference != null) {
-                confirmationPrompt += " (Preference/Target: " + baseUI.formatEnumName(determinedPreference)
-                        + ")? (yes/no): ";
+                confirmationPrompt += " (Preference: " + baseUI.formatEnumName(determinedPreference)
+                        + ")?";
             } else {
-                confirmationPrompt += " (Specific type based on eligibility or no preference indicated)? (yes/no): ";
+                confirmationPrompt += " (Specific type based on eligibility or no preference indicated)?";
             }
 
             // If promptForConfirmation returns false, user cancelled.
@@ -123,7 +122,7 @@ public class ApplicationUIHelper {
             }
 
             // 6. Call Controller/Service with the *determined* preference
-            Application app = applicationController.submitApplication(applicant, projectId, determinedPreference);
+            Application app = applicationController.submitApplication(user, projectId, determinedPreference);
 
             // 7. Display Success Feedback
             baseUI.displayMessage("----------------------------------");
@@ -153,12 +152,12 @@ public class ApplicationUIHelper {
      * Displays the details of the applicant's current or most recent application
      * and provides an option to request withdrawal if applicable based on status.
      *
-     * @param applicant The applicant user whose application is being viewed.
+     * @param user The applicant user whose application is being viewed.
      */
-    public void performViewAndWithdraw(Applicant applicant) {
+    public void performViewAndWithdraw(User user) {
         baseUI.displayHeader("View My BTO Application Status");
         try {
-            Application app = applicationController.getMyApplication(applicant);
+            Application app = applicationController.getMyApplication(user);
 
             if (app == null) {
                 baseUI.displayMessage("You have no active or previous BTO application.");
@@ -198,16 +197,11 @@ public class ApplicationUIHelper {
 
                 int actionChoice = baseUI.promptForInt("Enter option: ");
                 if (actionChoice == 1) {
-                    performWithdrawalAction(applicant); // Call the separate withdrawal logic
+                    performWithdrawalAction(user); // Call the separate withdrawal logic
                 }
-                // If 0 or other, method ends, returning to previous menu loop
             } else {
                 baseUI.displayMessage("Withdrawal is not applicable for the current application status ("
                         + baseUI.formatEnumName(app.getStatus()) + ").");
-                // Optionally add a prompt to go back if needed, or let the main loop pause
-                // handle it.
-                // System.out.println("\n[0] Back");
-                // baseUI.promptForInt("Enter 0 to go back: ");
             }
         } catch (Exception e) {
             baseUI.displayError("Error retrieving application status: " + e.getMessage());
@@ -221,16 +215,16 @@ public class ApplicationUIHelper {
      *
      * @param applicant The applicant requesting withdrawal.
      */
-    private void performWithdrawalAction(Applicant applicant) {
+    private void performWithdrawalAction(User user) {
         if (baseUI.promptForConfirmation(
-                "Are you sure you want to request withdrawal? This may change your application status to Unsuccessful. (yes/no): ")) {
+                "Are you sure you want to request withdrawal?")) {
             try {
-                boolean success = applicationController.requestWithdrawal(applicant);
+                boolean success = applicationController.requestWithdrawal(user);
                 // Based on FAQ, assume normal success leads to status change (handled by
                 // service)
                 if (success) {
                     baseUI.displayMessage(
-                            "Withdrawal request submitted. Your application status should now be Unsuccessful.");
+                            "Withdrawal request submitted.");
                     baseUI.displayMessage("Please check the status again if needed.");
                 } else {
                     // This might indicate an unexpected state or error in service logic
@@ -241,7 +235,6 @@ public class ApplicationUIHelper {
                 baseUI.displayError("Error requesting withdrawal: " + e.getMessage());
             } catch (Exception e) {
                 baseUI.displayError("An unexpected error occurred during withdrawal: " + e.getMessage());
-                // e.printStackTrace();
             }
         } else {
             baseUI.displayMessage("Withdrawal request cancelled.");
@@ -252,15 +245,15 @@ public class ApplicationUIHelper {
      * Helper method to check if an applicant is eligible for a specific flat type.
      * Note: This logic might ideally live in an EligibilityService.
      *
-     * @param applicant The applicant.
-     * @param flatType  The flat type to check.
+     * @param user     The applicant.
+     * @param flatType The flat type to check.
      * @return true if eligible, false otherwise.
      */
-    private boolean isApplicantEligibleForFlatType(Applicant applicant, FlatType flatType) {
-        if (applicant == null || flatType == null)
+    private boolean isApplicantEligibleForFlatType(User user, FlatType flatType) {
+        if (user == null || flatType == null)
             return false;
-        int age = applicant.getAge();
-        MaritalStatus status = applicant.getMaritalStatus();
+        int age = user.getAge();
+        MaritalStatus status = user.getMaritalStatus();
         if (status == MaritalStatus.SINGLE && age >= 35) {
             return flatType == FlatType.TWO_ROOM;
         } else if (status == MaritalStatus.MARRIED && age >= 21) {

@@ -1,3 +1,1 @@
 bookingId,applicationId,applicantNric,projectId,bookedFlatType,bookingDate
-BOOK001,APP001,S1000001A,PROJ001,TWO_ROOM,2025-04-01
-BOOK002,APP002,S1000002B,PROJ001,THREE_ROOM,2025-04-03

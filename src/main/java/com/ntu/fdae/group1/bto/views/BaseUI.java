@@ -182,7 +182,7 @@ public abstract class BaseUI {
      * @param enumConstant The enum constant to format
      * @return A user-friendly string representation.
      */
-    protected <E extends Enum<E>> String formatEnumName(E enumConstant) {
+    protected String formatEnumName(Enum<?> enumConstant) {
         if (enumConstant == null)
             return "";
         // Simple example: Replace underscore with space, title case maybe?
@@ -196,7 +196,7 @@ public abstract class BaseUI {
     }
 
     /**
-     * Prompts the user for confirmation (yes/no).
+     * Prompts the user for confirmation (Y/N).
      * 
      * @param prompt The message to display before input.
      * @return True if user confirms (Y/y), false otherwise.

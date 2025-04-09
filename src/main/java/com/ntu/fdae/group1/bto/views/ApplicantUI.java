@@ -15,6 +15,7 @@ import com.ntu.fdae.group1.bto.models.project.ProjectFlatInfo;
 import com.ntu.fdae.group1.bto.models.user.Applicant;
 import com.ntu.fdae.group1.bto.exceptions.ApplicationException;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
@@ -39,6 +40,7 @@ public class ApplicantUI extends BaseUI {
     private final AccountUIHelper accountUIHelper; // Use the helper
     private final EnquiryUIHelper enquiryUIHelper;
     private final ApplicationUIHelper applicationUIHelper;
+    private Map<String, Object> currentProjectFilters;
 
     public ApplicantUI(Applicant user,
             UserController userCtrl,
@@ -58,6 +60,7 @@ public class ApplicantUI extends BaseUI {
         this.projectUIHelper = new ProjectUIHelper(this, userCtrl);
         this.enquiryUIHelper = new EnquiryUIHelper(this, userCtrl);
         this.applicationUIHelper = new ApplicationUIHelper(this, appCtrl, projCtrl);
+        this.currentProjectFilters = new HashMap<>();
     }
 
     public void displayMainMenu() {
@@ -118,7 +121,58 @@ public class ApplicantUI extends BaseUI {
 
     private void handleViewAndApplyProjects() {
         displayHeader("View Available BTO Projects");
-        List<Project> projects = projectController.getVisibleProjectsForUser(this.user);
+
+        boolean filtersWereActive = !currentProjectFilters.isEmpty(); // Check if filters exist *before* asking
+        if (filtersWereActive) {
+            System.out.println("Current filters are active:");
+            for (Map.Entry<String, Object> entry : currentProjectFilters.entrySet()) {
+                String key = entry.getKey();
+                Object value = entry.getValue();
+                // Format the value nicely (especially for enums)
+                String valueStr = (value instanceof Enum) ? ((Enum<?>) value).name() : value.toString();
+                System.out.println("  - " + key + ": " + valueStr);
+            }
+            System.out.println("----------------------------------");
+            System.out.println("\nFilter Options:");
+            System.out.println("[1] Keep current filters");
+            System.out.println("[2] Clear current filters and view all");
+            System.out.println("[3] Change/Set new filters");
+            System.out.println("[0] Back"); // Option to back out entirely
+
+            int filterAction = promptForInt("Choose filter action: ");
+
+            switch (filterAction) {
+                case 1:
+                    // Keep filters - Do nothing, proceed with currentProjectFilters
+                    displayMessage("Keeping existing filters.");
+                    break;
+                case 2:
+                    // Clear filters and view all
+                    this.currentProjectFilters.clear();
+                    displayMessage("Filters cleared.");
+                    // Proceed with empty filters map
+                    break;
+                case 3:
+                    // Change/Set new filters
+                    displayMessage("Clearing old filters to set new ones.");
+                    this.currentProjectFilters = projectUIHelper.promptForProjectFilters(false); // Get new filters
+                    break;
+                case 0:
+                default: // Includes Back or invalid choice
+                    displayMessage("Returning to main menu.");
+                    return; // Exit the handleView method
+            }
+        } else {
+            // No filters were active, ask if they want to apply some now
+            if (promptForConfirmation("Apply filters before viewing?:")) {
+                this.currentProjectFilters = projectUIHelper.promptForProjectFilters(false);
+            } else {
+                this.currentProjectFilters.clear(); // Ensure empty if they say no
+            }
+        }
+
+        List<Project> projects = projectController.getVisibleProjectsForUser(this.user,
+                this.currentProjectFilters);
 
         Project selectedProject = projectUIHelper.selectProjectFromList(projects,
                 "Select Project to View Details & Apply");
@@ -145,7 +199,7 @@ public class ApplicantUI extends BaseUI {
 
     private void handleSubmitEnquiry() {
         displayHeader("Submit Enquiry");
-        List<Project> projects = projectController.getVisibleProjectsForUser(this.user);
+        List<Project> projects = projectController.getVisibleProjectsForUser(this.user, this.currentProjectFilters);
 
         Project selectedProject = projectUIHelper.selectProjectFromList(projects,
                 "Select Project to Submit Enquiry");

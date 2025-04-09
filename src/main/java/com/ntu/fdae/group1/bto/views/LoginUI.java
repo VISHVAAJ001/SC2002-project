@@ -57,42 +57,4 @@ public class LoginUI extends BaseUI {
             }
         }
     }
-
-    /**
-     * Handles the password change process for a given user.
-     * 
-     * @param user The user changing their password.
-     */
-    public void displayChangePassword(User user) {
-        if (user == null) {
-            displayError("Cannot change password. No user logged in.");
-            return;
-        }
-        displayHeader("Change Password for " + user.getName());
-        String newPassword = promptForInput("Enter new password:");
-        String confirmPassword = promptForInput("Confirm new password:");
-
-        if (!newPassword.equals(confirmPassword)) {
-            displayError("Passwords do not match.");
-            return;
-        }
-        if (newPassword.isEmpty()) {
-            displayError("Password cannot be empty.");
-            return;
-        }
-
-        try {
-            boolean success = authController.changePassword(user, newPassword);
-            if (success) {
-                displayMessage("Password changed successfully.");
-            } else {
-                // This might happen if saving fails in the repository
-                displayError("Password change failed. Please try again later.");
-            }
-        } catch (Exception e) {
-            displayError("An unexpected error occurred: " + e.getMessage());
-            e.printStackTrace();
-        }
-        pause();
-    }
 }

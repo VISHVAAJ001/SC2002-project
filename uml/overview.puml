@@ -400,12 +400,12 @@ package Service <<Folder>> {
     }
 
     interface IEligibilityService <<ISP>> {
-         + checkApplicationEligibility(applicant: Applicant, project: Project) : boolean
+         + checkApplicationEligibility(user: User, project: Project) : boolean
          + checkOfficerRegistrationEligibility(officer: HDBOfficer, project: Project, allRegistrations: Collection<OfficerRegistration>, allApplications: Collection<Application>) : boolean
      }
      class EligibilityService implements IEligibilityService {
          + EligibilityService()
-         + checkApplicationEligibility(applicant: Applicant, project: Project) : boolean
+         + checkApplicationEligibility(user: User, project: Project) : boolean
          + checkOfficerRegistrationEligibility(officer: HDBOfficer, project: Project, allRegistrations: Collection<OfficerRegistration>, allApplications: Collection<Application>) : boolean
      }
 
@@ -414,8 +414,8 @@ package Service <<Folder>> {
         + editCoreProjectDetails(manager: HDBManager, projectId: String, name: String, neighborhood: String, openDate: LocalDate, closeDate: LocalDate, officerSlots: int) : boolean;
         + deleteProject(manager: HDBManager, projectId: String) : boolean;
         + toggleVisibility(manager: HDBManager, projectId: String) : boolean;
-        + getVisibleProjectsForUser(user: User) : List<Project>;
-        + getAllProjects() : List<Project>;
+        + getVisibleProjectsForUser(user: User, filters: Map<String, Object>) : List<Project>;
+        + getAllProjects(user: User, filters: Map<String, Object>) : List<Project>;
         + getProjectsManagedBy(managerNric: String) : List<Project>;
         + findProjectById(projectId: String) : Project <<nullable>>;
     }
@@ -429,15 +429,15 @@ package Service <<Folder>> {
         + editCoreProjectDetails(manager: HDBManager, projectId: String, name: String, neighborhood: String, openDate: LocalDate, closeDate: LocalDate, officerSlots: int) : boolean;
         + deleteProject(manager: HDBManager, projectId: String) : boolean;
         + toggleVisibility(manager: HDBManager, projectId: String) : boolean;
-        + getVisibleProjectsForUser(user: User) : List<Project>;
-        + getAllProjects() : List<Project>;
+        + getVisibleProjectsForUser(user: User, filters: Map<String, Object>) : List<Project>;
+        + getAllProjects(user: User, filters: Map<String, Object>) : List<Project>;
         + getProjectsManagedBy(managerNric: String) : List<Project>;
         + findProjectById(projectId: String) : Project <<nullable>>;
     }
 
     interface IApplicationService <<ISP>> {
-        + submitApplication(applicant: Applicant, projectId: String, preferredFlatType: FlatType <<nullable>>) : Application <<throws ApplicationException>>
-        + requestWithdrawal(applicant: Applicant) : boolean <<throws ApplicationException>>;
+        + submitApplication(user: User, projectId: String, preferredFlatType: FlatType <<nullable>>) : Application <<throws ApplicationException>>
+        + requestWithdrawal(user: User) : boolean <<throws ApplicationException>>;
         + reviewApplication(manager: HDBManager, applicationId: String, approve: boolean) : boolean <<throws ApplicationException>>;
         + reviewWithdrawal(manager: HDBManager, applicationId: String, approve: boolean) : boolean <<throws ApplicationException>>;
         + getApplicationForUser(applicantNric: String) : Application <<nullable>>;
@@ -451,8 +451,8 @@ package Service <<Folder>> {
         - userRepo : IUserRepository;
         - bookingRepo : IBookingRepository;
         + ApplicationService(appRepo: IApplicationRepository, projRepo: IProjectRepository, eligSvc: IEligibilityService, userRepo: IUserRepository, bookingRepo: IBookingRepository);
-        + submitApplication(applicant: Applicant, projectId: String, preferredFlatType: FlatType <<nullable>>) : Application <<throws ApplicationException>>
-        + requestWithdrawal(applicant: Applicant) : boolean <<throws ApplicationException>>;
+        + submitApplication(user: User, projectId: String, preferredFlatType: FlatType <<nullable>>) : Application <<throws ApplicationException>>
+        + requestWithdrawal(user: User) : boolean <<throws ApplicationException>>;
         + reviewApplication(manager: HDBManager, applicationId: String, approve: boolean) : boolean <<throws ApplicationException>>;
         + reviewWithdrawal(manager: HDBManager, applicationId: String, approve: boolean) : boolean <<throws ApplicationException>>;
         + getApplicationForUser(applicantNric: String) : Application <<nullable>>;
@@ -553,8 +553,8 @@ package Controller <<Folder>> {
         + editProject(manager: HDBManager, projectId: String, name: String, neighborhood: String, openDate: LocalDate, closeDate: LocalDate, officerSlots: int) : boolean <<throws InvalidInputException>>;
         + deleteProject(manager: HDBManager, projectId: String) : boolean;
         + toggleVisibility(manager: HDBManager, projectId: String) : boolean;
-        + getVisibleProjects(user: User) : List<Project>;
-        + getAllProjects(user: HDBStaff) : List<Project>;
+        + getVisibleProjects(user: User, filters: Map<String, Object>) : List<Project>;
+        + getAllProjects(user: HDBStaff, filters: Map<String, Object>) : List<Project>;
         + getManagedProjects(manager: HDBManager) : List<Project>;
         + findProjectById(projectId: String) : Project <<nullable>>;
     }
@@ -562,11 +562,11 @@ package Controller <<Folder>> {
     class ApplicationController {
         - applicationService : IApplicationService;
         + ApplicationController(applicationService: IApplicationService);
-        + submitApplication(applicant: Applicant, projectId: String, preferredFlatType: FlatType <<nullable>>) : Application <<throws ApplicationException>>
-        + requestWithdrawal(applicant: Applicant) : boolean <<throws ApplicationException>>;
+        + submitApplication(user: User, projectId: String, preferredFlatType: FlatType <<nullable>>) : Application <<throws ApplicationException>>
+        + requestWithdrawal(user: User) : boolean <<throws ApplicationException>>;
         + reviewApplication(manager: HDBManager, applicationId: String, approve: boolean) : boolean <<throws ApplicationException>>;
         + reviewWithdrawal(manager: HDBManager, applicationId: String, approve: boolean) : boolean <<throws ApplicationException>>;
-        + getMyApplication(applicant: Applicant) : Application <<nullable>>;
+        + getMyApplication(user: User) : Application <<nullable>>;
         + getProjectApplications(staff: HDBStaff, projectId: String) : List<Application>;
         + getApplicationsByStatus(staff: HDBStaff, status: ApplicationStatus) : List<Application>;
     }
