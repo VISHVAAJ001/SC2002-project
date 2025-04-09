@@ -1,2 +1,3 @@
 applicationId,applicantNric,projectId,submissionDate,status,requestedWithdrawalDate,preferredFlatType
+APP002,T2345678D,PROJ001,2025-04-08,PENDING,,
 APP001,S1234567A,PROJ001,2025-04-08,PENDING,,TWO_ROOM

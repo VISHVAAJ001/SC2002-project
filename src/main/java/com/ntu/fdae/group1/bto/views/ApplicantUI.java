@@ -36,7 +36,7 @@ public class ApplicantUI extends BaseUI {
     private final ProjectUIHelper projectUIHelper; // Use the helper
     private final AccountUIHelper accountUIHelper; // Use the helper
     private final EnquiryUIHelper enquiryUIHelper;
-    private final ApplicationUIHelper applicationHelper;
+    private final ApplicationUIHelper applicationUIHelper;
 
     public ApplicantUI(Applicant user,
             ProjectController projCtrl,
@@ -53,7 +53,7 @@ public class ApplicantUI extends BaseUI {
         this.accountUIHelper = new AccountUIHelper(this, authController); // Initialize helper
         this.projectUIHelper = new ProjectUIHelper(this); // Initialize helper
         this.enquiryUIHelper = new EnquiryUIHelper(this); // Initialize helper
-        this.applicationHelper = new ApplicationUIHelper(this, appCtrl, projCtrl);
+        this.applicationUIHelper = new ApplicationUIHelper(this, appCtrl, projCtrl);
     }
 
     public void displayMainMenu() {
@@ -130,13 +130,13 @@ public class ApplicantUI extends BaseUI {
 
             int actionChoice = promptForInt("Enter option: ");
             if (actionChoice == 1) {
-                applicationHelper.performApplicationSubmission(this.user, selectedProject.getProjectId());
+                applicationUIHelper.performApplicationSubmission(this.user, selectedProject.getProjectId());
             }
         }
     }
 
     private void handleViewAndWithdrawApplication() {
-        applicationHelper.performViewAndWithdraw(this.user);
+        applicationUIHelper.performViewAndWithdraw(this.user);
     }
 
     private void handleSubmitEnquiry() {

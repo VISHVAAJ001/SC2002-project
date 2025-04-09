@@ -127,8 +127,7 @@ public abstract class BaseUI {
      * @return The selected enum constant, or null if the user chooses the null
      *         option or cancels (selects 0).
      */
-    public <E extends Enum<E>> E promptForEnum(String prompt, Class<E> enumClass, List<E> allowedValues,
-            boolean allowNullChoice, String nullChoiceText) {
+    public <E extends Enum<E>> E promptForEnum(String prompt, Class<E> enumClass, List<E> allowedValues) {
         // Validate input list
         if (allowedValues == null || allowedValues.isEmpty()) {
             displayError("Cannot prompt for selection: No allowed enum values provided.");
@@ -136,7 +135,6 @@ public abstract class BaseUI {
         }
 
         int choice;
-        int nullOptionNumber = -1; // Sentinel value, means not applicable/not chosen
         final int cancelOptionNumber = 0; // Standard cancel option
 
         while (true) { // Loop until valid input or cancel
@@ -151,14 +149,6 @@ public abstract class BaseUI {
                                                                                                                      // formatting
                     );
 
-            int currentMaxNumber = counter.get() - 1; // The number of the last valid enum option
-
-            // Display the "null choice" option if allowed
-            if (allowNullChoice) {
-                nullOptionNumber = currentMaxNumber + 1;
-                displayMessage("[" + nullOptionNumber + "] " + nullChoiceText);
-            }
-
             // Display the cancel option
             displayMessage("[" + cancelOptionNumber + "] Cancel / Back");
             displayMessage("---------------------------------");
@@ -170,10 +160,7 @@ public abstract class BaseUI {
                 displayMessage("Selection cancelled.");
                 return null;
             }
-            if (allowNullChoice && choice == nullOptionNumber) {
-                displayMessage(nullChoiceText + " selected.");
-                return null; // Return null to represent the 'no preference' choice
-            }
+
             if (choice > 0 && choice <= allowedValues.size()) {
                 // Valid enum choice, return the selected value (adjusting for 0-based list
                 // index)

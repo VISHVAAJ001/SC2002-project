@@ -95,17 +95,12 @@ public class ApplicationUIHelper {
                 determinedPreference = baseUI.promptForEnum(
                         "Select your preferred flat type:",
                         FlatType.class, // Pass the Enum class
-                        eligibleTypes, // Pass the list of ONLY the valid choices
-                        true, // Yes, allow a 'no preference' option
-                        "No Preference" // Text for the 'no preference' option
+                        eligibleTypes // Pass the list of ONLY the valid choices
                 );
 
-                // We need a way to know if promptForEnum returned null because of *cancel* vs
-                // *no preference*.
-                // For now, we'll assume the confirmation step handles the cancel escape route.
-                // If determinedPreference is null here, assume "No Preference" was selected.
                 if (determinedPreference == null) {
-                    baseUI.displayMessage("No specific preference selected.");
+                    baseUI.displayMessage("Cancelling application submission.");
+                    return; // Exit the submission process
                 }
             }
 
