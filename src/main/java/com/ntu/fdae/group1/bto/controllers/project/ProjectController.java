@@ -114,13 +114,16 @@ public class ProjectController {
     }
 
     /**
-     * Gets projects managed by a specific manager
-     * 
-     * @param managerNRIC NRIC of the manager
-     * @return List of projects managed by the manager
+     * Gets projects managed by a specific HDB Manager object.
+     * @param manager The HDBManager object.
+     * @return List of projects managed by the manager.
      */
-    public List<Project> getProjectsManagedBy(String managerNRIC) {
-        return projectService.getProjectsManagedBy(managerNRIC);
+    public List<Project> getProjectsManagedBy(HDBManager manager) {
+        if (manager == null) {
+            System.err.println("Controller Warning: Manager object required for getManagedProjects.");
+            return Collections.emptyList();
+        }
+        return projectService.getProjectsManagedBy(manager.getNric());
     }
 
     /**

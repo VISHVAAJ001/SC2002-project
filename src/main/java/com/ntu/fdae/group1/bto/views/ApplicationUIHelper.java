@@ -1,7 +1,9 @@
 package com.ntu.fdae.group1.bto.views;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import com.ntu.fdae.group1.bto.controllers.project.ApplicationController;
@@ -266,5 +268,28 @@ public class ApplicationUIHelper {
         } else {
             return false;
         }
+    }
+
+    // Helper to display a list of Applications and return a map for selection
+    private Map<Integer, Application> displayApplicationList(List<Application> apps, String title) {
+    Map<Integer, Application> appMap = new HashMap<>();
+    if (apps == null || apps.isEmpty()) {
+        displayMessage("No applications to display in this list.");
+        return appMap; // Return empty map
+    }
+
+    int index = 1;
+    for (Application app : apps) {
+        Project proj = projectController.findProjectById(app.getProjectId()); // Fetch project for name
+        String projName = (proj != null) ? proj.getProjectName() : "Unknown";
+        String withdrawalStatus = app.getRequestedWithdrawalDate() != null ? " (Withdrawal Requested)" : "";
+        System.out.printf("%d. AppID: %s | Applicant: %s | Project: %s (%s) | Status: %s%s | Pref: %s | Date: %s%n",
+                index, app.getApplicationId(), app.getApplicantNric(), projName, app.getProjectId(),
+                app.getStatus(), withdrawalStatus, app.getPreferredFlatType(), formatDate(app.getSubmissionDate()));
+        appMap.put(index, app);
+        index++;
+    }
+    System.out.println("0. Back");
+    return appMap;
     }
 }

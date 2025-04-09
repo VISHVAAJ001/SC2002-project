@@ -1,12 +1,19 @@
 package com.ntu.fdae.group1.bto.views;
 
+import com.ntu.fdae.group1.bto.controllers.project.ProjectController;
 import com.ntu.fdae.group1.bto.controllers.user.UserController;
 import com.ntu.fdae.group1.bto.models.enquiry.Enquiry;
+import com.ntu.fdae.group1.bto.models.project.Project;
 
+import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 /**
  * Helper class to manage common UI tasks related to displaying Enquiry
@@ -18,8 +25,8 @@ public class EnquiryUIHelper {
 
     private final BaseUI baseUI; // Use BaseUI for console interactions
     private final UserController userController;
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE; // Or your preferred
-                                                                                              // format
+    private final ProjectController projectController;
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE; 
     private static final int SNIPPET_LENGTH = 40; // Max length for content snippet in list view
 
     /**
@@ -27,8 +34,9 @@ public class EnquiryUIHelper {
      * 
      * @param baseUI An instance of BaseUI (or a subclass) to handle console I/O.
      */
-    public EnquiryUIHelper(BaseUI baseUI, UserController userController) {
+    public EnquiryUIHelper(BaseUI baseUI, UserController userController, ProjectController projectController) {
         this.userController = Objects.requireNonNull(userController);
+        this.projectController = Objects.requireNonNull(projectController, "ProjectController cannot be null for EnquiryUIHelper");
         this.baseUI = Objects.requireNonNull(baseUI, "BaseUI cannot be null for EnquiryUIHelper");
     }
 
@@ -125,5 +133,52 @@ public class EnquiryUIHelper {
             baseUI.displayMessage("---------------------");
         }
         baseUI.displayMessage("=======================");
+    }
+
+    /**
+     * Displays a formatted list of enquiries, sorted by unreplied first,
+     * and returns a map for selection.
+     * @param enquiries List of enquiries to display.
+     * @param title Title for the list header.
+     * @return Map where key is the displayed number, value is the Enquiry. Empty map if list is null/empty.
+     */
+    public Map<Integer, Enquiry> displayEnquiryList(List<Enquiry> enquiries, String title) {
+        baseUI.displayHeader(title);
+        Map<Integer, Enquiry> enquiryMap = new HashMap<>();
+        if (enquiries == null || enquiries.isEmpty()) {
+            baseUI.displayMessage("No enquiries to display in this list.");
+            return enquiryMap;
+        }
+
+        // Sort unreplied first, then perhaps by date?
+        List<Enquiry> sortedEnquiries = enquiries.stream()
+                .sorted(Comparator.comparing(Enquiry::isReplied) // false (unreplied) comes first
+                          .thenComparing(Enquiry::getSubmissionDate, Comparator.nullsLast(Comparator.reverseOrder()))) // Newest first within replied/unreplied
+                .collect(Collectors.toList());
+
+        int index = 1;
+        for (Enquiry enq : sortedEnquiries) {
+            Project proj = (enq.getProjectId() != null) ? projectController.findProjectById(enq.getProjectId()) : null;
+            String projName = (proj != null) ? proj.getProjectName() : "General";
+            String repliedStatus = enq.isReplied() ? "[Replied]" : "[UNREPLIED]";
+
+            // Use displayMessage for potentially multi-line output
+            baseUI.displayMessage(String.format("%d. %s EnqID: %s | User: %s | Project: %s (%s) | Date: %s",
+                    index, repliedStatus, enq.getEnquiryId(), enq.getUserNric(), projName,
+                    enq.getProjectId() == null ? "N/A" : enq.getProjectId(), formatDateSafe(enq.getSubmissionDate())));
+            baseUI.displayMessage(String.format("   Q: %s", enq.getContent())); // Question on new line
+
+            if (enq.isReplied()) {
+                baseUI.displayMessage(String.format("   A: %s (on %s)", enq.getReply(), formatDateSafe(enq.getReplyDate()))); // Reply on new line
+            }
+            enquiryMap.put(index, enq);
+            index++;
+        }
+        baseUI.displayMessage("[0] Back / Cancel");
+        return enquiryMap;
+    }
+
+    private String formatDateSafe(LocalDate date) {
+        return (date == null) ? "N/A" : DATE_FORMATTER.format(date);
     }
 }
