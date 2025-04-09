@@ -5,6 +5,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import com.ntu.fdae.group1.bto.enums.UserRole;
+import com.ntu.fdae.group1.bto.exceptions.AuthorizationException;
 import com.ntu.fdae.group1.bto.models.project.Project;
 import com.ntu.fdae.group1.bto.models.project.ProjectFlatInfo;
 import com.ntu.fdae.group1.bto.models.user.HDBManager;
@@ -92,7 +94,7 @@ public class ProjectController {
      * @param user The user to get visible projects for
      * @return List of visible projects
      */
-    public List<Project> getVisibleProjectsForUser(User user) {
+    public List<Project> getVisibleProjectsForUser(User user, Map<String, Object> filter) {
         // No specific authorization needed here usually, as the service filters based
         // on user.
         if (user == null) {
@@ -101,16 +103,21 @@ public class ProjectController {
             return Collections.emptyList();
         }
 
-        return projectService.getVisibleProjectsForUser(user);
+        return projectService.getVisibleProjectsForUser(user, filter);
     }
 
     /**
      * Gets all projects in the system
      * 
      * @return All projects
+     * @throws AuthorizationException
      */
-    public List<Project> getAllProjects() {
-        return projectService.getAllProjects();
+    public List<Project> getAllProjects(User user, Map<String, Object> filter) throws AuthorizationException {
+        if (user.getRole() != UserRole.HDB_MANAGER) {
+            throw new AuthorizationException("Only HDB Managers can view all projects.");
+        }
+
+        return projectService.getAllProjects(user, filter);
     }
 
     /**

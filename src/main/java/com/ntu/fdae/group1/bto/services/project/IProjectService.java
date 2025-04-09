@@ -66,14 +66,14 @@ public interface IProjectService {
          * @param user The user to get visible projects for
          * @return List of projects visible to the user
          */
-        List<Project> getVisibleProjectsForUser(User user);
+        List<Project> getVisibleProjectsForUser(User user, Map<String, Object> filters);
 
         /**
          * Gets all projects in the system
          * 
          * @return All projects
          */
-        List<Project> getAllProjects();
+        List<Project> getAllProjects(User user, Map<String, Object> filters);
 
         /**
          * Gets projects managed by a specific manager
