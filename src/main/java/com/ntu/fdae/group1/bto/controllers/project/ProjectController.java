@@ -88,13 +88,25 @@ public class ProjectController {
         return projectService.toggleVisibility(manager, projectId);
     }
 
+    // ****** Overload without filters ******
+    /**
+     * Gets projects visible to a user (without additional filters).
+     * @param user The user to get visible projects for
+     * @return List of visible projects
+     */
+    public List<Project> getVisibleProjectsForUser(User user) {
+        if (user == null) { System.err.println("Error: User context required."); return Collections.emptyList(); }
+        // Call the service overload without filters
+       return projectService.getVisibleProjectsForUser(user);
+   }
+
     /**
      * Gets projects visible to a user
      * 
      * @param user The user to get visible projects for
      * @return List of visible projects
      */
-    public List<Project> getVisibleProjectsForUser(User user, Map<String, Object> filter) {
+    public List<Project> getVisibleProjectsForUser(User user, Map<String, Object> filters) {
         // No specific authorization needed here usually, as the service filters based
         // on user.
         if (user == null) {
@@ -103,7 +115,7 @@ public class ProjectController {
             return Collections.emptyList();
         }
 
-        return projectService.getVisibleProjectsForUser(user, filter);
+        return projectService.getVisibleProjectsForUser(user, filters);
     }
 
     /**

@@ -68,6 +68,9 @@ public interface IProjectService {
          */
         List<Project> getVisibleProjectsForUser(User user, Map<String, Object> filters);
 
+        // Overload without filters
+        
+        List<Project> getVisibleProjectsForUser(User user);
         /**
          * Gets all projects in the system
          * 

@@ -281,6 +281,12 @@ public class ProjectService implements IProjectService {
         return projectRepo.findById(projectId);
     }
 
+    // Overload without filters (calls the one with filters using empty map)
+    @Override
+    public List<Project> getVisibleProjectsForUser(User user) {
+        return getVisibleProjectsForUser(user, Collections.emptyMap()); // Delegate to filter version
+    }
+
     /**
      * Gets a list of projects that are currently visible and eligible for a
      * specific user
