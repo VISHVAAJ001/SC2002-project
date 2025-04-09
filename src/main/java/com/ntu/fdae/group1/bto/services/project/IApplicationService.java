@@ -6,29 +6,29 @@ import com.ntu.fdae.group1.bto.exceptions.ApplicationException;
 import com.ntu.fdae.group1.bto.models.project.Application;
 import com.ntu.fdae.group1.bto.enums.ApplicationStatus;
 import com.ntu.fdae.group1.bto.enums.FlatType;
-import com.ntu.fdae.group1.bto.models.user.Applicant;
 import com.ntu.fdae.group1.bto.models.user.HDBManager;
+import com.ntu.fdae.group1.bto.models.user.User;
 
 public interface IApplicationService {
     /**
      * Submits a new application for a project
      * 
-     * @param applicant The applicant submitting the application
+     * @param user      The applicant submitting the application
      * @param projectId ID of the project to apply for
      * @return The created application
      * @throws ApplicationException if application submission fails
      */
-    Application submitApplication(Applicant applicant, String projectId, FlatType preferredFlatType)
+    Application submitApplication(User user, String projectId, FlatType preferredFlatType)
             throws ApplicationException;
 
     /**
      * Requests withdrawal of an existing application
      * 
-     * @param applicant The applicant requesting withdrawal
+     * @param user The applicant requesting withdrawal
      * @return true if request was successful, false otherwise
      * @throws ApplicationException if withdrawal request fails
      */
-    boolean requestWithdrawal(Applicant applicant) throws ApplicationException;
+    boolean requestWithdrawal(User user) throws ApplicationException;
 
     /**
      * Reviews an application

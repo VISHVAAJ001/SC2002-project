@@ -41,6 +41,7 @@ public class HDBOfficerUI extends BaseUI {
     private final ProjectUIHelper projectUIHelper; // Use the helper
     private final AccountUIHelper accountUIHelper;
     private final EnquiryUIHelper enquiryUIHelper; // Use the helper
+    private final ApplicationUIHelper applicationUIHelper;
 
     public HDBOfficerUI(HDBOfficer user,
             UserController userCtrl,
@@ -65,6 +66,7 @@ public class HDBOfficerUI extends BaseUI {
         this.projectUIHelper = new ProjectUIHelper(this, userController);
         this.accountUIHelper = new AccountUIHelper(this, authController);
         this.enquiryUIHelper = new EnquiryUIHelper(this, userController);
+        this.applicationUIHelper = new ApplicationUIHelper(this, applicationController, projectController);
     }
 
     public void displayMainMenu() {
@@ -149,10 +151,6 @@ public class HDBOfficerUI extends BaseUI {
     // Duplicated/Similar Applicant Methods (Could potentially be shared via a
     // helper if identical)
     private void handleViewAndApplyProjects() {
-        // TODO: Implement identical flow as ApplicantUI.handleViewAndApplyProjects
-        System.out.println("[Placeholder: Officer viewing/applying like Applicant]");
-        // Remember service layer needs to check Officer eligibility (e.g., not handling
-        // project applying for)
         displayHeader("View Available BTO Projects");
         List<Project> projects = projectController.getVisibleProjectsForUser(this.user);
 
@@ -160,28 +158,23 @@ public class HDBOfficerUI extends BaseUI {
                 "Select Project to View Details & Apply");
 
         if (selectedProject != null) {
-            projectUIHelper.displayApplicantProjectDetails(selectedProject); // Show applicant view
+            // Display details using the specific applicant view helper method
+            projectUIHelper.displayApplicantProjectDetails(selectedProject); // Use the tailored view
 
+            // --- Contextual Action ---
             System.out.println("\nOptions:");
             System.out.println("[1] Apply for " + selectedProject.getProjectName());
             System.out.println("[0] Back");
+
             int actionChoice = promptForInt("Enter option: ");
             if (actionChoice == 1) {
-                handleSubmitApplicationAction(selectedProject.getProjectId());
+                applicationUIHelper.performApplicationSubmission(this.user, selectedProject.getProjectId());
             }
         }
     }
 
-    private void handleSubmitApplicationAction(String projectId) {
-        // TODO: Implement identical flow as ApplicantUI.handleSubmitApplicationAction
-        System.out.println("[Placeholder: Officer submitting application like Applicant]");
-        // Prompt for preference etc. Call appController.submitApplication(...)
-    }
-
     private void handleViewAndWithdrawApplication() {
-        // TODO: Implement identical flow as
-        // ApplicantUI.handleViewAndWithdrawApplication
-        System.out.println("[Placeholder: Officer viewing/withdrawing own application like Applicant]");
+        applicationUIHelper.performViewAndWithdraw(this.user);
     }
 
     private void handleSubmitEnquiry() {

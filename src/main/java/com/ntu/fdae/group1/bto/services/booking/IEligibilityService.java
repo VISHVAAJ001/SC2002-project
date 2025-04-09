@@ -9,26 +9,27 @@ import com.ntu.fdae.group1.bto.models.project.Project;
 import com.ntu.fdae.group1.bto.models.user.Applicant;
 import com.ntu.fdae.group1.bto.models.user.HDBManager;
 import com.ntu.fdae.group1.bto.models.user.HDBOfficer;
+import com.ntu.fdae.group1.bto.models.user.User;
 import com.ntu.fdae.group1.bto.enums.FlatType;
 
 public interface IEligibilityService {
         /**
          * Checks if an applicant is eligible to apply for a project
          * 
-         * @param applicant The applicant to check
-         * @param project   The project to apply for
+         * @param user    The applicant to check
+         * @param project The project to apply for
          * @return true if the applicant is eligible, false otherwise
          */
-        boolean canApplicantApply(Applicant applicant, Project project);
+        boolean canApplicantApply(User user, Project project);
 
         /**
          * Checks if an applicant is eligible for a specific flat type
          * 
-         * @param applicant The applicant to check
-         * @param flatType  The flat type to check against
+         * @param user     The applicant to check
+         * @param flatType The flat type to check against
          * @return true if the applicant is eligible, false otherwise
          */
-        boolean isApplicantEligibleForFlatType(Applicant applicant, FlatType flatType);
+        boolean isApplicantEligibleForFlatType(User user, FlatType flatType);
 
         /**
          * Checks if an officer can register for a project

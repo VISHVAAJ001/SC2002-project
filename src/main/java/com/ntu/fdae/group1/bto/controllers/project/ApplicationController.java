@@ -9,6 +9,7 @@ import com.ntu.fdae.group1.bto.enums.FlatType;
 import com.ntu.fdae.group1.bto.models.user.Applicant;
 import com.ntu.fdae.group1.bto.models.user.HDBManager;
 import com.ntu.fdae.group1.bto.models.user.HDBStaff;
+import com.ntu.fdae.group1.bto.models.user.User;
 import com.ntu.fdae.group1.bto.services.project.IApplicationService;
 
 /**
@@ -29,28 +30,28 @@ public class ApplicationController {
     /**
      * Submits a new application
      * 
-     * @param applicant         The applicant submitting the application
+     * @param user              The applicant submitting the application
      * @param projectId         ID of the project to apply for
      * @param preferredFlatType The preferred flat type
      * @return The created application
      * @throws ApplicationException if submission fails
      */
-    public Application submitApplication(Applicant applicant, String projectId, FlatType preferredFlatType)
+    public Application submitApplication(User user, String projectId, FlatType preferredFlatType)
             throws ApplicationException {
-        return applicationService.submitApplication(applicant, projectId, preferredFlatType);
+        return applicationService.submitApplication(user, projectId, preferredFlatType);
     }
 
     /**
      * Requests withdrawal of an application
      * 
-     * @param applicant The applicant requesting withdrawal
+     * @param user The applicant requesting withdrawal
      * @return true if request was successful, false otherwise
      * @throws ApplicationException if withdrawal request fails
      */
-    public boolean requestWithdrawal(Applicant applicant) throws ApplicationException {
-        if (applicant == null)
+    public boolean requestWithdrawal(User user) throws ApplicationException {
+        if (user == null)
             throw new ApplicationException("Applicant cannot be null for withdrawal.");
-        return applicationService.requestWithdrawal(applicant);
+        return applicationService.requestWithdrawal(user);
     }
 
     /**
@@ -92,11 +93,11 @@ public class ApplicationController {
     /**
      * Gets the application for a specific applicant
      * 
-     * @param applicant The applicant
+     * @param user The applicant
      * @return The application, or null if not found
      */
-    public Application getMyApplication(Applicant applicant) {
-        return applicationService.getApplicationForUser(applicant.getNric());
+    public Application getMyApplication(User user) {
+        return applicationService.getApplicationForUser(user.getNric());
     }
 
     /**
