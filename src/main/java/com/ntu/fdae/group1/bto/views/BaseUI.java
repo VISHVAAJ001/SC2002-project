@@ -98,8 +98,8 @@ public abstract class BaseUI {
      * @return The LocalDate entered by the user, or null if input is invalid.
      */
     public LocalDate promptForDate(String prompt) {
-        System.out.print(prompt + " (YYYY-MM-DD): ");
         LocalDate date = null;
+        DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE;
 
         while (date == null) { // Loop until a valid date is parsed
         System.out.print(prompt + " (YYYY-MM-DD): "); // Show prompt inside loop
@@ -111,7 +111,6 @@ public abstract class BaseUI {
         }
 
         try {
-            DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE; 
             date = LocalDate.parse(dateStr, formatter); // Assign to 'date' ONLY if parsing succeeds
         } catch (DateTimeParseException e) {
             displayError("Invalid date format. Please use YYYY-MM-DD.");

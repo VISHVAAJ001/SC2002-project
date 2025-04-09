@@ -52,9 +52,9 @@ public class ProjectService implements IProjectService {
             System.err.println("Service Error: Opening and Closing dates cannot be null.");
             return null;
         }
-        // 1. Check if closing date is before opening date
-        if (closeDate.isBefore(openDate)) {
-            System.err.println("Service Error: Closing date (" + closeDate + ") cannot be before opening date ("
+        // 1. Check if closing date is before or equal to opening date
+        if (closeDate.isBefore(openDate) || closeDate.equals(openDate)) {
+            System.err.println("Service Error: Closing date (" + closeDate + ") cannot be before or the same as opening date ("
                     + openDate + "). Project creation failed.");
             return null;
         }
@@ -118,8 +118,8 @@ public class ProjectService implements IProjectService {
             return false;
         }
         // 1. Check if closing date is before opening date
-        if (closeDate.isBefore(openDate)) {
-            System.err.println("Service Error: Closing date (" + closeDate + ") cannot be before opening date ("
+        if (closeDate.isBefore(openDate) || closeDate.equals(openDate)) {
+            System.err.println("Service Error: Closing date (" + closeDate + ") cannot be before or the same as opening date ("
                     + openDate + "). Project edit failed.");
             return false;
         }
