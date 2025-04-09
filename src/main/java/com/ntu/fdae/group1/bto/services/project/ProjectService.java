@@ -4,11 +4,13 @@ import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.ntu.fdae.group1.bto.enums.ApplicationStatus;
 import com.ntu.fdae.group1.bto.enums.FlatType;
@@ -37,11 +39,7 @@ public class ProjectService implements IProjectService {
         this.projectRepo = Objects.requireNonNull(projectRepo, "Project Repository cannot be null");
         this.userRepo = userRepo; // Assign if kept
         this.eligibilityService = Objects.requireNonNull(eligibilityService, "Eligibility Service cannot be null");
-        this.applicationRepo = Objects.requireNonNull(applicationRepo, "Application Repository cannot be null"); // <<<
-                                                                                                                 // ASSIGN
-                                                                                                                 // FIELD
-                                                                                                                 // HERE
-                                                                                                                 // >>>
+        this.applicationRepo = Objects.requireNonNull(applicationRepo, "Application Repository cannot be null");
     }
 
     @Override
@@ -53,17 +51,19 @@ public class ProjectService implements IProjectService {
         if (openDate == null || closeDate == null) {
             System.err.println("Service Error: Opening and Closing dates cannot be null.");
             return null;
-       }
-       // 1. Check if closing date is before opening date
-       if (closeDate.isBefore(openDate)) {
-           System.err.println("Service Error: Closing date (" + closeDate + ") cannot be before opening date (" + openDate + "). Project creation failed.");
-           return null;
-       }
-       // 2. Check HDB officer slots (1-10)
-       if (officerSlots < 1 || officerSlots > 10) {
-            System.err.println("Service Error: Max HDB Officer Slots must be between 1 and 10 (was " + officerSlots + "). Project creation failed.");
+        }
+        // 1. Check if closing date is before opening date
+        if (closeDate.isBefore(openDate)) {
+            System.err.println("Service Error: Closing date (" + closeDate + ") cannot be before opening date ("
+                    + openDate + "). Project creation failed.");
             return null;
-       }
+        }
+        // 2. Check HDB officer slots (1-10)
+        if (officerSlots < 1 || officerSlots > 10) {
+            System.err.println("Service Error: Max HDB Officer Slots must be between 1 and 10 (was " + officerSlots
+                    + "). Project creation failed.");
+            return null;
+        }
 
         // Eligibility Check
         // Need to handle Collection<Project> type potentially returned by findAll()
@@ -111,23 +111,25 @@ public class ProjectService implements IProjectService {
     public boolean editCoreProjectDetails(HDBManager manager, String projectId, String name, String neighborhood,
             LocalDate openDate, LocalDate closeDate, int officerSlots) {
         Project project = projectRepo.findById(projectId);
-        
+
         // Input validation
         if (openDate == null || closeDate == null) {
             System.err.println("Service Error: Opening and Closing dates cannot be null.");
             return false;
         }
-       // 1. Check if closing date is before opening date
+        // 1. Check if closing date is before opening date
         if (closeDate.isBefore(openDate)) {
-        System.err.println("Service Error: Closing date (" + closeDate + ") cannot be before opening date (" + openDate + "). Project edit failed.");
-           return false;
-        }
-       // 2. Check HDB officer slots (1-10)
-        if (officerSlots < 1 || officerSlots > 10) {
-            System.err.println("Service Error: Max HDB Officer Slots must be between 1 and 10 (was " + officerSlots + "). Project edit failed.");
+            System.err.println("Service Error: Closing date (" + closeDate + ") cannot be before opening date ("
+                    + openDate + "). Project edit failed.");
             return false;
         }
-        
+        // 2. Check HDB officer slots (1-10)
+        if (officerSlots < 1 || officerSlots > 10) {
+            System.err.println("Service Error: Max HDB Officer Slots must be between 1 and 10 (was " + officerSlots
+                    + "). Project edit failed.");
+            return false;
+        }
+
         if (project == null) {
             System.err.println("Service Error: Project not found with ID: " + projectId);
             return false;
@@ -149,15 +151,15 @@ public class ProjectService implements IProjectService {
         Map<String, Project> projectMap = projectRepo.findAll();
         // Exclude the current project being edited from the check list
         final String currentProjectId = projectId; // Final variable for lambda
-        Collection<Project> otherProjects = (projectMap != null) ?
-                projectMap.values().stream()
-                          .filter(p -> !p.getProjectId().equals(currentProjectId)) // Exclude self
-                          .collect(Collectors.toList())
+        Collection<Project> otherProjects = (projectMap != null) ? projectMap.values().stream()
+                .filter(p -> !p.getProjectId().equals(currentProjectId)) // Exclude self
+                .collect(Collectors.toList())
                 : Arrays.asList();
 
         if (!eligibilityService.checkManagerProjectHandlingEligibility(manager, openDate, closeDate, otherProjects)) {
-             System.err.println("Service Error: The new dates for project " + projectId + " overlap with another project managed by " + manager.getNric() + ". Edit failed.");
-             return false;
+            System.err.println("Service Error: The new dates for project " + projectId
+                    + " overlap with another project managed by " + manager.getNric() + ". Edit failed.");
+            return false;
         }
 
         // Use try-catch for potential validation errors from setters
@@ -238,9 +240,23 @@ public class ProjectService implements IProjectService {
     }
 
     @Override
-    public List<Project> getAllProjects() {
+    public List<Project> getAllProjects(User user, Map<String, Object> filters) {
+        // Authorization should be in Controller
         Map<String, Project> projectMap = projectRepo.findAll();
-        return (projectMap == null) ? new ArrayList<>() : new ArrayList<>(projectMap.values());
+        if (projectMap == null || projectMap.isEmpty()) {
+            return Collections.emptyList();
+        }
+        List<Project> allProjects = new ArrayList<>(projectMap.values());
+
+        Stream<Project> stream = allProjects.stream(); // Start with full stream
+
+        // Apply optional filters from the map (Neighbourhood, Flat Type, Visibility)
+        stream = applyOptionalFilters(stream, filters, true); // isStaffView = true
+
+        // Apply DEFAULT Sorting by Project ID (last step before collect)
+        stream = stream.sorted(Comparator.comparing(Project::getProjectId)); // Default sort
+
+        return stream.collect(Collectors.toList());
     }
 
     @Override
@@ -273,39 +289,32 @@ public class ProjectService implements IProjectService {
      * eligibility rules.
      * The list is sorted alphabetically by project name.
      *
-     * @param user The user for whom to filter the projects.
+     * @param user    The user for whom to filter the projects.
+     * @param filters A map of optional filters (e.g., neighbourhood, flat type).
      * @return A List of eligible and visible Project objects, sorted by name.
      */
     @Override
-    public List<Project> getVisibleProjectsForUser(User user) {
-        // 1. Get current date for filtering based on application period (FAQ pg 35)
+    public List<Project> getVisibleProjectsForUser(User user, Map<String, Object> filters) {
         LocalDate currentDate = LocalDate.now();
+        Map<String, Project> projectMap = projectRepo.findAll();
+        if (projectMap == null || projectMap.isEmpty()) {
+            return Collections.emptyList();
+        }
+        List<Project> allProjects = new ArrayList<>(projectMap.values());
 
-        // 2. Fetch all projects (handle potential map return type)
-        List<Project> allProjects = new ArrayList<>(projectRepo.findAll().values());
-
-        // 3. Filter the projects using a stream
-        List<Project> filteredProjects = allProjects.stream()
-                // Filter 1: Project must be explicitly set to visible
+        Stream<Project> stream = allProjects.stream()
+                // Base filters: Visible, Not Closed, Eligible for User Type
                 .filter(Project::isVisible)
+                .filter(project -> !currentDate.isAfter(project.getClosingDate()))
+                .filter(project -> isProjectEligibleForApplicant(user, project));
 
-                // Filter 2: Application period must still be active (current date <= closing
-                // date)
-                // (FAQ pg 36: not visible for *new* applications after closing date)
-                .filter(project -> !currentDate.isAfter(project.getClosingDate())) // Keep if today is on or before
-                                                                                   // closing date
+        // Apply optional filters from the map (Neighbourhood, Flat Type)
+        stream = applyOptionalFilters(stream, filters, false); // isStaffView = false
 
-                // Filter 3: Project must be eligible based on the user's profile (age, status,
-                // required flats)
-                .filter(project -> isProjectEligibleForApplicant(user, project)) // Delegate eligibility check
+        // Apply DEFAULT Sorting by Project ID (last step before collect)
+        stream = stream.sorted(Comparator.comparing(Project::getProjectId)); // Default sort
 
-                // 4. Sort the resulting list alphabetically by project name (case-insensitive)
-                .sorted(Comparator.comparing(Project::getProjectName, String.CASE_INSENSITIVE_ORDER))
-
-                // 5. Collect the results into a new list
-                .collect(Collectors.toList());
-
-        return filteredProjects;
+        return stream.collect(Collectors.toList());
     }
 
     /**
@@ -357,5 +366,49 @@ public class ProjectService implements IProjectService {
 
         // Default case for any other unforeseen roles? Return false.
         return false;
+    }
+
+    private Stream<Project> applyOptionalFilters(Stream<Project> stream, Map<String, Object> filters,
+            boolean isStaffView) {
+        if (filters == null || filters.isEmpty()) {
+            return stream; // No filters to apply
+        }
+
+        // Neighbourhood
+        if (filters.containsKey("neighborhood")) {
+            String neighborhood = (String) filters.get("neighborhood");
+            if (neighborhood != null && !neighborhood.trim().isEmpty()) {
+                stream = stream.filter(p -> p.getNeighborhood().equalsIgnoreCase(neighborhood.trim()));
+            }
+        }
+
+        // Flat Type (Checks if project *offers* this type)
+        if (filters.containsKey("flatType")) {
+            try {
+                FlatType flatType = (FlatType) filters.get("flatType"); // Assumes correct type in map
+                if (flatType != null) {
+                    stream = stream.filter(p -> p.getFlatTypes() != null && p.getFlatTypes().containsKey(flatType));
+                }
+            } catch (ClassCastException e) {
+                System.err.println("Filter Error: Invalid object type for flatType filter.");
+            }
+        }
+
+        // --- Staff Only Filters ---
+        if (isStaffView) {
+            // Visibility Filter
+            if (filters.containsKey("visibility")) {
+                try {
+                    Boolean isVisible = (Boolean) filters.get("visibility");
+                    if (isVisible != null) {
+                        stream = stream.filter(p -> p.isVisible() == isVisible);
+                    }
+                } catch (ClassCastException e) {
+                    System.err.println("Filter Error: Invalid object type for visibility filter.");
+                }
+            }
+        }
+
+        return stream;
     }
 }

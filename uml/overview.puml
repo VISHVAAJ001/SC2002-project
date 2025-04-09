@@ -414,8 +414,8 @@ package Service <<Folder>> {
         + editCoreProjectDetails(manager: HDBManager, projectId: String, name: String, neighborhood: String, openDate: LocalDate, closeDate: LocalDate, officerSlots: int) : boolean;
         + deleteProject(manager: HDBManager, projectId: String) : boolean;
         + toggleVisibility(manager: HDBManager, projectId: String) : boolean;
-        + getVisibleProjectsForUser(user: User) : List<Project>;
-        + getAllProjects() : List<Project>;
+        + getVisibleProjectsForUser(user: User, filters: Map<String, Object>) : List<Project>;
+        + getAllProjects(user: User, filters: Map<String, Object>) : List<Project>;
         + getProjectsManagedBy(managerNric: String) : List<Project>;
         + findProjectById(projectId: String) : Project <<nullable>>;
     }
@@ -429,8 +429,8 @@ package Service <<Folder>> {
         + editCoreProjectDetails(manager: HDBManager, projectId: String, name: String, neighborhood: String, openDate: LocalDate, closeDate: LocalDate, officerSlots: int) : boolean;
         + deleteProject(manager: HDBManager, projectId: String) : boolean;
         + toggleVisibility(manager: HDBManager, projectId: String) : boolean;
-        + getVisibleProjectsForUser(user: User) : List<Project>;
-        + getAllProjects() : List<Project>;
+        + getVisibleProjectsForUser(user: User, filters: Map<String, Object>) : List<Project>;
+        + getAllProjects(user: User, filters: Map<String, Object>) : List<Project>;
         + getProjectsManagedBy(managerNric: String) : List<Project>;
         + findProjectById(projectId: String) : Project <<nullable>>;
     }
@@ -553,8 +553,8 @@ package Controller <<Folder>> {
         + editProject(manager: HDBManager, projectId: String, name: String, neighborhood: String, openDate: LocalDate, closeDate: LocalDate, officerSlots: int) : boolean <<throws InvalidInputException>>;
         + deleteProject(manager: HDBManager, projectId: String) : boolean;
         + toggleVisibility(manager: HDBManager, projectId: String) : boolean;
-        + getVisibleProjects(user: User) : List<Project>;
-        + getAllProjects(user: HDBStaff) : List<Project>;
+        + getVisibleProjects(user: User, filters: Map<String, Object>) : List<Project>;
+        + getAllProjects(user: HDBStaff, filters: Map<String, Object>) : List<Project>;
         + getManagedProjects(manager: HDBManager) : List<Project>;
         + findProjectById(projectId: String) : Project <<nullable>>;
     }
