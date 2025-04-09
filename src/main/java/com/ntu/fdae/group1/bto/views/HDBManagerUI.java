@@ -191,8 +191,8 @@ public class HDBManagerUI extends BaseUI {
         displayHeader("Create New BTO Project");
         String name = promptForInput("Enter Project Name: ");
         String neighborhood = promptForInput("Enter Neighborhood: ");
-        LocalDate openDate = promptForDate("Enter Application Opening Date (YYYY-MM-DD): ");
-        LocalDate closeDate = promptForDate("Enter Application Closing Date (YYYY-MM-DD): ");
+        LocalDate openDate = promptForDate("Enter Application Opening Date: ");
+        LocalDate closeDate = promptForDate("Enter Application Closing Date: ");
         int officerSlots = promptForInt("Enter Max HDB Officer Slots (1-10): ");
 
         Map<String, ProjectFlatInfo> flatInfoMap = new HashMap<>();
@@ -286,7 +286,7 @@ public class HDBManagerUI extends BaseUI {
 
         displayMessage("Current visibility: " + (projectToToggle.isVisible() ? "ON" : "OFF"));
         if (promptForConfirmation(
-                "Toggle visibility for project '" + projectToToggle.getProjectName() + "'? (yes/no): ")) {
+                "Toggle visibility for project '" + projectToToggle.getProjectName() + "'?: ")) {
             boolean success = projectController.toggleProjectVisibility(user, projectToToggle.getProjectId());
             if (success) {
                 displayMessage("Visibility toggled successfully.");
@@ -385,7 +385,7 @@ public class HDBManagerUI extends BaseUI {
         List<Project> projectsToDisplay = myManagedProjects; // Start with the managed list
 
         // 2. Offer Optional Filtering on THIS SUBSET
-        if (promptForConfirmation("Apply filters to your managed projects? (yes/no): ")) {
+        if (promptForConfirmation("Apply filters to your managed projects?: ")) {
             displayMessage("Enter filter criteria (leave blank to skip a filter):");
             // Build filter map locally (same as in handleViewAllProjects)
             Map<String, Object> filterMap = new HashMap<>();
@@ -482,7 +482,7 @@ public class HDBManagerUI extends BaseUI {
 
         OfficerRegistration selectedReg = regMap.get(choice);
         boolean approve = promptForConfirmation("Approve registration for Officer " + selectedReg.getOfficerNric()
-                + " for project " + selectedReg.getProjectId() + "? (yes/no): ");
+                + " for project " + selectedReg.getProjectId() + "?: ");
 
         boolean success = officerRegController.reviewRegistration(user, selectedReg.getRegistrationId(), approve);
         if (success) {
@@ -522,7 +522,7 @@ public class HDBManagerUI extends BaseUI {
 
         Application selectedApp = appMap.get(choice);
         boolean approve = promptForConfirmation("Approve application " + selectedApp.getApplicationId()
-                + " for Applicant " + selectedApp.getApplicantNric() + "? (yes/no): ");
+                + " for Applicant " + selectedApp.getApplicantNric() + "?: ");
 
         boolean success = applicationController.reviewApplication(user, selectedApp.getApplicationId(), approve);
         if (success) {
@@ -562,7 +562,7 @@ public class HDBManagerUI extends BaseUI {
 
         Application selectedApp = appMap.get(choice);
         boolean approve = promptForConfirmation(
-                "Approve withdrawal for application " + selectedApp.getApplicationId() + "? (yes/no): ");
+                "Approve withdrawal for application " + selectedApp.getApplicationId() + "?: ");
 
         boolean success = applicationController.reviewWithdrawal(user, selectedApp.getApplicationId(), approve);
         if (success) {

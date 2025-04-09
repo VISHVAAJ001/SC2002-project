@@ -99,13 +99,26 @@ public abstract class BaseUI {
      */
     public LocalDate promptForDate(String prompt) {
         System.out.print(prompt + " (YYYY-MM-DD): ");
-        String dateStr = scanner.nextLine();
-        try {
-            return LocalDate.parse(dateStr, DateTimeFormatter.ISO_LOCAL_DATE);
-        } catch (DateTimeParseException e) {
-            System.err.println("Invalid date format. Please use YYYY-MM-DD.");
-            return null;
+        LocalDate date = null;
+
+        while (date == null) { // Loop until a valid date is parsed
+        System.out.print(prompt + " (YYYY-MM-DD): "); // Show prompt inside loop
+        String dateStr = scanner.nextLine().trim(); 
+
+        if (dateStr.isEmpty()) { // Handle empty input specifically
+            displayError("Date input cannot be empty. Please try again.");
+            continue; // Go to next loop iteration
         }
+
+        try {
+            DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE; 
+            date = LocalDate.parse(dateStr, formatter); // Assign to 'date' ONLY if parsing succeeds
+        } catch (DateTimeParseException e) {
+            displayError("Invalid date format. Please use YYYY-MM-DD.");
+            // Loop will continue as 'date' is still null
+        }
+    }
+        return date; // Return the valid date
     }
 
     /**
