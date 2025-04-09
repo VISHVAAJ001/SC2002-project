@@ -7,7 +7,7 @@ import com.ntu.fdae.group1.bto.controllers.project.OfficerRegistrationController
 import com.ntu.fdae.group1.bto.controllers.enquiry.EnquiryController;
 import com.ntu.fdae.group1.bto.controllers.project.ReportController;
 import com.ntu.fdae.group1.bto.controllers.user.AuthenticationController; // Added
-
+import com.ntu.fdae.group1.bto.controllers.user.UserController;
 // Import necessary models
 import com.ntu.fdae.group1.bto.models.user.HDBManager;
 import com.ntu.fdae.group1.bto.models.project.*; // Import project models
@@ -32,6 +32,7 @@ import java.util.Objects;
 
 public class HDBManagerUI extends BaseUI {
     private final HDBManager user;
+    private final UserController userController;
     private final ProjectController projectController;
     private final ApplicationController applicationController;
     private final OfficerRegistrationController officerRegController;
@@ -42,6 +43,7 @@ public class HDBManagerUI extends BaseUI {
     private final AccountUIHelper accountUIHelper;
 
     public HDBManagerUI(HDBManager user,
+            UserController userCtrl,
             ProjectController projCtrl,
             ApplicationController appCtrl,
             OfficerRegistrationController offRegCtrl,
@@ -51,13 +53,14 @@ public class HDBManagerUI extends BaseUI {
             Scanner scanner) {
         super(scanner);
         this.user = Objects.requireNonNull(user);
+        this.userController = Objects.requireNonNull(userCtrl);
         this.projectController = Objects.requireNonNull(projCtrl);
         this.applicationController = Objects.requireNonNull(appCtrl);
         this.officerRegController = Objects.requireNonNull(offRegCtrl);
         this.enquiryController = Objects.requireNonNull(enqCtrl);
         this.reportController = Objects.requireNonNull(reportCtrl);
         this.authController = Objects.requireNonNull(authCtrl);
-        this.projectUIHelper = new ProjectUIHelper(this); // Initialize helper
+        this.projectUIHelper = new ProjectUIHelper(this, userCtrl); // Initialize helper
         this.accountUIHelper = new AccountUIHelper(this, authCtrl); // Initialize account helper
     }
 

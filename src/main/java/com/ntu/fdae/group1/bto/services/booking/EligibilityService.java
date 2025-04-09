@@ -3,6 +3,9 @@ package com.ntu.fdae.group1.bto.services.booking;
 import com.ntu.fdae.group1.bto.enums.FlatType;
 import com.ntu.fdae.group1.bto.enums.MaritalStatus;
 import com.ntu.fdae.group1.bto.enums.OfficerRegStatus;
+import com.ntu.fdae.group1.bto.enums.FlatType;
+import com.ntu.fdae.group1.bto.enums.MaritalStatus;
+import com.ntu.fdae.group1.bto.enums.OfficerRegStatus;
 import com.ntu.fdae.group1.bto.models.project.Application;
 import com.ntu.fdae.group1.bto.models.project.Project;
 import com.ntu.fdae.group1.bto.models.project.ProjectFlatInfo;
@@ -13,12 +16,12 @@ import com.ntu.fdae.group1.bto.models.user.HDBOfficer;
 import com.ntu.fdae.group1.bto.repository.project.IProjectRepository;
 
 import java.time.LocalDate;
+import java.time.LocalDate;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
 
 public class EligibilityService implements IEligibilityService {
-
     private final IProjectRepository projectRepository;
 
     public EligibilityService(IProjectRepository projectRepository) {
