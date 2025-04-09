@@ -31,7 +31,7 @@ public class ApplicationController {
      * 
      * @param applicant         The applicant submitting the application
      * @param projectId         ID of the project to apply for
-     * @param preferredFlatType The preferred flat type (can be null)
+     * @param preferredFlatType The preferred flat type
      * @return The created application
      * @throws ApplicationException if submission fails
      */

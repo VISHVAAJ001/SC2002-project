@@ -8,9 +8,11 @@ import com.ntu.fdae.group1.bto.controllers.project.OfficerRegistrationController
 import com.ntu.fdae.group1.bto.controllers.project.ProjectController;
 import com.ntu.fdae.group1.bto.controllers.project.ReportController;
 import com.ntu.fdae.group1.bto.controllers.user.AuthenticationController;
+import com.ntu.fdae.group1.bto.controllers.user.UserController;
 
 public class ControllerContainer {
     public AuthenticationController authController;
+    public UserController userController;
     public ProjectController projectController;
     public ApplicationController appController;
     public OfficerRegistrationController officerRegController;
@@ -19,10 +21,12 @@ public class ControllerContainer {
     public EnquiryController enquiryController;
     public ReportController reportController;
 
-    public ControllerContainer(AuthenticationController auth, ProjectController proj, ApplicationController app,
+    public ControllerContainer(AuthenticationController auth, UserController user, ProjectController proj,
+            ApplicationController app,
             OfficerRegistrationController reg, BookingController book, ReceiptController receipt,
             EnquiryController enq, ReportController report) {
         this.authController = auth;
+        this.userController = user;
         this.projectController = proj;
         this.appController = app;
         this.officerRegController = reg;

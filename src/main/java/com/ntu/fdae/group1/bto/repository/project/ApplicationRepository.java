@@ -77,6 +77,13 @@ public class ApplicationRepository implements IApplicationRepository {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public List<Application> findByStatus(ApplicationStatus status) {
+        return applications.values().stream()
+                .filter(app -> app.getStatus() == status)
+                .collect(Collectors.toList());
+    }
+
     // Helper methods for serialization/deserialization
     private String[] getApplicationCsvHeader() {
         return new String[] {
