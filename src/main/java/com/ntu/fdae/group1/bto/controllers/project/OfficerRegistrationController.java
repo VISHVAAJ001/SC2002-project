@@ -253,4 +253,30 @@ public class OfficerRegistrationController {
         // Return active or most recent past approved project
         return (potentiallyActiveProject != null) ? potentiallyActiveProject : mostRecentPastProject;
     }
+
+    /**
+     * Retrieves all registration requests submitted by the specified officer.
+     *
+     * @param officer The HDBOfficer whose registrations are requested. Must not be
+     *                null.
+     * @return An immutable List of OfficerRegistration objects for this officer.
+     *         Returns an empty list if none found or input is invalid.
+     * @throws IllegalArgumentException if officer is null.
+     * @throws RuntimeException         if an unexpected error occurs during
+     *                                  retrieval.
+     */
+    public List<OfficerRegistration> getMyRegistrations(HDBOfficer officer) {
+        Objects.requireNonNull(officer, "Officer cannot be null for getMyRegistrations");
+
+        try {
+            List<OfficerRegistration> registrations = registrationService.getRegistrationsByOfficer(officer.getNric());
+            // Return immutable copy or view
+            return registrations != null ? Collections.unmodifiableList(new ArrayList<>(registrations))
+                    : Collections.emptyList();
+        } catch (Exception e) {
+            System.err.println("Controller ERROR: Failed to retrieve registrations for officer " + officer.getNric()
+                    + ": " + e.getMessage());
+            throw new RuntimeException("Failed to retrieve officer registrations due to an internal error.", e);
+        }
+    }
 }

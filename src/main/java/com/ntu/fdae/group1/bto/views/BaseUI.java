@@ -14,6 +14,7 @@ import java.util.function.Function;
  */
 public abstract class BaseUI {
     protected Scanner scanner;
+    protected static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE;
 
     public BaseUI(Scanner scanner) {
         if (scanner == null) {
