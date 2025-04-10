@@ -3,6 +3,7 @@ package com.ntu.fdae.group1.bto.services.project;
 import com.ntu.fdae.group1.bto.models.project.Project;
 import com.ntu.fdae.group1.bto.models.project.ProjectFlatInfo;
 import com.ntu.fdae.group1.bto.models.user.HDBManager;
+import com.ntu.fdae.group1.bto.models.user.HDBOfficer;
 import com.ntu.fdae.group1.bto.models.user.User;
 
 import java.time.LocalDate;
@@ -102,4 +103,12 @@ public interface IProjectService {
          * @return The project, or null if not found
          */
         Project findProjectById(String projectId);
+
+        /**
+         * Gets all projects available for officer registration
+         * 
+         * @param officer The officer to get projects for
+         * @return List of projects available for officer registration
+         */
+        List<Project> getProjectsAvailableForOfficerRegistration(HDBOfficer officer);
 }

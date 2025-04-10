@@ -9,18 +9,22 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.ntu.fdae.group1.bto.enums.ApplicationStatus;
 import com.ntu.fdae.group1.bto.enums.FlatType;
 import com.ntu.fdae.group1.bto.enums.MaritalStatus;
+import com.ntu.fdae.group1.bto.enums.OfficerRegStatus;
 import com.ntu.fdae.group1.bto.enums.UserRole;
 import com.ntu.fdae.group1.bto.models.project.Application;
+import com.ntu.fdae.group1.bto.models.project.OfficerRegistration;
 import com.ntu.fdae.group1.bto.models.project.Project;
 import com.ntu.fdae.group1.bto.models.project.ProjectFlatInfo;
 import com.ntu.fdae.group1.bto.models.user.*;
 import com.ntu.fdae.group1.bto.repository.project.IApplicationRepository;
+import com.ntu.fdae.group1.bto.repository.project.IOfficerRegistrationRepository;
 import com.ntu.fdae.group1.bto.repository.project.IProjectRepository;
 import com.ntu.fdae.group1.bto.repository.user.IUserRepository;
 import com.ntu.fdae.group1.bto.services.booking.IEligibilityService;
@@ -31,15 +35,17 @@ public class ProjectService implements IProjectService {
     private final IUserRepository userRepo;
     private final IEligibilityService eligibilityService;
     private final IApplicationRepository applicationRepo;
+    private final IOfficerRegistrationRepository officerRegRepo;
 
     public ProjectService(IProjectRepository projectRepo,
             IUserRepository userRepo,
             IEligibilityService eligibilityService,
-            IApplicationRepository applicationRepo) {
+            IApplicationRepository applicationRepo, IOfficerRegistrationRepository officerRegRepo) {
         this.projectRepo = Objects.requireNonNull(projectRepo, "Project Repository cannot be null");
         this.userRepo = userRepo; // Assign if kept
         this.eligibilityService = Objects.requireNonNull(eligibilityService, "Eligibility Service cannot be null");
         this.applicationRepo = Objects.requireNonNull(applicationRepo, "Application Repository cannot be null");
+        this.officerRegRepo = Objects.requireNonNull(officerRegRepo, "Officer Registration Repository cannot be null");
     }
 
     @Override
@@ -340,6 +346,110 @@ public class ProjectService implements IProjectService {
         stream = stream.sorted(Comparator.comparing(Project::getProjectId)); // Default sort
 
         return stream.collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Project> getProjectsAvailableForOfficerRegistration(HDBOfficer officer) {
+        if (officer == null) {
+            return Collections.emptyList();
+        }
+        String officerNric = officer.getNric();
+
+        // 1. Find project applied for by this officer (if any)
+        Application officerApplication = applicationRepo.findByApplicantNric(officerNric);
+        String appliedProjectId = (officerApplication != null) ? officerApplication.getProjectId() : null;
+
+        // 2. Get ALL registrations for this officer (needed for period overlap check)
+        List<OfficerRegistration> allMyRegistrations = officerRegRepo.findByOfficerNric(officerNric);
+
+        // 3. Separate out PENDING/APPROVED registrations and their project IDs/periods
+        // We need Project details to check periods, so fetch projects for existing regs
+        Map<String, OfficerRegistration> pendingOrApprovedRegsMap = allMyRegistrations.stream()
+                .filter(reg -> reg.getStatus() == OfficerRegStatus.PENDING
+                        || reg.getStatus() == OfficerRegStatus.APPROVED)
+                .collect(Collectors.toMap(OfficerRegistration::getProjectId, reg -> reg, (reg1, reg2) -> reg1));
+
+        // Fetch projects corresponding to these pending/approved registrations to get
+        // their dates
+        Map<String, Project> projectsOfExistingRegs = pendingOrApprovedRegsMap.keySet().stream()
+                .map(projectRepo::findById) // Assumes findById returns Project or null
+                .filter(Objects::nonNull)
+                .collect(Collectors.toMap(Project::getProjectId, proj -> proj));
+
+        // 4. Fetch all potential target projects
+        List<Project> allProjects = new ArrayList<>(projectRepo.findAll().values());
+
+        // 5. Filter based on Officer Registration rules
+        List<Project> availableProjects = allProjects.stream()
+
+                // Rule 1: Cannot register for the project they applied to as an applicant
+                .filter(targetProject -> appliedProjectId == null
+                        || !targetProject.getProjectId().equals(appliedProjectId))
+
+                // Rule 2: Cannot register for a project they already have a Pending/Approved
+                // registration for
+                .filter(targetProject -> !pendingOrApprovedRegsMap.containsKey(targetProject.getProjectId()))
+
+                // Rule 3: Cannot register if they have another Pending/Approved registration
+                // for a DIFFERENT project whose application period OVERLAPS with this target
+                // project.
+                .filter(targetProject -> {
+                    // If no other pending/approved regs exist, this rule passes automatically
+                    if (pendingOrApprovedRegsMap.isEmpty()) {
+                        return true;
+                    }
+                    // Check against each existing pending/approved registration's project period
+                    for (String existingRegProjectId : pendingOrApprovedRegsMap.keySet()) {
+                        Project existingRegProject = projectsOfExistingRegs.get(existingRegProjectId);
+                        if (existingRegProject != null) { // Ensure we have project details for the existing reg
+                            if (periodsOverlap(targetProject, existingRegProject)) {
+                                return false; // Found an overlap with another registration, cannot register for
+                                              // targetProject
+                            }
+                        } else {
+                            // Handle case where project details for an existing registration couldn't be
+                            // found?
+                            // Maybe log a warning. For safety, could assume overlap or filter out target.
+                            System.err.println(
+                                    "Warning: Could not find project details for existing registration on project ID: "
+                                            + existingRegProjectId);
+                            return false; // Safer to block registration if details are missing
+                        }
+                    }
+                    return true; // No overlapping registrations found
+                })
+
+                // 6. Sort the result
+                .sorted(Comparator.comparing(Project::getProjectName, String.CASE_INSENSITIVE_ORDER))
+                .collect(Collectors.toList());
+
+        return availableProjects;
+    }
+
+    /**
+     * Checks if the application periods of two projects overlap.
+     * Overlap occurs if one project's start date is before or on the other's end
+     * date,
+     * AND that first project's end date is after or on the other's start date.
+     * Assumes dates are inclusive as per PDF pg 4.
+     *
+     * @param p1 Project 1
+     * @param p2 Project 2
+     * @return true if the periods overlap, false otherwise.
+     */
+    private boolean periodsOverlap(Project p1, Project p2) {
+        if (p1 == null || p2 == null || p1.getOpeningDate() == null || p1.getClosingDate() == null ||
+                p2.getOpeningDate() == null || p2.getClosingDate() == null) {
+            return false; // Cannot determine overlap without valid dates
+        }
+
+        LocalDate start1 = p1.getOpeningDate();
+        LocalDate end1 = p1.getClosingDate();
+        LocalDate start2 = p2.getOpeningDate();
+        LocalDate end2 = p2.getClosingDate();
+
+        // Overlap condition: (StartA <= EndB) and (EndA >= StartB)
+        return !start1.isAfter(end2) && !end1.isBefore(start2);
     }
 
     /**

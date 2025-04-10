@@ -10,6 +10,7 @@ import com.ntu.fdae.group1.bto.exceptions.AuthorizationException;
 import com.ntu.fdae.group1.bto.models.project.Project;
 import com.ntu.fdae.group1.bto.models.project.ProjectFlatInfo;
 import com.ntu.fdae.group1.bto.models.user.HDBManager;
+import com.ntu.fdae.group1.bto.models.user.HDBOfficer;
 import com.ntu.fdae.group1.bto.models.user.User;
 import com.ntu.fdae.group1.bto.services.project.IProjectService;
 
@@ -162,5 +163,30 @@ public class ProjectController {
      */
     public Project findProjectById(String projectId) {
         return projectService.findProjectById(projectId);
+    }
+
+    /**
+     * Gets projects potentially available for the given officer to register for
+     * handling.
+     * Delegates filtering logic (e.g., excluding projects already applied for or
+     * registered for)
+     * to the ProjectService.
+     *
+     * @param officer The HDBOfficer requesting the list. Must not be null.
+     * @return A List of Project objects available for registration, sorted by name.
+     * @throws IllegalArgumentException if officer is null.
+     * @throws RuntimeException         if an unexpected error occurs during
+     *                                  retrieval.
+     */
+    public List<Project> getProjectsAvailableForRegistration(HDBOfficer officer) {
+        java.util.Objects.requireNonNull(officer, "Officer cannot be null for getProjectsAvailableForRegistration");
+
+        try {
+            return projectService.getProjectsAvailableForOfficerRegistration(officer);
+        } catch (Exception e) {
+            System.err.println("Controller ERROR: Failed to retrieve projects available for registration for officer "
+                    + officer.getNric());
+            return Collections.emptyList();
+        }
     }
 }

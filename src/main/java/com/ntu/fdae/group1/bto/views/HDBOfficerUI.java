@@ -13,7 +13,6 @@ import com.ntu.fdae.group1.bto.models.booking.BookingReceiptInfo;
 import com.ntu.fdae.group1.bto.models.enquiry.Enquiry;
 import com.ntu.fdae.group1.bto.models.project.*; // Import project models
 import com.ntu.fdae.group1.bto.models.user.HDBOfficer;
-import com.ntu.fdae.group1.bto.models.user.User; // Needed for receipt generation
 import com.ntu.fdae.group1.bto.exceptions.*; // Import custom exceptions
 import com.ntu.fdae.group1.bto.enums.ApplicationStatus;
 import com.ntu.fdae.group1.bto.enums.FlatType;
@@ -229,28 +228,194 @@ public class HDBOfficerUI extends BaseUI {
     }
 
     private void handleSubmitEnquiry() {
-        // TODO: Implement identical flow as ApplicantUI.handleSubmitEnquiry
-        System.out.println("[Placeholder: Officer submitting own enquiry like Applicant]");
+        displayHeader("Submit Enquiry");
+        List<Project> projects = projectController.getVisibleProjectsForUser(this.user, this.currentProjectFilters);
+
+        Project selectedProject = projectUIHelper.selectProjectFromList(projects,
+                "Select Project to Submit Enquiry");
+
+        if (selectedProject != null) {
+            String content = promptForInput("Enter your enquiry content: ");
+            if (content != null && !content.trim().isEmpty()) {
+                try {
+                    enquiryController.createEnquiry(this.user, selectedProject.getProjectId(), content);
+                    displayMessage("Enquiry submitted successfully!");
+                } catch (Exception e) {
+                    displayError("Failed to submit enquiry: " + e.getMessage());
+                }
+            } else {
+                displayError("Enquiry content cannot be empty.");
+            }
+        }
     }
 
     private void handleManageMyEnquiries() {
-        // TODO: Implement identical flow as ApplicantUI.handleManageMyEnquiries
-        System.out.println("[Placeholder: Officer managing own enquiries like Applicant]");
-    }
-    // ----------------------------------------------------------------------------
+        displayHeader("Manage My Enquiries");
+        List<Enquiry> enquiries = enquiryController.viewMyEnquiries(this.user); // Get data
 
+        // Use helper to display list and get selection
+        Enquiry selectedEnquiry = enquiryUIHelper.selectEnquiryFromList(enquiries, "My Submitted Enquiries");
+
+        if (selectedEnquiry != null) {
+            // Use helper to display details
+            enquiryUIHelper.displayEnquiryDetails(selectedEnquiry);
+
+            // --- Applicant Contextual Actions ---
+            // Check if editable/deletable based on rules (e.g., not replied - FAQ p26)
+            boolean canManage = !selectedEnquiry.isReplied();
+
+            if (canManage) {
+                System.out.println("\nOptions:");
+                System.out.println("[1] Edit Enquiry Content");
+                System.out.println("[2] Delete Enquiry");
+                System.out.println("[0] Back");
+
+                int actionChoice = promptForInt("Enter option: ");
+                switch (actionChoice) {
+                    case 1:
+                        handleEditEnquiryAction(selectedEnquiry.getEnquiryId());
+                        break;
+                    case 2:
+                        handleDeleteEnquiryAction(selectedEnquiry.getEnquiryId());
+                        break;
+                    // Default or 0: Do nothing
+                }
+            } else {
+                displayMessage("This enquiry has been replied to and cannot be modified.");
+                displayMessage("\n[0] Back");
+                promptForInt("Enter 0 to go back: ");
+            }
+        }
+    }
+
+    // Helper method to handle actual edit action
+    private void handleEditEnquiryAction(String enquiryId) {
+        String newContent = promptForInput("Enter new content for the enquiry: ");
+        if (newContent != null && !newContent.trim().isEmpty()) {
+            try {
+                boolean success = enquiryController.editEnquiry(enquiryId, newContent, this.user);
+                if (success) {
+                    displayMessage("Enquiry edited successfully!");
+                } else {
+                    displayError("Failed to edit enquiry. It may not exist or you may not have permission.");
+                }
+            } catch (Exception e) {
+                displayError("Failed to edit enquiry: " + e.getMessage());
+            }
+        } else {
+            displayError("New content cannot be empty.");
+        }
+    }
+
+    // Helper method to handle actual delete action
+    private void handleDeleteEnquiryAction(String enquiryId) {
+        try {
+            boolean success = enquiryController.deleteEnquiry(enquiryId, this.user);
+
+            if (success) {
+                displayMessage("Enquiry deleted successfully!");
+            } else {
+                displayError("Failed to delete enquiry. It may not exist or you may not have permission.");
+            }
+        } catch (Exception e) {
+            displayError("Failed to delete enquiry: " + e.getMessage());
+            return;
+        }
+    }
+
+    /**
+     * Handles the process for an HDB Officer to select a project and request
+     * registration to handle it.
+     */
     private void handleRequestRegistration() {
         displayHeader("Register for Project Handling");
-        // TODO: Prompt for Project ID, Confirm, Call
-        // officerRegController.requestRegistration(...)
-        System.out.println("[Placeholder: Request registration for project]");
+
+        try {
+            // 1. Get the list of projects available for registration
+            List<Project> availableProjects = projectController.getProjectsAvailableForRegistration(this.user);
+
+            if (availableProjects == null || availableProjects.isEmpty()) {
+                displayMessage(
+                        "No projects available for registration. You already applied for or are registered for all.");
+                return;
+            }
+
+            // 2. Use ProjectUIHelper to display the list and get selection
+            Project selectedProject = projectUIHelper.selectProjectFromList(
+                    availableProjects,
+                    "Select Project to Register For (Projects you applied for or are registered for are hidden)");
+
+            // 3. Handle selection
+            if (selectedProject == null) {
+                // User chose 'Back' or the list was empty
+                displayMessage("Registration request cancelled or no projects available.");
+                return;
+            }
+
+            String projectIdToRegister = selectedProject.getProjectId();
+            displayMessage(
+                    "You selected Project: " + selectedProject.getProjectName() + " (ID: " + projectIdToRegister + ")");
+
+            // 4. Confirmation
+            if (!promptForConfirmation("Confirm registration request for this project? (yes/no): ")) {
+                displayMessage("Registration request cancelled.");
+                return;
+            }
+
+            // 5. Call the controller to make the request
+            OfficerRegistration registration = officerRegController.requestRegistration(this.user, projectIdToRegister);
+            displayMessage("Registration requested successfully!");
+            // Display details from the returned registration object...
+            displayMessage("Registration ID: " + registration.getRegistrationId());
+            displayMessage("Project ID:      " + registration.getProjectId());
+            displayMessage("Request Date:    " + registration.getRequestDate().format(DATE_FORMATTER));
+            displayMessage("Current Status:  " + registration.getStatus());
+
+        } catch (RegistrationException e) {
+            displayError("Registration Failed: " + e.getMessage());
+        } catch (Exception e) { // Catch other potential errors (e.g., data access in controller/service)
+            displayError("An unexpected error occurred: " + e.getMessage());
+            // e.printStackTrace();
+        }
     }
 
+    /**
+     * Handles viewing the status of all project handling registrations submitted by
+     * the current HDB Officer.
+     * (Implementation remains the same as previous version)
+     */
     private void handleViewRegistrationStatus() {
         displayHeader("View My Project Registration Status");
-        // TODO: Prompt for Project ID (or show all?), Call officerRegController
-        // method(s), Display status(es)
-        System.out.println("[Placeholder: Display my registration status for project(s)]");
+
+        try {
+            List<OfficerRegistration> myRegistrations = officerRegController.getMyRegistrations(this.user); // Assumes
+                                                                                                            // this
+                                                                                                            // method
+                                                                                                            // exists
+
+            if (myRegistrations == null || myRegistrations.isEmpty()) {
+                displayMessage("You have no submitted registration requests.");
+                return;
+            }
+
+            displayMessage("Your Registration Requests:");
+            displayMessage("--------------------------------------------------");
+            System.out.printf("%-10s | %-15s | %-12s | %s\n", "Reg ID", "Project ID", "Request Date", "Status");
+            System.out.println("--------------------------------------------------");
+
+            myRegistrations.forEach(reg -> {
+                System.out.printf("%-10s | %-15s | %-12s | %s\n",
+                        reg.getRegistrationId(),
+                        reg.getProjectId(),
+                        reg.getRequestDate().format(DATE_FORMATTER),
+                        reg.getStatus().name());
+            });
+            displayMessage("--------------------------------------------------");
+
+        } catch (Exception e) {
+            displayError("An unexpected error occurred while retrieving registration status: " + e.getMessage());
+            // e.printStackTrace();
+        }
     }
 
     /**

@@ -5,6 +5,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.Objects;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Map;
 import java.time.LocalDate;
 
@@ -179,8 +180,9 @@ public class OfficerRegistrationService implements IOfficerRegistrationService {
 
     @Override
     public List<OfficerRegistration> getRegistrationsByOfficer(String officerNric) {
-        return registrationRepo.findAll().values().stream() // Adjust if findAll() returns List
-                .filter(reg -> reg.getOfficerNric().equals(officerNric))
-                .collect(Collectors.toList());
+        if (officerNric == null || officerNric.trim().isEmpty()) {
+            return Collections.emptyList(); // Return empty list for invalid input
+        }
+        return registrationRepo.findByOfficerNric(officerNric);
     }
 }
