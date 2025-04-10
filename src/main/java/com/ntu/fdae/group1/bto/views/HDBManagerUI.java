@@ -221,7 +221,7 @@ public class HDBManagerUI extends BaseUI {
             displayError("Project creation failed (check previous errors).");
         }
     }
-    
+
     private void handleEditProject() throws InvalidInputException {
         displayHeader("Edit Existing Project");
     
@@ -286,11 +286,11 @@ public class HDBManagerUI extends BaseUI {
                 projectToEdit.getNeighborhood());
     
         LocalDate openDate = promptForDateOrKeep(
-        "New Opening Date (YYYY-MM-DD) [" + formatDate(projectToEdit.getOpeningDate()) + "]:", // Use local formatDate
+        "New Opening Date (YYYY-MM-DD) [" + formatDateSafe(projectToEdit.getOpeningDate()) + "]:", // Use local formatDate
         projectToEdit.getOpeningDate());
 
         LocalDate closeDate = promptForDateOrKeep(
-        "New Closing Date (YYYY-MM-DD) [" + formatDate(projectToEdit.getClosingDate()) + "]:", // Use local formatDate
+        "New Closing Date (YYYY-MM-DD) [" + formatDateSafe(projectToEdit.getClosingDate()) + "]:", // Use local formatDate
         projectToEdit.getClosingDate());
 
         int officerSlots = promptForIntOrKeep( // <<< Declaration is here
@@ -799,7 +799,7 @@ public class HDBManagerUI extends BaseUI {
     private LocalDate promptForDateOrKeep(String prompt, LocalDate currentValue) {
         while (true) {
             String input = promptForInput(
-                    prompt + " (Enter YYYY-MM-DD or leave blank to keep '" + formatDate(currentValue) + "'): ");
+                    prompt + " (Enter YYYY-MM-DD or leave blank to keep '" + formatDateSafe(currentValue) + "'): ");
             if (input.trim().isEmpty()) {
                 return currentValue; // Keep current
             }
@@ -832,10 +832,6 @@ public class HDBManagerUI extends BaseUI {
             return originalValue; // Keep original if blank or only whitespace
         }
         return input.trim(); // Return trimmed user input
-    }
-
-    private String formatDate(LocalDate date) {
-        return (date == null) ? "N/A" : DATE_FORMATTER.format(date);
     }
 
 }

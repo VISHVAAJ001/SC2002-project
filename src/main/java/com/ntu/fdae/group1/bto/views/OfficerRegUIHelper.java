@@ -1,11 +1,9 @@
 package com.ntu.fdae.group1.bto.views; // Or views.helpers
 
-import com.ntu.fdae.group1.bto.controllers.project.ProjectController; // Corrected path potentially
-import com.ntu.fdae.group1.bto.models.project.Project; // Needed for project name
+import com.ntu.fdae.group1.bto.controllers.project.ProjectController;
+import com.ntu.fdae.group1.bto.models.project.Project;
 import com.ntu.fdae.group1.bto.models.project.OfficerRegistration;
 
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -13,12 +11,12 @@ import java.util.Objects;
 
 /**
  * Helper class for displaying Officer Registration related lists and details.
+ * Uses composition with BaseUI for console interactions.
  */
 public class OfficerRegUIHelper {
 
-    private final BaseUI baseUI;
+    private final BaseUI baseUI; // Instance for console I/O
     private final ProjectController projectController; // To get project names
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE; // Or get from BaseUI
 
     /**
      * Constructor for OfficerRegUIHelper.
@@ -37,10 +35,10 @@ public class OfficerRegUIHelper {
      * @return Map where key is the displayed number, value is the OfficerRegistration. Empty map if list is null/empty.
      */
     public Map<Integer, OfficerRegistration> displayOfficerRegList(List<OfficerRegistration> regs, String title) {
-        baseUI.displayHeader(title);
+        this.baseUI.displayHeader(title);
         Map<Integer, OfficerRegistration> regMap = new HashMap<>();
         if (regs == null || regs.isEmpty()) {
-            baseUI.displayMessage("No registrations to display in this list.");
+            this.baseUI.displayMessage("No registrations to display in this list."); // Use the baseUI field
             return regMap;
         }
 
@@ -58,32 +56,33 @@ public class OfficerRegUIHelper {
                     reg.getOfficerNric(),
                     projName, // Display name
                     reg.getProjectId(), // Display ID
-                    reg.getStatus(), // Enum name is usually fine
-                    formatDateSafe(reg.getRequestDate()) // Use local/BaseUI formatDate
+                    reg.getStatus(),
+                    this.baseUI.formatDateSafe(reg.getRequestDate())
             );
-            baseUI.displayMessage(formattedString); // Use injected BaseUI
+            this.baseUI.displayMessage(formattedString);
             regMap.put(index, reg);
             index++;
         }
-        baseUI.displayMessage("[0] Back / Cancel"); // Use injected BaseUI
+        this.baseUI.displayMessage("[0] Back / Cancel");
         return regMap;
     }
 
-     // --- Potentially add displayOfficerRegistrationDetails method here ---
+     /**
+      * Displays details for a single OfficerRegistration.
+      * @param reg The registration object to display details for.
+      */
      public void displayOfficerRegistrationDetails(OfficerRegistration reg) {
-         if (reg == null) { baseUI.displayError("No registration details to display."); return; }
-         baseUI.displayHeader("Officer Registration Details (ID: " + reg.getRegistrationId() + ")");
+         if (reg == null) {
+             this.baseUI.displayError("No registration details to display.");
+             return;
+         }
+         this.baseUI.displayHeader("Officer Registration Details (ID: " + reg.getRegistrationId() + ")");
          Project project = projectController.findProjectById(reg.getProjectId());
-         baseUI.displayMessage("Officer NRIC:    " + reg.getOfficerNric());
-         baseUI.displayMessage("Project ID:      " + reg.getProjectId());
-         baseUI.displayMessage("Project Name:    " + (project != null ? project.getProjectName() : "N/A"));
-         baseUI.displayMessage("Request Date:    " + formatDateSafe(reg.getRequestDate()));
-         baseUI.displayMessage("Current Status:  " + reg.getStatus());
-         baseUI.displayMessage("----------------------------------");
+         this.baseUI.displayMessage("Officer NRIC:    " + reg.getOfficerNric());
+         this.baseUI.displayMessage("Project ID:      " + reg.getProjectId());
+         this.baseUI.displayMessage("Project Name:    " + (project != null ? project.getProjectName() : "N/A"));
+         this.baseUI.displayMessage("Request Date:    " + this.baseUI.formatDateSafe(reg.getRequestDate()));
+         this.baseUI.displayMessage("Current Status:  " + reg.getStatus());
+         this.baseUI.displayMessage("----------------------------------");
      }
-
-    // Helper for date formatting - remove if BaseUI provides it
-    private String formatDateSafe(LocalDate date) {
-        return (date == null) ? "N/A" : DATE_FORMATTER.format(date);
-    }
 }
