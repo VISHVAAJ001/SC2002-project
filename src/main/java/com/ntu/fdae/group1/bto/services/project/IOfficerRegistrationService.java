@@ -46,6 +46,24 @@ public interface IOfficerRegistrationService {
     List<OfficerRegistration> getPendingRegistrations();
 
     /**
+     * Gets all pending officer registrations specifically for the given project ID.
+     *
+     * @param projectId The ID of the project to filter by.
+     * @return A List of OfficerRegistration objects with PENDING status for the specified project.
+     *         Returns an empty list if none are found or projectId is invalid.
+     */
+    List<OfficerRegistration> getPendingRegistrationsForProject(String projectId);
+
+    /**
+     * Gets the count of pending officer registrations specifically for the given project ID.
+     * This might be more efficient than retrieving the full list if only the count is needed.
+     *
+     * @param projectId The ID of the project to filter by.
+     * @return The number of PENDING registrations for the specified project.
+     */
+    int getPendingRegistrationCountForProject(String projectId);
+
+    /**
      * Gets all registrations for a specific project
      * 
      * @param projectId ID of the project

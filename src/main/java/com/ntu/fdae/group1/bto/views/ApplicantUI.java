@@ -1,6 +1,7 @@
 package com.ntu.fdae.group1.bto.views;
 
 import com.ntu.fdae.group1.bto.controllers.project.ApplicationController;
+import com.ntu.fdae.group1.bto.controllers.project.OfficerRegistrationController;
 import com.ntu.fdae.group1.bto.controllers.project.ProjectController;
 import com.ntu.fdae.group1.bto.controllers.enquiry.EnquiryController;
 import com.ntu.fdae.group1.bto.controllers.user.AuthenticationController; // Added
@@ -57,7 +58,7 @@ public class ApplicantUI extends BaseUI {
         this.enquiryController = Objects.requireNonNull(enqCtrl);
         this.authController = Objects.requireNonNull(authCtrl);
         this.accountUIHelper = new AccountUIHelper(this, authCtrl);
-        this.projectUIHelper = new ProjectUIHelper(this, userCtrl);
+        this.projectUIHelper = new ProjectUIHelper(this, userCtrl, projCtrl);
         this.enquiryUIHelper = new EnquiryUIHelper(this, userCtrl, projCtrl);
         this.applicationUIHelper = new ApplicationUIHelper(this, appCtrl, projCtrl);
         this.currentProjectFilters = new HashMap<>();

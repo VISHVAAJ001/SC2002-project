@@ -8,6 +8,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.stream.Collectors;
 
+import com.ntu.fdae.group1.bto.exceptions.AuthorizationException;
 import com.ntu.fdae.group1.bto.exceptions.RegistrationException;
 import com.ntu.fdae.group1.bto.enums.OfficerRegStatus;
 import com.ntu.fdae.group1.bto.models.project.OfficerRegistration;
@@ -156,40 +157,105 @@ public class OfficerRegistrationController {
     }
 
     /**
-     * Gets all registrations (regardless of status) associated with a specific
-     * project.
-     * Typically requested by an HDB Staff member (Manager or Officer).
+     * Gets the count of PENDING officer registrations specifically for a given project.
+     * Typically requested by an HDB Manager viewing project details.
+     * Includes basic authorization check to ensure the manager is associated with the project.
      *
-     * @param staff     The HDBStaff member requesting the list (provides context).
-     *                  Must not be null.
-     * @param projectId ID of the project. Must not be null or blank.
-     * @return An immutable List of OfficerRegistration objects for the project.
-     *         Returns an empty list if none found or input is invalid.
-     * @throws IllegalArgumentException if staff or projectId is null/blank
-     *                                  (programmer error).
-     * @throws RuntimeException         if an unexpected error occurs during
-     *                                  retrieval in the service/repository layer.
+     * @param manager The HDBManager requesting the count (provides context). Must not be null.
+     * @param projectId The ID of the project. Must not be null or blank.
+     * @return The number of pending registrations for the specified project.
+     * @throws IllegalArgumentException if manager or projectId is null/blank.
+     * @throws AuthorizationException if the manager is not authorized to manage this project.
+     * @throws RuntimeException if the project is not found or an unexpected error occurs during retrieval.
      */
-    public List<OfficerRegistration> getProjectRegistrations(HDBStaff staff, String projectId) {
-        // Input validation
-        Objects.requireNonNull(staff, "Staff context cannot be null for getProjectRegistrations");
+    public int getPendingRegistrationCountForProject(HDBManager manager, String projectId) throws AuthorizationException {
+        Objects.requireNonNull(manager, "HDBManager context cannot be null when calling getPendingRegistrationCountForProject.");
         if (projectId == null || projectId.trim().isEmpty()) {
-            System.err.println("Controller Warning: Project ID cannot be null or blank for getProjectRegistrations.");
-            return Arrays.asList(); // Return empty list for invalid project ID
+            throw new IllegalArgumentException("Project ID cannot be null or blank for getPendingRegistrationCountForProject.");
         }
 
         try {
-            // Delegate to the service. Service method should not throw checked exceptions
-            // here.
-            List<OfficerRegistration> registrations = registrationService.getRegistrationsByProject(projectId);
-            return registrations != null ? Collections.unmodifiableList(new ArrayList<>(registrations))
-                    : Collections.emptyList();
+            // --- Authorization Check ---
+            // Use ProjectService to verify manager owns the project before getting count
+            Project project = projectService.findProjectById(projectId); // Assumes findProjectById exists
+            if (project == null) {
+                 // Or throw a more specific ProjectNotFoundException if you have one
+                throw new RuntimeException("Project with ID " + projectId + " not found.");
+            }
+            if (!project.getManagerNric().equals(manager.getNric())) {
+                throw new AuthorizationException("Manager " + manager.getNric() + " is not authorized to view details for project " + projectId);
+            }
+            // --- End Authorization Check ---
+
+            // If authorized, delegate to the service
+            return registrationService.getPendingRegistrationCountForProject(projectId);
+
+        } catch (AuthorizationException ae) {
+            throw ae; // Re-throw authorization exceptions directly
         } catch (Exception e) {
-            // Catch unexpected runtime errors from the service/repo layer
-            System.err.println("Controller ERROR: Failed to retrieve project registrations for " + projectId + ": "
-                    + e.getMessage());
+            // Catch runtime errors from service/repo layer or project fetch
+            System.err.println("Controller ERROR: Failed to retrieve pending registration count for project " + projectId + ": " + e.getMessage());
             // Re-throw as a runtime exception to signal a system problem
-            throw new RuntimeException("Failed to retrieve project registrations due to an internal error.", e);
+            throw new RuntimeException("Failed to retrieve pending registration count due to an internal error.", e);
+        }
+    }
+
+    /**
+     * Gets the count of PENDING officer registrations specifically for a given project.
+     * Accessible by the project's managing HDB Manager or an HDB Officer approved for the project.
+     * Includes authorization checks based on the staff member's role.
+     *
+     * @param staff     The HDBStaff (Manager or Officer) requesting the count. Must not be null.
+     * @param projectId The ID of the project. Must not be null or blank.
+     * @return The number of pending registrations for the specified project.
+     * @throws IllegalArgumentException if staff or projectId is null/blank.
+     * @throws AuthorizationException if the staff member is not authorized for this project based on their role.
+     * @throws RuntimeException if the project is not found or an unexpected error occurs during retrieval.
+     */
+    public int getPendingRegistrationCountForProject(HDBStaff staff, String projectId) throws AuthorizationException {
+        // Validate inputs
+        Objects.requireNonNull(staff, "HDBStaff context cannot be null when calling getPendingRegistrationCountForProject.");
+        if (projectId == null || projectId.trim().isEmpty()) {
+            throw new IllegalArgumentException("Project ID cannot be null or blank for getPendingRegistrationCountForProject.");
+        }
+
+        try {
+            // --- Fetch Project ---
+            // Use ProjectService to get project details needed for authorization
+            Project project = projectService.findProjectById(projectId);
+            if (project == null) {
+                throw new RuntimeException("Project with ID " + projectId + " not found.");
+            }
+
+            // --- Authorization Check (Role-Based) ---
+            boolean isAuthorized = false;
+            if (staff instanceof HDBManager) {
+                // Manager Rule: Must be the designated manager for this project
+                isAuthorized = project.getManagerNric().equals(staff.getNric());
+            } else if (staff instanceof HDBOfficer) {
+                // Officer Rule: Must be in the list of approved officers for this project
+                // Add null check for safety if getApprovedOfficerNrics() can return null
+                List<String> approvedNrics = project.getApprovedOfficerNrics();
+                isAuthorized = (approvedNrics != null && approvedNrics.contains(staff.getNric()));
+            }
+            // If 'staff' is neither (shouldn't happen with proper hierarchy), isAuthorized remains false.
+
+            if (!isAuthorized) {
+                throw new AuthorizationException("Staff member " + staff.getNric() + " (Role: " + staff.getClass().getSimpleName() + ") is not authorized to view details for project " + projectId);
+            }
+            // --- End Authorization Check ---
+
+            // If authorized, delegate to the service to get the count
+            return registrationService.getPendingRegistrationCountForProject(projectId);
+
+        } catch (AuthorizationException ae) {
+            // Re-throw specific AuthorizationExceptions directly
+            throw ae;
+        } catch (Exception e) {
+            // Catch runtime errors from service/repo layer or project fetch
+            System.err.println("Controller ERROR: Failed to retrieve pending registration count for project " + projectId + ": " + e.getMessage());
+            // Re-throw as a runtime exception to signal a system problem
+            throw new RuntimeException("Failed to retrieve pending registration count due to an internal error.", e);
         }
     }
 

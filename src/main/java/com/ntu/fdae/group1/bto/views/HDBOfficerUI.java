@@ -61,7 +61,7 @@ public class HDBOfficerUI extends BaseUI {
         this.receiptController = Objects.requireNonNull(receiptCtrl);
         this.enquiryController = Objects.requireNonNull(enqCtrl);
         this.authController = Objects.requireNonNull(authCtrl);
-        this.projectUIHelper = new ProjectUIHelper(this, userController, projectController, officerRegController);
+        this.projectUIHelper = new ProjectUIHelper(this, userController, projectController);
         this.accountUIHelper = new AccountUIHelper(this, authController);
         this.enquiryUIHelper = new EnquiryUIHelper(this, userController, projectController);
         this.applicationUIHelper = new ApplicationUIHelper(this, applicationController, projectController);
@@ -420,8 +420,9 @@ public class HDBOfficerUI extends BaseUI {
 
     /**
      * Handles the sub-menu for managing the specific project the officer is
-     * approved to handle. Finds the project, displays its details, and offers
-     * relevant management actions like booking, receipts, and enquiry handling.
+     * approved to handle. Finds the project, displays its details (including
+     * pending officer registration count), and offers relevant management actions
+     * like booking, receipts, and enquiry handling.
      */
     private void handleManageHandlingProject() {
         displayHeader("Manage Project Being Handled");
@@ -429,14 +430,10 @@ public class HDBOfficerUI extends BaseUI {
         // --- Step 1: Find the project the officer is handling ---
         Project handlingProject = null;
         try {
-            // Assumes a controller method exists to find the project based on APPROVED
-            // registrations
-            // This might return null if the officer isn't approved for any.
-            handlingProject = officerRegController.findApprovedHandlingProject(this.user); // CRITICAL: Implement this
-                                                                                           // controller method
+            handlingProject = officerRegController.findApprovedHandlingProject(this.user);
         } catch (Exception e) {
-            // Handle potential exceptions during lookup
             displayError("Error finding the project you are handling: " + e.getMessage());
+            // logger.log(Level.SEVERE, "Error finding handling project for officer " + user.getNric(), e);
             return; // Cannot proceed
         }
 
@@ -450,14 +447,33 @@ public class HDBOfficerUI extends BaseUI {
         boolean keepManaging = true;
         while (keepManaging) {
             clearConsole(); // Optional: Clear screen for better sub-menu visibility
+
+            // --- Step 2a: Fetch Pending Count for THIS project ---
+            int projectSpecificPendingCount = 0; // Default to 0 if fetch fails
+            try {
+                // Call the updated controller method (accepting HDBStaff)
+                projectSpecificPendingCount = officerRegController.getPendingRegistrationCountForProject(
+                    this.user, // Pass the HDBOfficer user
+                    handlingProject.getProjectId()
+                );
+            } catch (AuthorizationException ae) {
+                displayError("Authorization Error fetching pending count: " + ae.getMessage());
+            } catch (IllegalArgumentException iae) {
+                displayError("Internal Error fetching pending count: " + iae.getMessage());
+            } catch (RuntimeException re) {
+                displayError("Error fetching pending registration count: " + re.getMessage());
+            } 
+
+            // --- Step 2b: Display Project Details ---
             displayMessage("You are managing Project: " + handlingProject.getProjectName() + " ("
                     + handlingProject.getProjectId() + ")");
             displayMessage("--------------------------------------------------");
 
-            // Display full project details for context using the STAFF view helper
-            projectUIHelper.displayStaffProjectDetails(handlingProject);
+            // Display full project details using the STAFF view helper, passing the fetched count
+            // Ensure you use the variable declared above: projectSpecificPendingCount
+            projectUIHelper.displayStaffProjectDetails(handlingProject, projectSpecificPendingCount); // <<< Use correct variable
 
-            // Display Contextual Actions Sub-Menu
+            // --- Step 2c: Display Contextual Actions Sub-Menu ---
             System.out.println("\n--- Management Actions for this Project ---");
             System.out.println("[1] Book Flat for Successful Applicant");
             System.out.println("[2] Generate Booking Receipt for Applicant");
@@ -486,19 +502,18 @@ public class HDBOfficerUI extends BaseUI {
                         displayError("Invalid choice.");
                         break;
                 }
-            } catch (DataAccessException e) {
+            } catch (DataAccessException | BookingException | InvalidInputException e) {
                 // Catch exceptions relevant to booking, receipt, enquiry actions
                 displayError("Operation failed: " + e.getMessage());
-            } catch (Exception e) {
+            } catch (Exception e) { // Catch any other unexpected errors
                 displayError("An unexpected error occurred: " + e.getMessage());
-                // e.printStackTrace();
             }
 
             if (keepManaging && choice != 0) {
                 pause();
             }
-        }
-    }
+        } 
+    } 
 
     /**
      * Handles booking by first listing eligible (SUCCESSFUL) applicants for the

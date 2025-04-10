@@ -27,9 +27,8 @@ import java.util.concurrent.atomic.AtomicInteger; // For numbered lists
 public class ProjectUIHelper {
 
     private final BaseUI baseUI; // Use BaseUI for console interactions
-    private final UserController userController;
     private final ProjectController projectController;
-    private final OfficerRegistrationController officerRegController;
+    private final UserController userController;
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE; // Or your preferred
                                                                                               // format
 
@@ -38,11 +37,10 @@ public class ProjectUIHelper {
      * 
      * @param baseUI An instance of BaseUI (or a subclass) to handle console I/O.
      */
-    public ProjectUIHelper(BaseUI baseUI, UserController userController, ProjectController projCtrl, OfficerRegistrationController officerRegCtrl) {
-        this.userController = Objects.requireNonNull(userController);
+    public ProjectUIHelper(BaseUI baseUI, UserController userCtrl, ProjectController projCtrl) {
         this.baseUI = Objects.requireNonNull(baseUI, "BaseUI cannot be null");
+        this.userController = Objects.requireNonNull(userCtrl, "UserController cannot be null");
         this.projectController = Objects.requireNonNull(projCtrl, "ProjectController cannot be null");
-        this.officerRegController = Objects.requireNonNull(officerRegCtrl, "OfficerRegController cannot be null");
     }
 
     /**
@@ -122,7 +120,7 @@ public class ProjectUIHelper {
      *
      * @param project The Project object whose details are to be displayed.
      */
-    public void displayStaffProjectDetails(Project project) {
+    public void displayStaffProjectDetails(Project project, int pendingCount) {
         if (project == null) {
             baseUI.displayError("Cannot display details for a null project.");
             return;
@@ -130,36 +128,24 @@ public class ProjectUIHelper {
 
         baseUI.displayHeader("Project Details: " + project.getProjectName() + " (" + project.getProjectId() + ")");
         baseUI.displayMessage("Neighborhood:     " + project.getNeighborhood());
-        baseUI.displayMessage("Application Open: " + project.getOpeningDate().format(DATE_FORMATTER));
-        baseUI.displayMessage("Application Close:" + project.getClosingDate().format(DATE_FORMATTER));
+        baseUI.displayMessage("Application Open: " + baseUI.formatDateSafe(project.getOpeningDate()));
+        baseUI.displayMessage("Application Close:" + baseUI.formatDateSafe(project.getClosingDate()));
 
-        // Display Flat Type Information
-        displayFlatInfoSection(project);
+        displayFlatInfoSection(project); // Display flat info
 
-        // --- Staff-Specific Administrative Details ---
         baseUI.displayMessage("--- Administrative Details ---");
+        // Use injected userController to get manager name
         baseUI.displayMessage("Managed By: " + project.getManagerNric() +
-                " (" + userController.getUserName(project.getManagerNric()) + ")");
+                " (" + this.userController.getUserName(project.getManagerNric()) + ")"); // Use field
         baseUI.displayMessage("Visibility Status: " + (project.isVisible() ? "ON (Visible)" : "OFF (Hidden)"));
 
-        // --- Officer Slot Calculation & Display ---
-        List<OfficerRegistration> projectRegistrations = Collections.emptyList();
-        int pendingCount = 0;
-        try {
-             projectRegistrations = this.officerRegController.getProjectRegistrations(null, project.getProjectId()); // Pass null for staff if not needed, or pass actual staff user
-             pendingCount = (int) projectRegistrations.stream()
-                                     .filter(reg -> reg.getStatus() == OfficerRegStatus.PENDING)
-                                     .count();
-        } catch (Exception e) {
-             baseUI.displayError("Could not retrieve officer registration details: " + e.getMessage());
-        }
-        // Display calculated/retrieved counts
+        // --- Display Officer Slot Counts (using passed-in pendingCount) ---
         baseUI.displayMessage(String.format("Officer Slots    : %d / %d (Max: %d, Remaining: %d, Pending: %d)",
-                project.getApprovedOfficerNrics().size(), // Current approved count
-                project.getMaxOfficerSlots(),            // Max allowed
-                project.getMaxOfficerSlots(),            // Explicit Max
-                project.getRemainingOfficerSlots(),      // Explicit Remaining (from Project entity)
-                pendingCount                             // Calculated Pending Count
+                project.getApprovedOfficerNrics().size(),
+                project.getMaxOfficerSlots(),
+                project.getMaxOfficerSlots(),
+                project.getRemainingOfficerSlots(),
+                pendingCount
         ));
 
         List<String> approvedOfficers = project.getApprovedOfficerNrics(); // Assuming getter exists

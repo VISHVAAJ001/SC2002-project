@@ -71,7 +71,7 @@ public class HDBManagerUI extends BaseUI {
         this.enquiryController = Objects.requireNonNull(enqCtrl);
         this.reportController = Objects.requireNonNull(reportCtrl);
         this.authController = Objects.requireNonNull(authCtrl);
-        this.projectUIHelper = new ProjectUIHelper(this, userCtrl, projCtrl, offRegCtrl); // Initialize helper; pass in BaseUI and UserController
+        this.projectUIHelper = new ProjectUIHelper(this, userCtrl, projCtrl); // Initialize helper; pass in BaseUI and UserController
         this.accountUIHelper = new AccountUIHelper(this, authCtrl); // Initialize account helper; pass in BaseUI and AuthController
         this.applicationUIHelper = new ApplicationUIHelper(this, appCtrl, projCtrl); // Initialize application helper; pass in BaseUI and appController, ProjController
         this.enquiryUIHelper = new EnquiryUIHelper(this, userCtrl, projCtrl); // Initialize enquiry helper; pass in BaseUI and ProjController
@@ -221,45 +221,119 @@ public class HDBManagerUI extends BaseUI {
             displayError("Project creation failed (check previous errors).");
         }
     }
-
+    
     private void handleEditProject() throws InvalidInputException {
         displayHeader("Edit Existing Project");
-        List<Project> myProjects = projectController.getProjectsManagedBy(user);
-
-        // Delegate to ProjectUIHelper
+    
+        // --- Step 1: Get projects managed by the current manager ---
+        List<Project> myProjects;
+        try {
+            // Assuming getProjectsManagedBy only needs the user and doesn't throw checked exceptions
+            // other than potential RuntimeExceptions if the service fails.
+            myProjects = projectController.getProjectsManagedBy(user);
+        } catch (Exception e) {
+            displayError("Error retrieving your managed projects: " + e.getMessage());
+            // logger.log(Level.SEVERE, "Error retrieving managed projects", e);
+            return; // Cannot proceed without the list
+        }
+    
+        if (myProjects.isEmpty()) {
+            displayMessage("You are not currently managing any projects to edit.");
+            return;
+        }
+    
+        // --- Step 2: Select the project to edit ---
         Project projectToEdit = this.projectUIHelper.selectProjectFromList(myProjects, "Select Project to Edit");
-        if (projectToEdit == null) return;
-
-        this.projectUIHelper.displayStaffProjectDetails(projectToEdit);
-
-        displayMessage("Enter new details (leave blank or enter ' ' to keep current):");
-        String name = promptForInput("New Project Name [" + projectToEdit.getProjectName() + "]: ");
-        String neighborhood = promptForInput("New Neighborhood [" + projectToEdit.getNeighborhood() + "]: ");
-
+        if (projectToEdit == null) {
+            // User selected 'Back'
+            return;
+        }
+    
+        // --- Step 3: Fetch Pending Count & Display Details ---
+        try {
+            // Fetch the pending count specifically for the selected project
+            int projectSpecificPendingCount = officerRegController.getPendingRegistrationCountForProject(
+                this.user, projectToEdit.getProjectId()
+            );
+    
+            // Display the current details *including* the correct pending count
+            this.projectUIHelper.displayStaffProjectDetails(projectToEdit, projectSpecificPendingCount);
+    
+        } catch (AuthorizationException ae) {
+            // Catch auth error fetching the count (unlikely if getProjectsManagedBy worked, but good practice)
+            displayError("Authorization Error fetching project details: " + ae.getMessage());
+            return; // Don't proceed if details couldn't be fully displayed
+        } catch (IllegalArgumentException iae) {
+            displayError("Internal Error: Invalid arguments fetching project details. " + iae.getMessage());
+            return;
+        } catch (RuntimeException re) {
+            // Catch other errors fetching the count (project not found, service error)
+            displayError("Error fetching project details: " + re.getMessage());
+            // logger.log(Level.SEVERE, "Runtime error fetching project details for edit", re);
+            return; // Don't proceed if details couldn't be fully displayed
+        }
+    
+        // --- Step 4: Prompt for Edits ---
+        displayMessage("\nEnter new details (leave blank or enter just spaces to keep current value):");
+    
+        // Use helper methods that handle keeping the original value if input is blank/spaces
+        String name = promptForOptionalInput(
+                "New Project Name [" + projectToEdit.getProjectName() + "]: ",
+                projectToEdit.getProjectName()); // Pass original as default
+    
+        String neighborhood = promptForOptionalInput(
+                "New Neighborhood [" + projectToEdit.getNeighborhood() + "]: ",
+                projectToEdit.getNeighborhood());
+    
         LocalDate openDate = promptForDateOrKeep(
-                "New Opening Date (YYYY-MM-DD) [" + projectToEdit.getOpeningDate() + "]:",
-                projectToEdit.getOpeningDate());
+        "New Opening Date (YYYY-MM-DD) [" + formatDate(projectToEdit.getOpeningDate()) + "]:", // Use local formatDate
+        projectToEdit.getOpeningDate());
+
         LocalDate closeDate = promptForDateOrKeep(
-                "New Closing Date (YYYY-MM-DD) [" + projectToEdit.getClosingDate() + "]:",
-                projectToEdit.getClosingDate());
+        "New Closing Date (YYYY-MM-DD) [" + formatDate(projectToEdit.getClosingDate()) + "]:", // Use local formatDate
+        projectToEdit.getClosingDate());
 
-        int officerSlots = promptForIntOrKeep(
-                "New Max Officer Slots [" + projectToEdit.getMaxOfficerSlots() + "] (1-10):",
-                projectToEdit.getMaxOfficerSlots());
-
-        boolean success = projectController.editProject(user, projectToEdit.getProjectId(),
-                name.trim().isEmpty() ? projectToEdit.getProjectName() : name.trim(),
-                neighborhood.trim().isEmpty() ? projectToEdit.getNeighborhood() : neighborhood.trim(),
-                openDate, // Use the potentially kept date
-                closeDate, // Use the potentially kept date
-                officerSlots); // Use the potentially kept slots
-
-        if (success) {
-            displayMessage("Project updated successfully.");
-        } else {
-            displayError("Project update failed.");
+        int officerSlots = promptForIntOrKeep( // <<< Declaration is here
+        "New Max Officer Slots [" + projectToEdit.getMaxOfficerSlots() + "] (Range: 1-10):",
+        projectToEdit.getMaxOfficerSlots());
+    
+        // Optional: Add validation step here for officerSlots range if not done in prompt
+        if (officerSlots < 1 || officerSlots > 10) {
+             displayError("Invalid number of officer slots. Must be between 1 and 10. Edit cancelled.");
+             return;
+        }
+         // Optional: Add validation for dates (close date >= open date)
+         if (closeDate.isBefore(openDate)) {
+             displayError("Closing date cannot be before the opening date. Edit cancelled.");
+             return;
+         }
+    
+    
+        // --- Step 5: Call Controller to Perform Edit ---
+        try {
+            boolean success = projectController.editProject(
+                    user,                           // Authenticated manager
+                    projectToEdit.getProjectId(),   // ID of project to edit
+                    name,                           // Use value returned by prompt (original or new)
+                    neighborhood,                   // Use value returned by prompt
+                    openDate,                       // Use value returned by prompt
+                    closeDate,                      // Use value returned by prompt
+                    officerSlots);                  // Use value returned by prompt
+    
+            if (success) {
+                displayMessage("Project '" + name + "' updated successfully."); // Use updated name for feedback
+            } else {
+                // The controller ideally should throw an exception if it fails,
+                // rather than returning false, to indicate *why* it failed.
+                // If it MUST return boolean, the error message here is generic.
+                displayError("Project update failed. Please check logs or contact support.");
+            }
+        } catch (Exception e) { // Catch runtime exceptions from the controller/service during edit
+            displayError("An unexpected error occurred during project update: " + e.getMessage());
+            // logger.log(Level.SEVERE, "Error editing project " + projectToEdit.getProjectId(), e);
         }
     }
+
 
     private void handleDeleteProject() {
         displayHeader("Delete Project");
@@ -304,34 +378,33 @@ public class HDBManagerUI extends BaseUI {
         }
     }
 
-    private void handleViewAllProjects() throws AuthorizationException{
+    private void handleViewAllProjects() throws AuthorizationException {
         displayHeader("All BTO Projects - View & Filter");
-
-        // --- Prepare Filters ---
-        Map<String, Object> filterMap = new HashMap<>(); 
-        boolean applyFilters = promptForConfirmation("Apply filters?: ");
-
+    
+        Map<String, Object> filterMap = new HashMap<>();
+        boolean applyFilters = promptForConfirmation("Apply filters?: "); // Ask ONCE
+    
         if (applyFilters) {
             displayMessage("Enter filter criteria (leave blank to skip a filter):");
-
-            // 1. Neighborhood Filter (String)
+    
+            // 1. Neighborhood Filter
             String neighborhoodFilter = promptForInput("Filter by Neighborhood (contains, case-insensitive): ");
             if (!neighborhoodFilter.trim().isEmpty()) {
-                filterMap.put("neighborhood", neighborhoodFilter); // Service uses 'contains'
+                filterMap.put("neighborhood", neighborhoodFilter.trim().toLowerCase()); // Consider lowercasing for consistent matching
             }
-
-            // 2. Flat Type Filter (FlatType Enum)
-            String flatTypeFilterInput = promptForInput("Filter by Flat Type Offered (TWO_ROOM, THREE_ROOM): ").toUpperCase();
+    
+            // 2. Flat Type Filter - Consider using promptForEnum if available
+            String flatTypeFilterInput = promptForInput("Filter by Flat Type Offered (e.g., TWO_ROOM, THREE_ROOM): ").toUpperCase();
             if (!flatTypeFilterInput.trim().isEmpty()) {
                 try {
                     FlatType selectedType = FlatType.valueOf(flatTypeFilterInput);
-                    filterMap.put("flatType", selectedType); // Put the Enum object in the map
+                    filterMap.put("flatType", selectedType);
                 } catch (IllegalArgumentException e) {
-                    displayError("Invalid flat type '" + flatTypeFilterInput + "'. Flat type filter skipped.");
+                    displayError("Invalid flat type '" + flatTypeFilterInput + "'. Filter skipped.");
                 }
             }
-
-            // 3. Visibility Filter (Boolean - Manager Only)
+    
+            // 3. Visibility Filter
             String visibilityInput = promptForInput("Filter by Visibility (ON, OFF): ").toUpperCase();
             if (!visibilityInput.trim().isEmpty()) {
                 if ("ON".equals(visibilityInput)) {
@@ -339,88 +412,175 @@ public class HDBManagerUI extends BaseUI {
                 } else if ("OFF".equals(visibilityInput)) {
                     filterMap.put("visibility", Boolean.FALSE);
                 } else {
-                    displayError("Invalid visibility input '" + visibilityInput + "'. Visibility filter skipped.");
+                    displayError("Invalid visibility input '" + visibilityInput + "'. Filter skipped.");
                 }
             }
-
-            displayMessage("Applying filters: " + filterMap);
+    
+            if (!filterMap.isEmpty()) {
+                displayMessage("Applying filters: " + filterMap);
+            } else {
+                 displayMessage("No filters entered.");
+            }
         }
-
-        // --- Call Controller with Filters ---
+    
+        // --- Call Controller to Get Projects with Filters ---
         List<Project> projectsToDisplay;
         try {
-            // Pass the current manager user and the constructed filter map
+            // Pass the authenticated manager and the filter map
             projectsToDisplay = projectController.getAllProjects(this.user, filterMap);
-        } catch (AuthorizationException ae) { 
-             displayError("Authorization Error: " + ae.getMessage());
-             return; // Cannot proceed
-        } catch (Exception e) { // Catch other unexpected errors
-             displayError("Error retrieving projects: " + e.getMessage());
-             return; // Cannot proceed
+        } catch (AuthorizationException ae) {
+            displayError("Authorization Error: " + ae.getMessage());
+            return; // Cannot proceed
+        } catch (Exception e) {
+            // Catch potential RuntimeExceptions from the controller/service during project fetch
+            displayError("Error retrieving projects: " + e.getMessage());
+            return; // Cannot proceed
         }
-
+    
         // --- Display Results ---
         if (projectsToDisplay.isEmpty()) {
-            if (applyFilters) { // Check if filters were actually applied
+            if (applyFilters && !filterMap.isEmpty()) { // Check if filters were actually applied
                 displayMessage("No projects match the specified filters.");
             } else {
                 displayMessage("No projects found in the system.");
             }
         } else {
-            String listTitle = applyFilters ? "Filtered Projects (" + projectsToDisplay.size() + " found)" : "All Projects";
-            // Use ProjectUIHelper to display list and select
+            // Use the ProjectUIHelper to display the list and handle selection
+            String listTitle = (applyFilters && !filterMap.isEmpty())
+                                 ? "Filtered Projects (" + projectsToDisplay.size() + " found)"
+                                 : "All Projects (" + projectsToDisplay.size() + " found)";
             Project selected = this.projectUIHelper.selectProjectFromList(projectsToDisplay, listTitle);
+    
+            // If the user selected a project (didn't choose 'Back')
             if (selected != null) {
-                // Use ProjectUIHelper to display details
-                this.projectUIHelper.displayStaffProjectDetails(selected);
+                try {
+                    // Get the PENDING registration count SPECIFICALLY for the selected project.
+                    // Pass the authenticated manager (this.user) and the project ID.
+                    int projectSpecificPendingCount = officerRegController.getPendingRegistrationCountForProject(
+                        this.user, selected.getProjectId()
+                    );
+    
+                    // Pass the project and the CORRECT pending count to the display method
+                    this.projectUIHelper.displayStaffProjectDetails(selected, projectSpecificPendingCount);
+    
+                } catch (AuthorizationException ae) {
+                    // Catch auth error specifically from getPendingRegistrationCountForProject
+                    // (e.g., manager doesn't own the selected project)
+                    displayError("Authorization Error fetching project details: " + ae.getMessage());
+                } catch (IllegalArgumentException iae) {
+                    // Catch programmer errors like null manager/projectId passed to controller
+                    displayError("Internal Error: Invalid arguments fetching project details. " + iae.getMessage());
+                    // logger.log(Level.WARNING, "Illegal arguments passed", iae);
+                } catch (RuntimeException re) {
+                    // Catch other errors from getPendingRegistrationCountForProject
+                    // (e.g., project not found by ID in controller, service/repo errors)
+                    displayError("Error fetching project details: " + re.getMessage());
+                }
             }
+            // If selected == null, the user chose 'Back' from the list. Return.
         }
     }
 
-    private void handleViewMyProjects() {
+    private void handleViewMyProjects() throws AuthorizationException {
         displayHeader("My Managed BTO Projects - View & Filter");
-
-        // --- Prepare Filters (Identical logic to handleViewAllProjects) ---
+    
         Map<String, Object> filterMap = new HashMap<>();
-        boolean applyFilters = promptForConfirmation("Apply filters to your managed projects? (yes/no): ");
+        boolean applyFilters = promptForConfirmation("Apply filters to your managed projects?: ");
         if (applyFilters) {
             displayMessage("Enter filter criteria (leave blank to skip a filter):");
-            // Get Neighborhood Filter
+    
+            // 1. Neighborhood Filter
             String neighborhoodFilter = promptForInput("Filter by Neighborhood (contains, case-insensitive): ");
-            if (!neighborhoodFilter.trim().isEmpty()) filterMap.put("neighborhood", neighborhoodFilter);
-            // Get Flat Type Filter
-            String flatTypeFilterInput = promptForInput("Filter by Flat Type Offered (TWO_ROOM, THREE_ROOM): ").toUpperCase();
-            if (!flatTypeFilterInput.trim().isEmpty()) { try { filterMap.put("flatType", FlatType.valueOf(flatTypeFilterInput)); } catch (IllegalArgumentException e) { displayError("Invalid flat type. Filter skipped."); } }
-            // Get Visibility Filter
+            if (!neighborhoodFilter.trim().isEmpty()) {
+                filterMap.put("neighborhood", neighborhoodFilter.trim().toLowerCase()); // Consistent matching
+            }
+    
+            // 2. Flat Type Filter - Consider using promptForEnum
+            String flatTypeFilterInput = promptForInput("Filter by Flat Type Offered (e.g., TWO_ROOM, THREE_ROOM): ").toUpperCase();
+            if (!flatTypeFilterInput.trim().isEmpty()) {
+                try {
+                    FlatType selectedType = FlatType.valueOf(flatTypeFilterInput);
+                    filterMap.put("flatType", selectedType);
+                } catch (IllegalArgumentException e) {
+                    displayError("Invalid flat type '" + flatTypeFilterInput + "'. Filter skipped.");
+                }
+            }
+    
+            // 3. Visibility Filter
             String visibilityInput = promptForInput("Filter by Visibility (ON, OFF): ").toUpperCase();
-            if (!visibilityInput.trim().isEmpty()) { if ("ON".equals(visibilityInput)) filterMap.put("visibility", Boolean.TRUE); else if ("OFF".equals(visibilityInput)) filterMap.put("visibility", Boolean.FALSE); else displayError("Invalid visibility. Filter skipped."); }
-
-            displayMessage("Applying filters: " + filterMap);
+            if (!visibilityInput.trim().isEmpty()) {
+                if ("ON".equals(visibilityInput)) {
+                    filterMap.put("visibility", Boolean.TRUE);
+                } else if ("OFF".equals(visibilityInput)) {
+                    filterMap.put("visibility", Boolean.FALSE);
+                } else {
+                    displayError("Invalid visibility input '" + visibilityInput + "'. Filter skipped.");
+                }
+            }
+    
+            if (!filterMap.isEmpty()) {
+                 displayMessage("Applying filters: " + filterMap);
+            } else {
+                 displayMessage("No filters entered.");
+            }
         }
-
-        // --- Call Controller WITH Filters ---
+    
+        // --- Call Controller to Get MANAGED Projects with Filters ---
         List<Project> projectsToDisplay;
         try {
-            // Call the controller method that handles manager + filters
-            projectsToDisplay = projectController.getManagedProjects(this.user, filterMap); // Pass user object and filters
-        } catch (Exception e) { // Catch potential runtime exceptions
+            // Call the controller method specifically for projects managed by this user
+            projectsToDisplay = projectController.getManagedProjects(this.user, filterMap);
+        } catch (Exception e) { // Catch potential RuntimeExceptions from the controller/service
             displayError("Error retrieving managed projects: " + e.getMessage());
-            projectsToDisplay = Collections.emptyList(); // Show empty on error
+            // Consider logging e
+            // Set to empty list or return, depending on desired flow. Returning is safer.
+            return; // Cannot proceed if projects couldn't be retrieved
         }
-
-        // Display Results
+    
+        // --- Display Results ---
         if (projectsToDisplay.isEmpty()) {
-            if (applyFilters) { // Check if filters were the reason for emptiness
+            if (applyFilters && !filterMap.isEmpty()) { // Check if filters were the reason
                 displayMessage("No managed projects match the specified filters.");
             } else {
-                displayMessage("You are not managing any projects.");
+                // If no filters applied and list is empty, they manage no projects
+                displayMessage("You are not currently managing any BTO projects.");
             }
         } else {
-            String listTitle = applyFilters ? "Filtered Managed Projects (" + projectsToDisplay.size() + " found)" : "My Managed Projects";
+            // Use the ProjectUIHelper to display the list and handle selection
+            String listTitle = (applyFilters && !filterMap.isEmpty())
+                                 ? "Filtered Managed Projects (" + projectsToDisplay.size() + " found)"
+                                 : "My Managed Projects (" + projectsToDisplay.size() + " found)";
             Project selected = this.projectUIHelper.selectProjectFromList(projectsToDisplay, listTitle);
+    
+            // If the user selected a project (didn't choose 'Back')
             if (selected != null) {
-                this.projectUIHelper.displayStaffProjectDetails(selected);
+                try {
+                    // Get the PENDING registration count SPECIFICALLY for the selected project.
+                    // Pass the authenticated manager (this.user) and the project ID.
+                    int projectSpecificPendingCount = officerRegController.getPendingRegistrationCountForProject(
+                        this.user, selected.getProjectId()
+                    );
+    
+                    // Pass the project and the CORRECT pending count to the display method
+                    this.projectUIHelper.displayStaffProjectDetails(selected, projectSpecificPendingCount);
+    
+                } catch (AuthorizationException ae) {
+                    // Catch auth error from getPendingRegistrationCountForProject
+                    // (Should be unlikely here since getManagedProjects already filtered, but good defense)
+                    displayError("Authorization Error fetching project details: " + ae.getMessage());
+                } catch (IllegalArgumentException iae) {
+                    // Catch programmer errors like null manager/projectId passed to controller
+                    displayError("Internal Error: Invalid arguments fetching project details. " + iae.getMessage());
+                    // logger.log(Level.WARNING, "Illegal arguments passed", iae);
+                } catch (RuntimeException re) {
+                    // Catch other errors from getPendingRegistrationCountForProject
+                    // (e.g., project somehow not found by ID, service/repo errors)
+                    displayError("Error fetching project details: " + re.getMessage());
+                    // logger.log(Level.SEVERE, "Runtime error fetching project details", re);
+                }
+                // The main application loop usually handles pausing.
             }
+            // If selected == null, user chose 'Back', return naturally.
         }
     }
 
@@ -663,6 +823,15 @@ public class HDBManagerUI extends BaseUI {
                 displayError("Invalid number format.");
             }
         }
+    }
+
+    private String promptForOptionalInput(String prompt, String originalValue) {
+        // Assuming promptForInput exists in BaseUI and returns the raw user input string
+        String input = promptForInput(prompt); // Get input from BaseUI method
+        if (input == null || input.trim().isEmpty()) {
+            return originalValue; // Keep original if blank or only whitespace
+        }
+        return input.trim(); // Return trimmed user input
     }
 
     private String formatDate(LocalDate date) {

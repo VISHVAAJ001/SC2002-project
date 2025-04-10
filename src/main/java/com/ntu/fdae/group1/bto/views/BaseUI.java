@@ -273,4 +273,8 @@ public abstract class BaseUI {
             System.out.println("Error clearing console: " + e.getMessage());
         }
     }
+
+    protected String formatDateSafe(LocalDate date) {
+        return (date == null) ? "N/A" : DATE_FORMATTER.format(date);
+    }
 }
