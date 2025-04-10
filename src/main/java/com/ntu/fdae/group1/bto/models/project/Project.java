@@ -117,9 +117,8 @@ public class Project {
      * @throws IllegalArgumentException if the new openingDate is after the existing closingDate.
      */
     public void setOpeningDate(LocalDate openingDate) {
-        // Check against current closing date if both are set
-        if (openingDate != null && this.closingDate != null && openingDate.isAfter(this.closingDate)) {
-            throw new IllegalArgumentException("Opening Date (" + openingDate + ") cannot be after the current Closing Date (" + this.closingDate + ").");
+        if (openingDate == null) {
+            throw new IllegalArgumentException("Opening date cannot be null.");
         }
         this.openingDate = openingDate;
     }
@@ -131,10 +130,9 @@ public class Project {
      * @throws IllegalArgumentException if the new closingDate is before the existing openingDate.
      */
     public void setClosingDate(LocalDate closingDate) {
-         // Check against current opening date if both are set
-         if (closingDate != null && this.openingDate != null && closingDate.isBefore(this.openingDate)) {
-            throw new IllegalArgumentException("Closing Date (" + closingDate + ") cannot be before the current Opening Date (" + this.openingDate + ").");
-        }
+        if (closingDate == null) {
+            throw new IllegalArgumentException("Closing date cannot be null.");
+       }
         this.closingDate = closingDate;
     }
 
