@@ -147,7 +147,6 @@ public class ApplicationUIHelper {
         } catch (Exception e) {
             // Catch any other unexpected errors
             baseUI.displayError("An unexpected error occurred during application: " + e.getMessage());
-            e.printStackTrace(); // Helpful during development
         }
     }
 
@@ -208,7 +207,6 @@ public class ApplicationUIHelper {
             }
         } catch (Exception e) {
             baseUI.displayError("Error retrieving application status: " + e.getMessage());
-            e.printStackTrace();
         }
     }
 
@@ -267,11 +265,13 @@ public class ApplicationUIHelper {
     }
 
     // Helper to display a list of Applications and return a map for selection
-     /**
+    /**
      * Displays a formatted list of applications and returns a map for selection.
-     * @param apps List of applications to display.
+     * 
+     * @param apps  List of applications to display.
      * @param title Title for the list header.
-     * @return Map where key is the displayed number, value is the Application. Empty map if list is null/empty.
+     * @return Map where key is the displayed number, value is the Application.
+     *         Empty map if list is null/empty.
      */
     public Map<Integer, Application> displayApplicationList(List<Application> apps, String title) {
         baseUI.displayHeader(title); // Use injected BaseUI

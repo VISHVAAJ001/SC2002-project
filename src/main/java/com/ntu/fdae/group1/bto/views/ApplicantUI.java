@@ -110,7 +110,6 @@ public class ApplicantUI extends BaseUI {
                 }
             } catch (Exception e) {
                 displayError("An error occurred: " + e.getMessage());
-                // e.printStackTrace(); // For debugging
             }
 
             if (keepRunning && choice != 0) {

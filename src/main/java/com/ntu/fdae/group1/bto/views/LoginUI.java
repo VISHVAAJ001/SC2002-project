@@ -53,7 +53,6 @@ public class LoginUI extends BaseUI {
                 displayError(e.getMessage()); // Display specific error from controller/service
             } catch (Exception e) {
                 displayError("An unexpected error occurred during login: " + e.getMessage());
-                e.printStackTrace(); // Log unexpected errors
             }
         }
     }

@@ -139,7 +139,6 @@ public class App {
 
         } catch (Exception e) { // Catch broader exceptions during setup
             System.err.println("FATAL: Application initialisation failed: " + e.getMessage());
-            e.printStackTrace(); // Print stack trace for debugging during development
             return null; // Indicate failure
         }
     }

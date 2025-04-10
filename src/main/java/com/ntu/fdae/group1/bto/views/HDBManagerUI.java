@@ -36,7 +36,6 @@ import com.ntu.fdae.group1.bto.exceptions.AuthorizationException;
 import com.ntu.fdae.group1.bto.exceptions.InvalidInputException;
 import com.ntu.fdae.group1.bto.exceptions.RegistrationException;
 
-
 public class HDBManagerUI extends BaseUI {
     private final HDBManager user;
     private final UserController userController;
@@ -71,11 +70,17 @@ public class HDBManagerUI extends BaseUI {
         this.enquiryController = Objects.requireNonNull(enqCtrl);
         this.reportController = Objects.requireNonNull(reportCtrl);
         this.authController = Objects.requireNonNull(authCtrl);
-        this.projectUIHelper = new ProjectUIHelper(this, userCtrl); // Initialize helper; pass in BaseUI and UserController
-        this.accountUIHelper = new AccountUIHelper(this, authCtrl); // Initialize account helper; pass in BaseUI and AuthController
-        this.applicationUIHelper = new ApplicationUIHelper(this, appCtrl, projCtrl); // Initialize application helper; pass in BaseUI and appController, ProjController
-        this.enquiryUIHelper = new EnquiryUIHelper(this, userCtrl, projCtrl); // Initialize enquiry helper; pass in BaseUI and ProjController
-        this.officerRegUIHelper = new OfficerRegUIHelper(this, projCtrl); // Initialize officer registration helper; pass in BaseUI and ProjController
+        this.projectUIHelper = new ProjectUIHelper(this, userCtrl); // Initialize helper; pass in BaseUI and
+                                                                    // UserController
+        this.accountUIHelper = new AccountUIHelper(this, authCtrl); // Initialize account helper; pass in BaseUI and
+                                                                    // AuthController
+        this.applicationUIHelper = new ApplicationUIHelper(this, appCtrl, projCtrl); // Initialize application helper;
+                                                                                     // pass in BaseUI and
+                                                                                     // appController, ProjController
+        this.enquiryUIHelper = new EnquiryUIHelper(this, userCtrl, projCtrl); // Initialize enquiry helper; pass in
+                                                                              // BaseUI and ProjController
+        this.officerRegUIHelper = new OfficerRegUIHelper(this, projCtrl); // Initialize officer registration helper;
+                                                                          // pass in BaseUI and ProjController
     }
 
     public void displayMainMenu() {
@@ -146,7 +151,6 @@ public class HDBManagerUI extends BaseUI {
                 }
             } catch (Exception e) {
                 displayError("An error occurred: " + e.getMessage());
-                // e.printStackTrace(); // For debugging
             }
 
             if (keepRunning && choice != 0) {
@@ -185,7 +189,7 @@ public class HDBManagerUI extends BaseUI {
         }
     }
 
-    private void handleCreateProject() throws RegistrationException, InvalidInputException {                                            
+    private void handleCreateProject() throws RegistrationException, InvalidInputException {
         String name = promptForInput("Enter Project Name: ");
         String neighborhood = promptForInput("Enter Neighborhood: ");
         LocalDate openDate = promptForDate("Enter Application Opening Date: ");
@@ -207,7 +211,7 @@ public class HDBManagerUI extends BaseUI {
 
         if (flatInfoMap.isEmpty()) {
             displayError("Project creation failed: At least one flat type must have more than 0 units.");
-            return; 
+            return;
         }
 
         // Call controller with the Map<String, ProjectFlatInfo>
@@ -228,7 +232,8 @@ public class HDBManagerUI extends BaseUI {
 
         // Delegate to ProjectUIHelper
         Project projectToEdit = this.projectUIHelper.selectProjectFromList(myProjects, "Select Project to Edit");
-        if (projectToEdit == null) return;
+        if (projectToEdit == null)
+            return;
 
         this.projectUIHelper.displayStaffProjectDetails(projectToEdit);
 
@@ -264,10 +269,11 @@ public class HDBManagerUI extends BaseUI {
     private void handleDeleteProject() {
         displayHeader("Delete Project");
         List<Project> myProjects = projectController.getProjectsManagedBy(this.user);
-       
+
         // Delegate to Helper
         Project projectToDelete = this.projectUIHelper.selectProjectFromList(myProjects, "Select Project to Delete");
-        if (projectToDelete == null) return;
+        if (projectToDelete == null)
+            return;
 
         if (promptForConfirmation(
                 "WARNING: Deleting a project might be irreversible and subject to rules (e.g., no active applications). Proceed?: ")) {
@@ -285,10 +291,12 @@ public class HDBManagerUI extends BaseUI {
     private void handleToggleVisibility() {
         displayHeader("Toggle Project Visibility");
         List<Project> myProjects = projectController.getProjectsManagedBy(this.user);
-        
+
         // Delegate to Helper
-        Project projectToToggle = this.projectUIHelper.selectProjectFromList(myProjects, "Select Project to Toggle Visibility");
-            if (projectToToggle == null) return;
+        Project projectToToggle = this.projectUIHelper.selectProjectFromList(myProjects,
+                "Select Project to Toggle Visibility");
+        if (projectToToggle == null)
+            return;
 
         displayMessage("Current visibility: " + (projectToToggle.isVisible() ? "ON" : "OFF"));
         if (promptForConfirmation(
@@ -304,11 +312,11 @@ public class HDBManagerUI extends BaseUI {
         }
     }
 
-    private void handleViewAllProjects() throws AuthorizationException{
+    private void handleViewAllProjects() throws AuthorizationException {
         displayHeader("All BTO Projects - View & Filter");
 
         // --- Prepare Filters ---
-        Map<String, Object> filterMap = new HashMap<>(); 
+        Map<String, Object> filterMap = new HashMap<>();
         boolean applyFilters = promptForConfirmation("Apply filters?: ");
 
         if (applyFilters) {
@@ -321,7 +329,8 @@ public class HDBManagerUI extends BaseUI {
             }
 
             // 2. Flat Type Filter (FlatType Enum)
-            String flatTypeFilterInput = promptForInput("Filter by Flat Type Offered (TWO_ROOM, THREE_ROOM): ").toUpperCase();
+            String flatTypeFilterInput = promptForInput("Filter by Flat Type Offered (TWO_ROOM, THREE_ROOM): ")
+                    .toUpperCase();
             if (!flatTypeFilterInput.trim().isEmpty()) {
                 try {
                     FlatType selectedType = FlatType.valueOf(flatTypeFilterInput);
@@ -351,12 +360,12 @@ public class HDBManagerUI extends BaseUI {
         try {
             // Pass the current manager user and the constructed filter map
             projectsToDisplay = projectController.getAllProjects(this.user, filterMap);
-        } catch (AuthorizationException ae) { 
-             displayError("Authorization Error: " + ae.getMessage());
-             return; // Cannot proceed
+        } catch (AuthorizationException ae) {
+            displayError("Authorization Error: " + ae.getMessage());
+            return; // Cannot proceed
         } catch (Exception e) { // Catch other unexpected errors
-             displayError("Error retrieving projects: " + e.getMessage());
-             return; // Cannot proceed
+            displayError("Error retrieving projects: " + e.getMessage());
+            return; // Cannot proceed
         }
 
         // --- Display Results ---
@@ -367,7 +376,8 @@ public class HDBManagerUI extends BaseUI {
                 displayMessage("No projects found in the system.");
             }
         } else {
-            String listTitle = applyFilters ? "Filtered Projects (" + projectsToDisplay.size() + " found)" : "All Projects";
+            String listTitle = applyFilters ? "Filtered Projects (" + projectsToDisplay.size() + " found)"
+                    : "All Projects";
             // Use ProjectUIHelper to display list and select
             Project selected = this.projectUIHelper.selectProjectFromList(projectsToDisplay, listTitle);
             if (selected != null) {
@@ -387,13 +397,28 @@ public class HDBManagerUI extends BaseUI {
             displayMessage("Enter filter criteria (leave blank to skip a filter):");
             // Get Neighborhood Filter
             String neighborhoodFilter = promptForInput("Filter by Neighborhood (contains, case-insensitive): ");
-            if (!neighborhoodFilter.trim().isEmpty()) filterMap.put("neighborhood", neighborhoodFilter);
+            if (!neighborhoodFilter.trim().isEmpty())
+                filterMap.put("neighborhood", neighborhoodFilter);
             // Get Flat Type Filter
-            String flatTypeFilterInput = promptForInput("Filter by Flat Type Offered (TWO_ROOM, THREE_ROOM): ").toUpperCase();
-            if (!flatTypeFilterInput.trim().isEmpty()) { try { filterMap.put("flatType", FlatType.valueOf(flatTypeFilterInput)); } catch (IllegalArgumentException e) { displayError("Invalid flat type. Filter skipped."); } }
+            String flatTypeFilterInput = promptForInput("Filter by Flat Type Offered (TWO_ROOM, THREE_ROOM): ")
+                    .toUpperCase();
+            if (!flatTypeFilterInput.trim().isEmpty()) {
+                try {
+                    filterMap.put("flatType", FlatType.valueOf(flatTypeFilterInput));
+                } catch (IllegalArgumentException e) {
+                    displayError("Invalid flat type. Filter skipped.");
+                }
+            }
             // Get Visibility Filter
             String visibilityInput = promptForInput("Filter by Visibility (ON, OFF): ").toUpperCase();
-            if (!visibilityInput.trim().isEmpty()) { if ("ON".equals(visibilityInput)) filterMap.put("visibility", Boolean.TRUE); else if ("OFF".equals(visibilityInput)) filterMap.put("visibility", Boolean.FALSE); else displayError("Invalid visibility. Filter skipped."); }
+            if (!visibilityInput.trim().isEmpty()) {
+                if ("ON".equals(visibilityInput))
+                    filterMap.put("visibility", Boolean.TRUE);
+                else if ("OFF".equals(visibilityInput))
+                    filterMap.put("visibility", Boolean.FALSE);
+                else
+                    displayError("Invalid visibility. Filter skipped.");
+            }
 
             displayMessage("Applying filters: " + filterMap);
         }
@@ -402,7 +427,8 @@ public class HDBManagerUI extends BaseUI {
         List<Project> projectsToDisplay;
         try {
             // Call the controller method that handles manager + filters
-            projectsToDisplay = projectController.getManagedProjects(this.user, filterMap); // Pass user object and filters
+            projectsToDisplay = projectController.getManagedProjects(this.user, filterMap); // Pass user object and
+                                                                                            // filters
         } catch (Exception e) { // Catch potential runtime exceptions
             displayError("Error retrieving managed projects: " + e.getMessage());
             projectsToDisplay = Collections.emptyList(); // Show empty on error
@@ -416,7 +442,8 @@ public class HDBManagerUI extends BaseUI {
                 displayMessage("You are not managing any projects.");
             }
         } else {
-            String listTitle = applyFilters ? "Filtered Managed Projects (" + projectsToDisplay.size() + " found)" : "My Managed Projects";
+            String listTitle = applyFilters ? "Filtered Managed Projects (" + projectsToDisplay.size() + " found)"
+                    : "My Managed Projects";
             Project selected = this.projectUIHelper.selectProjectFromList(projectsToDisplay, listTitle);
             if (selected != null) {
                 this.projectUIHelper.displayStaffProjectDetails(selected);
@@ -434,8 +461,10 @@ public class HDBManagerUI extends BaseUI {
         }
 
         // Delegate to helper
-        Map<Integer, OfficerRegistration> regMap = this.officerRegUIHelper.displayOfficerRegList(pendingRegs, "Pending Officer Registrations");
-         if (regMap.isEmpty()) return;
+        Map<Integer, OfficerRegistration> regMap = this.officerRegUIHelper.displayOfficerRegList(pendingRegs,
+                "Pending Officer Registrations");
+        if (regMap.isEmpty())
+            return;
 
         int choice = promptForInt("Select registration number to review (or 0 to go back): ");
         if (choice == 0 || !regMap.containsKey(choice)) {
@@ -474,8 +503,10 @@ public class HDBManagerUI extends BaseUI {
             return;
         }
 
-        Map<Integer, Application> appMap = this.applicationUIHelper.displayApplicationList(relevantApps, "Pending Applications for Your Projects");
-         if (appMap.isEmpty()) return;
+        Map<Integer, Application> appMap = this.applicationUIHelper.displayApplicationList(relevantApps,
+                "Pending Applications for Your Projects");
+        if (appMap.isEmpty())
+            return;
 
         int choice = promptForInt("Select application number to review (or 0 to go back): ");
         if (choice == 0 || !appMap.containsKey(choice)) {
@@ -514,8 +545,10 @@ public class HDBManagerUI extends BaseUI {
             return;
         }
 
-        Map<Integer, Application> appMap = this.applicationUIHelper.displayApplicationList(pendingWithdrawals, "Pending Withdrawal Requests");
-        if(appMap.isEmpty()) return;
+        Map<Integer, Application> appMap = this.applicationUIHelper.displayApplicationList(pendingWithdrawals,
+                "Pending Withdrawal Requests");
+        if (appMap.isEmpty())
+            return;
 
         int choice = promptForInt("Select application number to review withdrawal (or 0 to go back): ");
         if (choice == 0 || !appMap.containsKey(choice)) {
@@ -544,8 +577,10 @@ public class HDBManagerUI extends BaseUI {
         }
 
         // Delegate to helper
-        Map<Integer, Enquiry> enquiryMap = this.enquiryUIHelper.displayEnquiryList(allEnquiries, "All Enquiries (Sorted by Unreplied First)");
-         if(enquiryMap.isEmpty()) return;
+        Map<Integer, Enquiry> enquiryMap = this.enquiryUIHelper.displayEnquiryList(allEnquiries,
+                "All Enquiries (Sorted by Unreplied First)");
+        if (enquiryMap.isEmpty())
+            return;
 
         int choice = promptForInt("Select enquiry number to reply (or 0 to go back): ");
         if (choice == 0 || !enquiryMap.containsKey(choice)) {
@@ -634,7 +669,6 @@ public class HDBManagerUI extends BaseUI {
     private void handleChangePassword() {
         this.accountUIHelper.handlePasswordChange(this.user);
     }
-
 
     private LocalDate promptForDateOrKeep(String prompt, LocalDate currentValue) {
         while (true) {

@@ -136,7 +136,6 @@ public class HDBOfficerUI extends BaseUI {
                 }
             } catch (Exception e) {
                 displayError("An error occurred: " + e.getMessage());
-                // e.printStackTrace(); // For debugging
             }
 
             if (keepRunning && choice != 0) {
@@ -375,7 +374,6 @@ public class HDBOfficerUI extends BaseUI {
             displayError("Registration Failed: " + e.getMessage());
         } catch (Exception e) { // Catch other potential errors (e.g., data access in controller/service)
             displayError("An unexpected error occurred: " + e.getMessage());
-            // e.printStackTrace();
         }
     }
 
@@ -414,7 +412,6 @@ public class HDBOfficerUI extends BaseUI {
 
         } catch (Exception e) {
             displayError("An unexpected error occurred while retrieving registration status: " + e.getMessage());
-            // e.printStackTrace();
         }
     }
 
@@ -491,7 +488,6 @@ public class HDBOfficerUI extends BaseUI {
                 displayError("Operation failed: " + e.getMessage());
             } catch (Exception e) {
                 displayError("An unexpected error occurred: " + e.getMessage());
-                // e.printStackTrace();
             }
 
             if (keepManaging && choice != 0) {
