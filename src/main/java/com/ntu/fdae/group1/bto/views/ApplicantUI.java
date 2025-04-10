@@ -58,7 +58,7 @@ public class ApplicantUI extends BaseUI {
         this.authController = Objects.requireNonNull(authCtrl);
         this.accountUIHelper = new AccountUIHelper(this, authCtrl);
         this.projectUIHelper = new ProjectUIHelper(this, userCtrl);
-        this.enquiryUIHelper = new EnquiryUIHelper(this, userCtrl);
+        this.enquiryUIHelper = new EnquiryUIHelper(this, userCtrl, projCtrl);
         this.applicationUIHelper = new ApplicationUIHelper(this, appCtrl, projCtrl);
         this.currentProjectFilters = new HashMap<>();
     }

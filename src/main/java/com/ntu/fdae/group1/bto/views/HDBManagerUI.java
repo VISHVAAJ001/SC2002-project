@@ -1,34 +1,41 @@
 package com.ntu.fdae.group1.bto.views;
 
-// Import necessary controllers
-import com.ntu.fdae.group1.bto.controllers.project.ProjectController;
-import com.ntu.fdae.group1.bto.controllers.project.ApplicationController;
-import com.ntu.fdae.group1.bto.controllers.project.OfficerRegistrationController;
-import com.ntu.fdae.group1.bto.controllers.enquiry.EnquiryController;
-import com.ntu.fdae.group1.bto.controllers.project.ReportController;
-import com.ntu.fdae.group1.bto.controllers.user.AuthenticationController; // Added
-import com.ntu.fdae.group1.bto.controllers.user.UserController;
-// Import necessary models
-import com.ntu.fdae.group1.bto.models.user.HDBManager;
-import com.ntu.fdae.group1.bto.models.project.*; // Import project models
-import com.ntu.fdae.group1.bto.enums.*; // Import enums
-
-// Import exceptions if needed for specific handling in UI
-// import com.ntu.fdae.group1.bto.exceptions.*;
-
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Scanner;
-import java.time.LocalDate; // For creating project dates
-
+import java.util.Set;
 import java.util.Objects;
-// Import other necessary Entity/Enum/Exception types as needed
-
-import java.util.List;
-import java.util.Map; // For filters maybe
 import java.util.Scanner;
-import java.util.Objects;
-// Import other necessary types
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import com.ntu.fdae.group1.bto.controllers.enquiry.EnquiryController;
+import com.ntu.fdae.group1.bto.models.enquiry.Enquiry;
+import com.ntu.fdae.group1.bto.models.project.Application;
+import com.ntu.fdae.group1.bto.models.project.OfficerRegistration;
+import com.ntu.fdae.group1.bto.models.project.Project;
+import com.ntu.fdae.group1.bto.models.project.ProjectFlatInfo;
+import com.ntu.fdae.group1.bto.models.user.HDBManager;
+import com.ntu.fdae.group1.bto.controllers.project.ApplicationController;
+import com.ntu.fdae.group1.bto.controllers.user.AuthenticationController;
+import com.ntu.fdae.group1.bto.controllers.user.UserController;
+import com.ntu.fdae.group1.bto.controllers.project.ProjectController;
+import com.ntu.fdae.group1.bto.controllers.project.ReportController;
+import com.ntu.fdae.group1.bto.controllers.project.OfficerRegistrationController;
+import com.ntu.fdae.group1.bto.enums.ApplicationStatus;
+import com.ntu.fdae.group1.bto.enums.FlatType;
+import com.ntu.fdae.group1.bto.enums.MaritalStatus;
+import com.ntu.fdae.group1.bto.exceptions.ApplicationException;
+import com.ntu.fdae.group1.bto.exceptions.AuthorizationException;
+import com.ntu.fdae.group1.bto.exceptions.InvalidInputException;
+import com.ntu.fdae.group1.bto.exceptions.RegistrationException;
+
 
 public class HDBManagerUI extends BaseUI {
     private final HDBManager user;
@@ -39,8 +46,12 @@ public class HDBManagerUI extends BaseUI {
     private final EnquiryController enquiryController;
     private final ReportController reportController;
     private final AuthenticationController authController;
-    private final ProjectUIHelper projectUIHelper; // Use the helper
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE;
+    private final ProjectUIHelper projectUIHelper;
     private final AccountUIHelper accountUIHelper;
+    private final ApplicationUIHelper applicationUIHelper;
+    private final EnquiryUIHelper enquiryUIHelper;
+    private final OfficerRegUIHelper officerRegUIHelper;
 
     public HDBManagerUI(HDBManager user,
             UserController userCtrl,
@@ -60,8 +71,11 @@ public class HDBManagerUI extends BaseUI {
         this.enquiryController = Objects.requireNonNull(enqCtrl);
         this.reportController = Objects.requireNonNull(reportCtrl);
         this.authController = Objects.requireNonNull(authCtrl);
-        this.projectUIHelper = new ProjectUIHelper(this, userCtrl); // Initialize helper
-        this.accountUIHelper = new AccountUIHelper(this, authCtrl); // Initialize account helper
+        this.projectUIHelper = new ProjectUIHelper(this, userCtrl); // Initialize helper; pass in BaseUI and UserController
+        this.accountUIHelper = new AccountUIHelper(this, authCtrl); // Initialize account helper; pass in BaseUI and AuthController
+        this.applicationUIHelper = new ApplicationUIHelper(this, appCtrl, projCtrl); // Initialize application helper; pass in BaseUI and appController, ProjController
+        this.enquiryUIHelper = new EnquiryUIHelper(this, userCtrl, projCtrl); // Initialize enquiry helper; pass in BaseUI and ProjController
+        this.officerRegUIHelper = new OfficerRegUIHelper(this, projCtrl); // Initialize officer registration helper; pass in BaseUI and ProjController
     }
 
     public void displayMainMenu() {
@@ -69,57 +83,62 @@ public class HDBManagerUI extends BaseUI {
         while (keepRunning) {
             displayHeader("HDB Manager Menu - Welcome " + (user != null ? user.getName() : "User"));
 
-            System.out.println("--- Project Management ---");
-            System.out.println("[1] Create New BTO Project");
-            System.out.println("[2] View/Manage Projects (Edit/Delete/Visibility)"); // Combined view & manage
-            System.out.println("----------------------------------");
-            System.out.println("--- Approvals & Reviews ---");
-            System.out.println("[3] Review Pending Officer Registrations"); // View->Review flow
-            System.out.println("[4] Review Pending BTO Applications"); // View->Review flow
-            System.out.println("[5] Review Pending Application Withdrawals"); // View->Review flow
-            System.out.println("----------------------------------");
-            System.out.println("--- Reporting ---");
-            System.out.println("[6] Generate Booking Report");
-            System.out.println("----------------------------------");
-            System.out.println("--- Enquiries ---");
-            System.out.println("[7] View & Reply to Enquiries"); // Combined view & manage
-            System.out.println("----------------------------------");
+            System.out.println("--- Manager Project Role ---");
+            System.out.println("[1] Manage My Projects (Create/Edit/Delete/Visbility)"); // Combined
+            System.out.println("[2] View All Created Projects");
+            System.out.println("[3] View My Managed Projects");
+            System.out.println("-------------------------------------");
+            System.out.println("--- Manager Tasks ---");
+            System.out.println("[4] Review Officer Registration (Pending/Approved)");
+            System.out.println("[5] Review Pending BTO Applications (Approve/Reject)");
+            System.out.println("[6] Review Pending Application Withdrawals (Approve/Reject)");
+            System.out.println("-------------------------------------");
+            System.out.println("--- Communication & Reports ---");
+            System.out.println("[7] View/Reply Enquiries");
+            System.out.println("[8] Generate Booking Report");
+            System.out.println("-------------------------------------");
             System.out.println("--- Account ---");
-            System.out.println("[8] Change Password");
-            System.out.println("----------------------------------");
+            System.out.println("[9] Change Password");
+            System.out.println("-------------------------------------");
             System.out.println("[0] Logout");
-            System.out.println("==================================");
+            System.out.println("=====================================");
 
             int choice = promptForInt("Enter your choice: ");
 
             try {
                 switch (choice) {
                     case 1:
-                        handleCreateProject();
+                        handleManageProjects();
                         break;
                     case 2:
-                        handleViewAndManageProjects();
+                        handleViewAllProjects();
                         break;
                     case 3:
+                        handleViewMyProjects();
+                        break;
+
+                    case 4:
                         handleReviewOfficerRegistrations();
                         break;
-                    case 4:
+                    case 5:
                         handleReviewApplications();
                         break;
-                    case 5:
+                    case 6:
                         handleReviewWithdrawals();
                         break;
-                    case 6:
-                        handleGenerateReport();
-                        break;
+
                     case 7:
-                        handleViewAndReplyToEnquiries();
+                        handleViewReplyEnquiries();
                         break;
                     case 8:
+                        handleGenerateReport();
+                        break;
+
+                    case 9:
                         handleChangePassword();
-                        keepRunning = false; // Could just remove the break here, but this is clearer
                         break;
                     case 0:
+                        displayMessage("Logging out...");
                         keepRunning = false;
                         break;
                     default:
@@ -133,153 +152,521 @@ public class HDBManagerUI extends BaseUI {
             if (keepRunning && choice != 0) {
                 pause();
             }
+
         }
     }
 
-    // --- Revised Handler Methods ---
+    private void handleManageProjects() throws RegistrationException, InvalidInputException {
+        displayHeader("Manage BTO Projects");
+        System.out.println("1. Create New Project");
+        System.out.println("2. Edit Existing Project");
+        System.out.println("3. Delete Project");
+        System.out.println("4. Toggle Project Visibility");
+        System.out.println("0. Back to Main Menu");
+        int choice = promptForInt("Enter choice: ");
 
-    private void handleCreateProject() {
-        displayHeader("Create New BTO Project");
-        System.out.println("Calling projectController.createProject...");
-        // TODO: Implement input gathering & controller call
-        System.out.println("[Placeholder: Create a new project listing]");
+        switch (choice) {
+            case 1:
+                handleCreateProject();
+                break;
+            case 2:
+                handleEditProject();
+                break;
+            case 3:
+                handleDeleteProject();
+                break;
+            case 4:
+                handleToggleVisibility();
+                break;
+            case 0:
+                break;
+            default:
+                displayError("Invalid choice.");
+        }
     }
 
-    private void handleViewAndManageProjects() {
-        displayHeader("View/Manage Projects");
-        // TODO: Implement filter prompting if desired
-        // Map<String, String> filters = projectUIHelper.promptForProjectFilters();
-        // List<Project> projects = projectController.getAllProjects(this.user /* ,
-        // filters */); // Manager sees all
+    private void handleCreateProject() throws RegistrationException, InvalidInputException {                                            
+        String name = promptForInput("Enter Project Name: ");
+        String neighborhood = promptForInput("Enter Neighborhood: ");
+        LocalDate openDate = promptForDate("Enter Application Opening Date: ");
+        LocalDate closeDate = promptForDate("Enter Application Closing Date: ");
+        int officerSlots = promptForInt("Enter Max HDB Officer Slots (1-10): ");
 
-        // Project selectedProject = projectUIHelper.selectProjectFromList(projects,
-        // "Select Project to View Details/Manage");
+        Map<String, ProjectFlatInfo> flatInfoMap = new HashMap<>();
+        System.out.println("--- Enter Flat Details (Enter 0 units if type is not offered) ---");
+        for (FlatType type : Arrays.asList(FlatType.TWO_ROOM, FlatType.THREE_ROOM)) {
+            int totalUnits = promptForInt("Enter Total Units for " + type.name() + ": ");
+            if (totalUnits > 0) {
+                ProjectFlatInfo info = new ProjectFlatInfo(type, totalUnits, totalUnits, 0.0); // remaining = total
+                flatInfoMap.put(type.name(), info); // Use enum name as String key
+                displayMessage("Added " + type.name() + " with " + totalUnits + " units.");
+            } else {
+                displayMessage("Skipping " + type.name() + " as 0 units were entered.");
+            }
+        }
 
-        // if (selectedProject != null) {
-        // // Use the STAFF view helper method
-        // projectUIHelper.displayStaffProjectDetails(selectedProject);
+        if (flatInfoMap.isEmpty()) {
+            displayError("Project creation failed: At least one flat type must have more than 0 units.");
+            return; 
+        }
 
-        // // --- Contextual Actions for Manager ---
-        // System.out.println("\nOptions for Project " + selectedProject.getProjectId()
-        // + ":");
-        // System.out.println("[1] Edit Project Details");
-        // System.out.println("[2] Delete Project");
-        // System.out
-        // .println("[3] Toggle Visibility (Currently " + (selectedProject.isVisible() ?
-        // "ON" : "OFF") + ")");
-        // System.out.println("[0] Back");
+        // Call controller with the Map<String, ProjectFlatInfo>
+        Project createdProject = projectController.createProject(user, name, neighborhood, flatInfoMap, openDate,
+                closeDate, officerSlots);
 
-        // int actionChoice = promptForInt("Enter option: ");
-        // switch (actionChoice) {
-        // case 1:
-        // handleEditProjectAction(selectedProject);
-        // break;
-        // case 2:
-        // handleDeleteProjectAction(selectedProject.getProjectId());
-        // break;
-        // case 3:
-        // handleToggleVisibilityAction(selectedProject.getProjectId());
-        // break;
-        // // Default or 0: Do nothing, loop will pause and show menu again
-        // }
-        // }
+        if (createdProject != null) {
+            displayMessage("Project '" + createdProject.getProjectName() + "' created successfully with ID: "
+                    + createdProject.getProjectId());
+        } else {
+            displayError("Project creation failed (check previous errors).");
+        }
     }
 
-    // Extracted Action Logic Helpers
-    private void handleEditProjectAction(Project project) {
-        System.out.println("Editing Project ID: " + project.getProjectId());
-        // TODO: Prompt for new Name, Neighbourhood, Dates, Slots. Get current values
-        // from 'project'.
-        // TODO: Call projectController.editProject(...)
-        System.out.println("[Placeholder: Edit project action]");
+    private void handleEditProject() throws InvalidInputException {
+        displayHeader("Edit Existing Project");
+        List<Project> myProjects = projectController.getProjectsManagedBy(user);
+
+        // Delegate to ProjectUIHelper
+        Project projectToEdit = this.projectUIHelper.selectProjectFromList(myProjects, "Select Project to Edit");
+        if (projectToEdit == null) return;
+
+        this.projectUIHelper.displayStaffProjectDetails(projectToEdit);
+
+        displayMessage("Enter new details (leave blank or enter ' ' to keep current):");
+        String name = promptForInput("New Project Name [" + projectToEdit.getProjectName() + "]: ");
+        String neighborhood = promptForInput("New Neighborhood [" + projectToEdit.getNeighborhood() + "]: ");
+
+        LocalDate openDate = promptForDateOrKeep(
+                "New Opening Date (YYYY-MM-DD) [" + projectToEdit.getOpeningDate() + "]:",
+                projectToEdit.getOpeningDate());
+        LocalDate closeDate = promptForDateOrKeep(
+                "New Closing Date (YYYY-MM-DD) [" + projectToEdit.getClosingDate() + "]:",
+                projectToEdit.getClosingDate());
+
+        int officerSlots = promptForIntOrKeep(
+                "New Max Officer Slots [" + projectToEdit.getMaxOfficerSlots() + "] (1-10):",
+                projectToEdit.getMaxOfficerSlots());
+
+        boolean success = projectController.editProject(user, projectToEdit.getProjectId(),
+                name.trim().isEmpty() ? projectToEdit.getProjectName() : name.trim(),
+                neighborhood.trim().isEmpty() ? projectToEdit.getNeighborhood() : neighborhood.trim(),
+                openDate, // Use the potentially kept date
+                closeDate, // Use the potentially kept date
+                officerSlots); // Use the potentially kept slots
+
+        if (success) {
+            displayMessage("Project updated successfully.");
+        } else {
+            displayError("Project update failed.");
+        }
     }
 
-    private void handleDeleteProjectAction(String projectId) {
-        System.out.println("Deleting Project ID: " + projectId);
-        // TODO: Confirm deletion. Call projectController.deleteProject(...)
-        System.out.println("[Placeholder: Delete project action]");
+    private void handleDeleteProject() {
+        displayHeader("Delete Project");
+        List<Project> myProjects = projectController.getProjectsManagedBy(this.user);
+       
+        // Delegate to Helper
+        Project projectToDelete = this.projectUIHelper.selectProjectFromList(myProjects, "Select Project to Delete");
+        if (projectToDelete == null) return;
+
+        if (promptForConfirmation(
+                "WARNING: Deleting a project might be irreversible and subject to rules (e.g., no active applications). Proceed?: ")) {
+            boolean success = projectController.deleteProject(user, projectToDelete.getProjectId());
+            if (success) {
+                displayMessage("Project deletion request processed.");
+            } else {
+                displayError("Project deletion failed or not allowed (check logs/previous errors).");
+            }
+        } else {
+            displayMessage("Deletion cancelled.");
+        }
     }
 
-    private void handleToggleVisibilityAction(String projectId) {
-        System.out.println("Toggling visibility for Project ID: " + projectId);
-        // TODO: Confirm toggle. Call projectController.toggleVisibility(...)
-        System.out.println("[Placeholder: Toggle visibility action]");
-    }
-    // --------------------
+    private void handleToggleVisibility() {
+        displayHeader("Toggle Project Visibility");
+        List<Project> myProjects = projectController.getProjectsManagedBy(this.user);
+        
+        // Delegate to Helper
+        Project projectToToggle = this.projectUIHelper.selectProjectFromList(myProjects, "Select Project to Toggle Visibility");
+            if (projectToToggle == null) return;
 
-    private void handleReviewOfficerRegistrations() {
+        displayMessage("Current visibility: " + (projectToToggle.isVisible() ? "ON" : "OFF"));
+        if (promptForConfirmation(
+                "Toggle visibility for project '" + projectToToggle.getProjectName() + "'?: ")) {
+            boolean success = projectController.toggleProjectVisibility(user, projectToToggle.getProjectId());
+            if (success) {
+                displayMessage("Visibility toggled successfully.");
+            } else {
+                displayError("Failed to toggle visibility.");
+            }
+        } else {
+            displayMessage("Operation cancelled.");
+        }
+    }
+
+    private void handleViewAllProjects() throws AuthorizationException{
+        displayHeader("All BTO Projects - View & Filter");
+
+        // --- Prepare Filters ---
+        Map<String, Object> filterMap = new HashMap<>(); 
+        boolean applyFilters = promptForConfirmation("Apply filters?: ");
+
+        if (applyFilters) {
+            displayMessage("Enter filter criteria (leave blank to skip a filter):");
+
+            // 1. Neighborhood Filter (String)
+            String neighborhoodFilter = promptForInput("Filter by Neighborhood (contains, case-insensitive): ");
+            if (!neighborhoodFilter.trim().isEmpty()) {
+                filterMap.put("neighborhood", neighborhoodFilter); // Service uses 'contains'
+            }
+
+            // 2. Flat Type Filter (FlatType Enum)
+            String flatTypeFilterInput = promptForInput("Filter by Flat Type Offered (TWO_ROOM, THREE_ROOM): ").toUpperCase();
+            if (!flatTypeFilterInput.trim().isEmpty()) {
+                try {
+                    FlatType selectedType = FlatType.valueOf(flatTypeFilterInput);
+                    filterMap.put("flatType", selectedType); // Put the Enum object in the map
+                } catch (IllegalArgumentException e) {
+                    displayError("Invalid flat type '" + flatTypeFilterInput + "'. Flat type filter skipped.");
+                }
+            }
+
+            // 3. Visibility Filter (Boolean - Manager Only)
+            String visibilityInput = promptForInput("Filter by Visibility (ON, OFF): ").toUpperCase();
+            if (!visibilityInput.trim().isEmpty()) {
+                if ("ON".equals(visibilityInput)) {
+                    filterMap.put("visibility", Boolean.TRUE);
+                } else if ("OFF".equals(visibilityInput)) {
+                    filterMap.put("visibility", Boolean.FALSE);
+                } else {
+                    displayError("Invalid visibility input '" + visibilityInput + "'. Visibility filter skipped.");
+                }
+            }
+
+            displayMessage("Applying filters: " + filterMap);
+        }
+
+        // --- Call Controller with Filters ---
+        List<Project> projectsToDisplay;
+        try {
+            // Pass the current manager user and the constructed filter map
+            projectsToDisplay = projectController.getAllProjects(this.user, filterMap);
+        } catch (AuthorizationException ae) { 
+             displayError("Authorization Error: " + ae.getMessage());
+             return; // Cannot proceed
+        } catch (Exception e) { // Catch other unexpected errors
+             displayError("Error retrieving projects: " + e.getMessage());
+             return; // Cannot proceed
+        }
+
+        // --- Display Results ---
+        if (projectsToDisplay.isEmpty()) {
+            if (applyFilters) { // Check if filters were actually applied
+                displayMessage("No projects match the specified filters.");
+            } else {
+                displayMessage("No projects found in the system.");
+            }
+        } else {
+            String listTitle = applyFilters ? "Filtered Projects (" + projectsToDisplay.size() + " found)" : "All Projects";
+            // Use ProjectUIHelper to display list and select
+            Project selected = this.projectUIHelper.selectProjectFromList(projectsToDisplay, listTitle);
+            if (selected != null) {
+                // Use ProjectUIHelper to display details
+                this.projectUIHelper.displayStaffProjectDetails(selected);
+            }
+        }
+    }
+
+    private void handleViewMyProjects() {
+        displayHeader("My Managed BTO Projects - View & Filter");
+
+        // --- Prepare Filters (Identical logic to handleViewAllProjects) ---
+        Map<String, Object> filterMap = new HashMap<>();
+        boolean applyFilters = promptForConfirmation("Apply filters to your managed projects? (yes/no): ");
+        if (applyFilters) {
+            displayMessage("Enter filter criteria (leave blank to skip a filter):");
+            // Get Neighborhood Filter
+            String neighborhoodFilter = promptForInput("Filter by Neighborhood (contains, case-insensitive): ");
+            if (!neighborhoodFilter.trim().isEmpty()) filterMap.put("neighborhood", neighborhoodFilter);
+            // Get Flat Type Filter
+            String flatTypeFilterInput = promptForInput("Filter by Flat Type Offered (TWO_ROOM, THREE_ROOM): ").toUpperCase();
+            if (!flatTypeFilterInput.trim().isEmpty()) { try { filterMap.put("flatType", FlatType.valueOf(flatTypeFilterInput)); } catch (IllegalArgumentException e) { displayError("Invalid flat type. Filter skipped."); } }
+            // Get Visibility Filter
+            String visibilityInput = promptForInput("Filter by Visibility (ON, OFF): ").toUpperCase();
+            if (!visibilityInput.trim().isEmpty()) { if ("ON".equals(visibilityInput)) filterMap.put("visibility", Boolean.TRUE); else if ("OFF".equals(visibilityInput)) filterMap.put("visibility", Boolean.FALSE); else displayError("Invalid visibility. Filter skipped."); }
+
+            displayMessage("Applying filters: " + filterMap);
+        }
+
+        // --- Call Controller WITH Filters ---
+        List<Project> projectsToDisplay;
+        try {
+            // Call the controller method that handles manager + filters
+            projectsToDisplay = projectController.getManagedProjects(this.user, filterMap); // Pass user object and filters
+        } catch (Exception e) { // Catch potential runtime exceptions
+            displayError("Error retrieving managed projects: " + e.getMessage());
+            projectsToDisplay = Collections.emptyList(); // Show empty on error
+        }
+
+        // Display Results
+        if (projectsToDisplay.isEmpty()) {
+            if (applyFilters) { // Check if filters were the reason for emptiness
+                displayMessage("No managed projects match the specified filters.");
+            } else {
+                displayMessage("You are not managing any projects.");
+            }
+        } else {
+            String listTitle = applyFilters ? "Filtered Managed Projects (" + projectsToDisplay.size() + " found)" : "My Managed Projects";
+            Project selected = this.projectUIHelper.selectProjectFromList(projectsToDisplay, listTitle);
+            if (selected != null) {
+                this.projectUIHelper.displayStaffProjectDetails(selected);
+            }
+        }
+    }
+
+    private void handleReviewOfficerRegistrations() throws RegistrationException {
         displayHeader("Review Pending Officer Registrations");
-        // TODO: Implement View->Select->Detail->Action flow
-        // 1. Call officerRegController.getPendingRegistrations(user).
-        // 2. Display list of pending registrations.
-        // 3. Prompt selection.
-        // 4. If selected:
-        // a. Display details of the registration (Officer NRIC, Project ID, Date).
-        // b. Display Actions: "[1] Approve", "[2] Reject", "[0] Back".
-        // c. Get action choice.
-        // d. If Approve/Reject: Call officerRegController.reviewRegistration(user,
-        // regId, isApproved).
-        // e. Display success/error.
-        System.out.println("[Placeholder: List pending regs -> Select -> Approve/Reject]");
+        List<OfficerRegistration> pendingRegs = officerRegController.getPendingRegistrations(user);
+
+        if (pendingRegs.isEmpty()) {
+            displayMessage("No pending officer registrations found.");
+            return;
+        }
+
+        // Delegate to helper
+        Map<Integer, OfficerRegistration> regMap = this.officerRegUIHelper.displayOfficerRegList(pendingRegs, "Pending Officer Registrations");
+         if (regMap.isEmpty()) return;
+
+        int choice = promptForInt("Select registration number to review (or 0 to go back): ");
+        if (choice == 0 || !regMap.containsKey(choice)) {
+            if (choice != 0)
+                displayError("Invalid selection.");
+            return;
+        }
+
+        OfficerRegistration selectedReg = regMap.get(choice);
+        boolean approve = promptForConfirmation("Approve registration for Officer " + selectedReg.getOfficerNric()
+                + " for project " + selectedReg.getProjectId() + "?: ");
+
+        boolean success = officerRegController.reviewRegistration(user, selectedReg.getRegistrationId(), approve);
+        if (success) {
+            displayMessage("Registration review processed successfully.");
+        }
     }
 
-    private void handleReviewApplications() {
+    private void handleReviewApplications() throws ApplicationException {
         displayHeader("Review Pending BTO Applications");
-        // TODO: Implement View->Select->Detail->Action flow
-        // 1. Call applicationController.getApplicationsByStatus(user,
-        // ApplicationStatus.PENDING).
-        // 2. Display list of pending applications.
-        // 3. Prompt selection.
-        // 4. If selected:
-        // a. Display details (App ID, Applicant NRIC, Project ID, Pref?).
-        // b. Display Actions: "[1] Approve", "[2] Reject", "[0] Back".
-        // c. Get action choice.
-        // d. If Approve/Reject: Call applicationController.reviewApplication(user,
-        // appId, isApproved).
-        // e. Display success/error.
-        System.out.println("[Placeholder: List pending apps -> Select -> Approve/Reject]");
+        List<Application> pendingApps = applicationController.getApplicationsByStatus(user, ApplicationStatus.PENDING);
+
+        if (pendingApps.isEmpty()) {
+            displayMessage("No pending applications found globally.");
+            return;
+        }
+        // Filter only applications for projects managed by this manager
+        List<Project> myProjects = projectController.getProjectsManagedBy(this.user);
+        Set<String> myProjectIds = myProjects.stream().map(Project::getProjectId).collect(Collectors.toSet());
+        List<Application> relevantApps = pendingApps.stream()
+                .filter(app -> myProjectIds.contains(app.getProjectId()))
+                .collect(Collectors.toList());
+
+        if (relevantApps.isEmpty()) {
+            displayMessage("No pending applications found for the projects you manage.");
+            return;
+        }
+
+        Map<Integer, Application> appMap = this.applicationUIHelper.displayApplicationList(relevantApps, "Pending Applications for Your Projects");
+         if (appMap.isEmpty()) return;
+
+        int choice = promptForInt("Select application number to review (or 0 to go back): ");
+        if (choice == 0 || !appMap.containsKey(choice)) {
+            if (choice != 0)
+                displayError("Invalid selection.");
+            return;
+        }
+
+        Application selectedApp = appMap.get(choice);
+        boolean approve = promptForConfirmation("Approve application " + selectedApp.getApplicationId()
+                + " for Applicant " + selectedApp.getApplicantNric() + "?: ");
+
+        boolean success = applicationController.reviewApplication(user, selectedApp.getApplicationId(), approve);
+        if (success) {
+            displayMessage("Application review processed successfully.");
+        }
     }
 
-    private void handleReviewWithdrawals() {
+    private void handleReviewWithdrawals() throws ApplicationException {
         displayHeader("Review Pending Application Withdrawals");
-        // TODO: Implement View->Select->Detail->Action flow
-        // 1. Call applicationController.getApplicationsByStatus(user,
-        // ApplicationStatus.WITHDRAWAL_REQUESTED).
-        // 2. Display list.
-        // 3. Prompt selection.
-        // 4. If selected:
-        // a. Display details.
-        // b. Display Actions: "[1] Approve Withdrawal", "[2] Reject Withdrawal", "[0]
-        // Back".
-        // c. Get action choice.
-        // d. If Approve/Reject: Call applicationController.reviewWithdrawal(user,
-        // appId, isApproved).
-        // e. Display success/error.
-        System.out.println("[Placeholder: List withdrawal reqs -> Select -> Approve/Reject]");
+        // Fetch apps that *could* have withdrawals (PENDING or SUCCESSFUL)
+        List<Application> allPotentialApps = new ArrayList<>(
+                applicationController.getApplicationsByStatus(user, ApplicationStatus.PENDING));
+        allPotentialApps.addAll(applicationController.getApplicationsByStatus(user, ApplicationStatus.SUCCESSFUL));
+
+        // Filter for those with withdrawal requests AND managed by this manager
+        List<Project> myProjects = projectController.getProjectsManagedBy(this.user);
+        Set<String> myProjectIds = myProjects.stream().map(Project::getProjectId).collect(Collectors.toSet());
+
+        List<Application> pendingWithdrawals = allPotentialApps.stream()
+                .filter(app -> app.getRequestedWithdrawalDate() != null && myProjectIds.contains(app.getProjectId()))
+                .collect(Collectors.toList());
+
+        if (pendingWithdrawals.isEmpty()) {
+            displayMessage("No pending withdrawal requests found for the projects you manage.");
+            return;
+        }
+
+        Map<Integer, Application> appMap = this.applicationUIHelper.displayApplicationList(pendingWithdrawals, "Pending Withdrawal Requests");
+        if(appMap.isEmpty()) return;
+
+        int choice = promptForInt("Select application number to review withdrawal (or 0 to go back): ");
+        if (choice == 0 || !appMap.containsKey(choice)) {
+            if (choice != 0)
+                displayError("Invalid selection.");
+            return;
+        }
+
+        Application selectedApp = appMap.get(choice);
+        boolean approve = promptForConfirmation(
+                "Approve withdrawal for application " + selectedApp.getApplicationId() + "?: ");
+
+        boolean success = applicationController.reviewWithdrawal(user, selectedApp.getApplicationId(), approve);
+        if (success) {
+            displayMessage("Withdrawal review processed successfully.");
+        }
+    }
+
+    private void handleViewReplyEnquiries() throws InvalidInputException {
+        displayHeader("View/Reply Enquiries");
+        List<Enquiry> allEnquiries = enquiryController.viewAllEnquiries(); // Manager sees all
+
+        if (allEnquiries.isEmpty()) {
+            displayMessage("No enquiries found in the system.");
+            return;
+        }
+
+        // Delegate to helper
+        Map<Integer, Enquiry> enquiryMap = this.enquiryUIHelper.displayEnquiryList(allEnquiries, "All Enquiries (Sorted by Unreplied First)");
+         if(enquiryMap.isEmpty()) return;
+
+        int choice = promptForInt("Select enquiry number to reply (or 0 to go back): ");
+        if (choice == 0 || !enquiryMap.containsKey(choice)) {
+            if (choice != 0)
+                displayError("Invalid selection.");
+            return;
+        }
+
+        Enquiry selectedEnq = enquiryMap.get(choice);
+
+        if (selectedEnq.isReplied()) {
+            displayMessage("This enquiry has already been replied to.");
+            return;
+        }
+
+        // Preliminary permission check (Service layer does final check)
+        boolean canReply = false;
+        if (selectedEnq.getProjectId() == null) {
+            canReply = true; // General enquiry
+        } else {
+            Project proj = projectController.findProjectById(selectedEnq.getProjectId());
+            if (proj != null && proj.getManagerNric().equals(user.getNric())) {
+                canReply = true; // Manager in charge
+            }
+        }
+        if (!canReply) {
+            displayError("You may not have permission to reply to this specific enquiry.");
+            return;
+        }
+
+        String reply = promptForInput("Enter your reply: ");
+        boolean success = enquiryController.replyToEnquiry(this.user, selectedEnq.getEnquiryId(), reply);
+        if (success) {
+            displayMessage("Reply submitted successfully.");
+        }
     }
 
     private void handleGenerateReport() {
-        displayHeader("Generate Applicant Booking Report");
-        // TODO: Implement input gathering for filters & controller call
-        System.out.println("[Placeholder: Generate and display report based on filters]");
-    }
+        displayHeader("Generate Booking Report");
+        Map<String, String> filters = new HashMap<>();
 
-    private void handleViewAndReplyToEnquiries() {
-        displayHeader("View & Reply to Enquiries");
-        // TODO: Implement View->Select->Detail->Action flow
-        // 1. Call enquiryController.viewAllEnquiries(user). (Manager sees all FAQ p57)
-        // 2. Display list.
-        // 3. Prompt selection.
-        // 4. If selected:
-        // a. Display full details (Content, Submitter, Project?, Reply if exists).
-        // b. If not replied, display Actions: "[1] Reply", "[0] Back".
-        // c. If Reply: Prompt for reply content, call
-        // enquiryController.replyToEnquiry(user, enquiryId, replyContent).
-        // d. Display success/error.
-        System.out.println("[Placeholder: List all enquiries -> Select -> Reply]");
+        displayMessage("Enter filter criteria (leave blank to ignore):");
+        // --- Flat Type Filter ---
+        String flatTypeInput = promptForInput("Filter by Flat Type (TWO_ROOM, THREE_ROOM): ").toUpperCase();
+        if (!flatTypeInput.trim().isEmpty()) {
+            try {
+                filters.put("FLAT_TYPE", FlatType.valueOf(flatTypeInput).name());
+            } catch (IllegalArgumentException e) {
+                displayError("Invalid flat type '" + flatTypeInput + "'. Ignoring filter.");
+            }
+        }
+        // --- Project Name Filter ---
+        String projectNameFilter = promptForInput("Filter by Project Name (exact match): ");
+        if (!projectNameFilter.trim().isEmpty())
+            filters.put("PROJECT_NAME", projectNameFilter);
+
+        // --- Age Filter ---
+        String ageFilter = promptForInput("Filter by Applicant Age (exact match): ");
+        if (!ageFilter.trim().isEmpty()) {
+            try {
+                Integer.parseInt(ageFilter);
+                filters.put("AGE", ageFilter);
+            } catch (NumberFormatException e) {
+                displayError("Invalid age '" + ageFilter + "'. Ignoring filter.");
+            }
+        }
+
+        // --- Marital Status Filter ---
+        String maritalStatusInput = promptForInput("Filter by Marital Status (SINGLE, MARRIED): ").toUpperCase();
+        if (!maritalStatusInput.trim().isEmpty()) {
+            try {
+                filters.put("MARITAL_STATUS", MaritalStatus.valueOf(maritalStatusInput).name());
+            } catch (IllegalArgumentException e) {
+                displayError("Invalid marital status '" + maritalStatusInput + "'. Ignoring filter.");
+            }
+        }
+
+        displayMessage("Generating report with filters: " + filters);
+        String report = reportController.generateBookingReport(filters);
+        displayMessage("\n--- Report Start ---");
+        System.out.println(report);
+        displayMessage("--- Report End ---");
+        // pause();
     }
 
     private void handleChangePassword() {
-        accountUIHelper.handlePasswordChange(this.user);
+        this.accountUIHelper.handlePasswordChange(this.user);
     }
+
+
+    private LocalDate promptForDateOrKeep(String prompt, LocalDate currentValue) {
+        while (true) {
+            String input = promptForInput(
+                    prompt + " (Enter YYYY-MM-DD or leave blank to keep '" + formatDate(currentValue) + "'): ");
+            if (input.trim().isEmpty()) {
+                return currentValue; // Keep current
+            }
+            try {
+                return LocalDate.parse(input, DATE_FORMATTER);
+            } catch (DateTimeParseException e) {
+                displayError("Invalid date format. Please use YYYY-MM-DD.");
+            }
+        }
+    }
+
+    private int promptForIntOrKeep(String prompt, int currentValue) {
+        while (true) {
+            String input = promptForInput(prompt + " (Enter number or leave blank to keep '" + currentValue + "'): ");
+            if (input.trim().isEmpty()) {
+                return currentValue;
+            }
+            try {
+                return Integer.parseInt(input);
+            } catch (NumberFormatException e) {
+                displayError("Invalid number format.");
+            }
+        }
+    }
+
+    private String formatDate(LocalDate date) {
+        return (date == null) ? "N/A" : DATE_FORMATTER.format(date);
+    }
+
 }

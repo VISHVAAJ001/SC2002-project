@@ -63,7 +63,7 @@ public class HDBOfficerUI extends BaseUI {
         this.authController = Objects.requireNonNull(authCtrl);
         this.projectUIHelper = new ProjectUIHelper(this, userController);
         this.accountUIHelper = new AccountUIHelper(this, authController);
-        this.enquiryUIHelper = new EnquiryUIHelper(this, userController);
+        this.enquiryUIHelper = new EnquiryUIHelper(this, userController, projectController);
         this.applicationUIHelper = new ApplicationUIHelper(this, applicationController, projectController);
         this.currentProjectFilters = new HashMap<>();
     }

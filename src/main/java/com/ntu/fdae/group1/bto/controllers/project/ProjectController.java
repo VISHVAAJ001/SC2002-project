@@ -89,13 +89,25 @@ public class ProjectController {
         return projectService.toggleVisibility(manager, projectId);
     }
 
+    // ****** Overload without filters ******
+    /**
+     * Gets projects visible to a user (without additional filters).
+     * @param user The user to get visible projects for
+     * @return List of visible projects
+     */
+    public List<Project> getVisibleProjectsForUser(User user) {
+        if (user == null) { System.err.println("Error: User context required."); return Collections.emptyList(); }
+        // Call the service overload without filters
+       return projectService.getVisibleProjectsForUser(user);
+   }
+
     /**
      * Gets projects visible to a user
      * 
      * @param user The user to get visible projects for
      * @return List of visible projects
      */
-    public List<Project> getVisibleProjectsForUser(User user, Map<String, Object> filter) {
+    public List<Project> getVisibleProjectsForUser(User user, Map<String, Object> filters) {
         // No specific authorization needed here usually, as the service filters based
         // on user.
         if (user == null) {
@@ -104,7 +116,7 @@ public class ProjectController {
             return Collections.emptyList();
         }
 
-        return projectService.getVisibleProjectsForUser(user, filter);
+        return projectService.getVisibleProjectsForUser(user, filters);
     }
 
     /**
@@ -122,13 +134,25 @@ public class ProjectController {
     }
 
     /**
-     * Gets projects managed by a specific manager
-     * 
-     * @param managerNRIC NRIC of the manager
-     * @return List of projects managed by the manager
+     * Gets projects managed by a specific HDB Manager object.
+     * @param manager The HDBManager object.
+     * @return List of projects managed by the manager.
      */
-    public List<Project> getProjectsManagedBy(String managerNRIC) {
-        return projectService.getProjectsManagedBy(managerNRIC);
+    public List<Project> getProjectsManagedBy(HDBManager manager) {
+        if (manager == null) {
+            System.err.println("Controller Warning: Manager object required for getManagedProjects.");
+            return Collections.emptyList();
+        }
+        return projectService.getProjectsManagedBy(manager.getNric());
+    }
+
+    // Overload accepting HDBManager and filters
+    public List<Project> getManagedProjects(HDBManager manager, Map<String, Object> filters) { // Renamed slightly for clarity
+        if (manager == null) {
+            System.err.println("Controller Warning: Manager object required for getManagedProjects.");
+            return Collections.emptyList();
+        }
+        return projectService.getProjectsManagedBy(manager.getNric(), filters);
     }
 
     /**

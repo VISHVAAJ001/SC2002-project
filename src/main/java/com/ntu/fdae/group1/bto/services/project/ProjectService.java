@@ -58,9 +58,9 @@ public class ProjectService implements IProjectService {
             System.err.println("Service Error: Opening and Closing dates cannot be null.");
             return null;
         }
-        // 1. Check if closing date is before opening date
-        if (closeDate.isBefore(openDate)) {
-            System.err.println("Service Error: Closing date (" + closeDate + ") cannot be before opening date ("
+        // 1. Check if closing date is before or equal to opening date
+        if (closeDate.isBefore(openDate) || closeDate.equals(openDate)) {
+            System.err.println("Service Error: Closing date (" + closeDate + ") cannot be before or the same as opening date ("
                     + openDate + "). Project creation failed.");
             return null;
         }
@@ -98,13 +98,10 @@ public class ProjectService implements IProjectService {
             return null;
         }
 
-        // Ensure both required flat types are present
-        if (typedFlatInfoMap.size() != 2 || !typedFlatInfoMap.containsKey(FlatType.TWO_ROOM)
-                || !typedFlatInfoMap.containsKey(FlatType.THREE_ROOM)) {
-            System.err.println(
-                    "Service Error: flatInfoMap must contain exactly TWO_ROOM and THREE_ROOM after conversion.");
+        if (typedFlatInfoMap.isEmpty()) {
+            System.err.println("Service Error: Project must offer at least one flat type (TWO_ROOM or THREE_ROOM) with units > 0.");
             return null;
-        }
+       }
 
         Project newProject = new Project(projectId, name, neighborhood, typedFlatInfoMap, openDate, closeDate,
                 manager.getNric(), officerSlots);
@@ -124,8 +121,8 @@ public class ProjectService implements IProjectService {
             return false;
         }
         // 1. Check if closing date is before opening date
-        if (closeDate.isBefore(openDate)) {
-            System.err.println("Service Error: Closing date (" + closeDate + ") cannot be before opening date ("
+        if (closeDate.isBefore(openDate) || closeDate.equals(openDate)) {
+            System.err.println("Service Error: Closing date (" + closeDate + ") cannot be before or the same as opening date ("
                     + openDate + "). Project edit failed.");
             return false;
         }
@@ -280,11 +277,39 @@ public class ProjectService implements IProjectService {
     }
 
     @Override
+    public List<Project> getProjectsManagedBy(String managerNRIC, Map<String, Object> filters) { // Add filters param
+        if (managerNRIC == null || managerNRIC.trim().isEmpty()) {
+            return Collections.emptyList(); // Use Collections.emptyList() for Java 8
+        }
+        Map<String, Project> projectMap = projectRepo.findAll();
+        if (projectMap == null || projectMap.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        Stream<Project> stream = projectMap.values().stream()
+                .filter(p -> managerNRIC.equals(p.getManagerNric())); // Mandatory filter first
+
+        // Apply optional filters (pass isStaffView=true as manager is staff)
+        stream = applyOptionalFilters(stream, filters, true);
+
+        // Apply default sorting (e.g., by Project ID or Name)
+        stream = stream.sorted(Comparator.comparing(Project::getProjectId));
+
+        return stream.collect(Collectors.toList());
+    }
+
+    @Override
     public Project findProjectById(String projectId) {
         if (projectId == null || projectId.trim().isEmpty()) {
             return null;
         }
         return projectRepo.findById(projectId);
+    }
+
+    // Overload without filters (calls the one with filters using empty map)
+    @Override
+    public List<Project> getVisibleProjectsForUser(User user) {
+        return getVisibleProjectsForUser(user, Collections.emptyMap()); // Delegate to filter version
     }
 
     /**
@@ -492,12 +517,20 @@ public class ProjectService implements IProjectService {
             }
         }
 
-        // Flat Type (Checks if project *offers* this type)
+        // Flat Type (Checks if project *offers* this type AND has units > 0)
         if (filters.containsKey("flatType")) {
             try {
-                FlatType flatType = (FlatType) filters.get("flatType"); // Assumes correct type in map
+                FlatType flatType = (FlatType) filters.get("flatType"); 
                 if (flatType != null) {
-                    stream = stream.filter(p -> p.getFlatTypes() != null && p.getFlatTypes().containsKey(flatType));
+                    stream = stream.filter(project -> {
+                        // Check 1: Does the project have flat info
+                        if (project.getFlatTypes() == null) return false;
+                        // Check 2: Does the project offer this specific flat type?
+                        ProjectFlatInfo info = project.getFlatTypes().get(flatType);
+                        // Check 3: Does this flat type actually have units defined?
+                        // Filter based on whether units are CURRENTLY available (remaining > 0)
+                        return info != null && info.getRemainingUnits() > 0;
+                    });
                 }
             } catch (ClassCastException e) {
                 System.err.println("Filter Error: Invalid object type for flatType filter.");

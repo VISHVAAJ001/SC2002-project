@@ -1,7 +1,11 @@
 package com.ntu.fdae.group1.bto.views;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import com.ntu.fdae.group1.bto.controllers.project.ApplicationController;
@@ -24,6 +28,7 @@ public class ApplicationUIHelper {
     private final BaseUI baseUI;
     private final ApplicationController applicationController;
     private final ProjectController projectController; // Needed for preference check
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE;
 
     public ApplicationUIHelper(BaseUI baseUI, ApplicationController appCtrl, ProjectController projCtrl) {
         this.baseUI = Objects.requireNonNull(baseUI, "BaseUI cannot be null");
@@ -259,5 +264,52 @@ public class ApplicationUIHelper {
         } else {
             return false;
         }
+    }
+
+    // Helper to display a list of Applications and return a map for selection
+     /**
+     * Displays a formatted list of applications and returns a map for selection.
+     * @param apps List of applications to display.
+     * @param title Title for the list header.
+     * @return Map where key is the displayed number, value is the Application. Empty map if list is null/empty.
+     */
+    public Map<Integer, Application> displayApplicationList(List<Application> apps, String title) {
+        baseUI.displayHeader(title); // Use injected BaseUI
+        Map<Integer, Application> appMap = new HashMap<>();
+        if (apps == null || apps.isEmpty()) {
+            baseUI.displayMessage("No applications to display in this list.");
+            return appMap;
+        }
+
+        int index = 1;
+        for (Application app : apps) {
+            Project proj = projectController.findProjectById(app.getProjectId());
+            String projName = (proj != null) ? proj.getProjectName() : "Unknown/Deleted";
+            String withdrawalStatus = app.getRequestedWithdrawalDate() != null ? " (Withdrawal Req.)" : ""; // Shorter
+            String preference = (app.getPreferredFlatType() != null) ? app.getPreferredFlatType().name() : "N/A";
+
+            // Format the string for display
+            String formattedString = String.format(
+                    "[%d] AppID: %-10s | Applicant: %-9s | Project: %s (%s) | Status: %-12s%s | Pref: %-8s | Date: %s",
+                    index,
+                    app.getApplicationId(),
+                    app.getApplicantNric(),
+                    projName, // Display name
+                    app.getProjectId(), // Display ID
+                    app.getStatus(), // Enum name is usually fine
+                    withdrawalStatus,
+                    preference,
+                    formatDateSafe(app.getSubmissionDate()) // Use local/BaseUI formatDate
+            );
+            baseUI.displayMessage(formattedString); // Use injected BaseUI
+            appMap.put(index, app);
+            index++;
+        }
+        baseUI.displayMessage("[0] Back / Cancel"); // Use injected BaseUI
+        return appMap;
+    }
+
+    private String formatDateSafe(LocalDate date) {
+        return (date == null) ? "N/A" : DATE_FORMATTER.format(date);
     }
 }
