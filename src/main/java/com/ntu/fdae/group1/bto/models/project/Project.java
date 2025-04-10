@@ -18,6 +18,7 @@ public class Project {
     private LocalDate closingDate;
     private String managerNric;
     private int maxOfficerSlots;
+    private int remainingOfficerSlots;
     private boolean isVisible;
     private List<String> approvedOfficerNrics;
 
@@ -32,8 +33,16 @@ public class Project {
         this.closingDate = closingDate;
         this.managerNric = managerNric;
         this.maxOfficerSlots = maxOfficerSlots;
+        this.remainingOfficerSlots = this.maxOfficerSlots;
         this.isVisible = true; // Default is visible
         this.approvedOfficerNrics = new ArrayList<>();
+
+        if (maxOfficerSlots < 0) {
+            System.err.println("WARN: Max officer slots cannot be negative. Setting to 0 for project " + projectId);
+            this.maxOfficerSlots = 0;
+       } else {
+            this.maxOfficerSlots = maxOfficerSlots;
+       }
     }
 
     public String getProjectId() {
@@ -66,6 +75,10 @@ public class Project {
 
     public int getMaxOfficerSlots() {
         return maxOfficerSlots;
+    }
+
+    public int getRemainingOfficerSlots() {
+        return remainingOfficerSlots; 
     }
 
     public boolean isVisible() {
@@ -139,12 +152,18 @@ public class Project {
     }
 
     public void setMaxOfficerSlots(int maxOfficerSlots) {
-        // Add validation (e.g., non-negative, potentially not less than current approved count)
-        if (maxOfficerSlots >= 0) { // Basic non-negative check
-            // More complex check: if (maxOfficerSlots >= this.approvedOfficerNrics.size())
+        // When MAX slots change, remaining slots need recalculation
+        if (maxOfficerSlots >= 0) {
             this.maxOfficerSlots = maxOfficerSlots;
+            // Recalculate remaining based on current approved list
+            int currentApproved = (this.approvedOfficerNrics != null) ? this.approvedOfficerNrics.size() : 0;
+            this.remainingOfficerSlots = Math.max(0, this.maxOfficerSlots - currentApproved); // Ensure non-negative
+            if (this.remainingOfficerSlots < 0) { // Should be caught by Math.max, but safeguard
+                 System.err.println("WARN: Remaining slots calculation resulted in negative for project " + this.projectId + ". Setting to 0.");
+                 this.remainingOfficerSlots = 0;
+            }
         } else {
-            System.err.println("WARN: Cannot set maxOfficerSlots to a negative value ("+ maxOfficerSlots +") for project " + this.projectId);
+            System.err.println("WARN: Cannot set maxOfficerSlots to a negative value for project " + this.projectId);
         }
     }
 
@@ -182,16 +201,24 @@ public class Project {
         // Consider null/blank check for officerNric
         if (officerNric != null && !officerNric.trim().isEmpty() &&
             approvedOfficerNrics.size() < maxOfficerSlots &&
-            !approvedOfficerNrics.contains(officerNric))
+            !approvedOfficerNrics.contains(officerNric) &&
+            this.remainingOfficerSlots > 0)
         {
+            this.remainingOfficerSlots--;
             return approvedOfficerNrics.add(officerNric); 
         }
         return false; // Not added
     }
 
     public boolean removeApprovedOfficer(String officerNric) {
-        return approvedOfficerNrics.remove(officerNric); // remove returns boolean
+        if (this.approvedOfficerNrics.remove(officerNric)) { // If removal was successful
+            // <<< INCREMENT on successful remove (but don't exceed max) >>>
+            this.remainingOfficerSlots = Math.min(this.maxOfficerSlots, this.remainingOfficerSlots + 1);
+            return true;
+       }
+       return false; // Not removed
     }
+    
 
     @Override
     public boolean equals(Object o) {

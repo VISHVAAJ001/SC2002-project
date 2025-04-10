@@ -132,7 +132,11 @@ public class ProjectUIHelper {
         baseUI.displayMessage("Managed By: " + project.getManagerNric() +
                 " (" + userController.getUserName(project.getManagerNric()) + ")");
         baseUI.displayMessage("Visibility Status: " + (project.isVisible() ? "ON (Visible)" : "OFF (Hidden)"));
-        baseUI.displayMessage("Officer Slots Max: " + project.getMaxOfficerSlots());
+        baseUI.displayMessage(String.format("Officer Slots: %d / %d (Max: %d, Remaining: %d)",project.getApprovedOfficerNrics().size(),
+        project.getMaxOfficerSlots(),            // Max allowed
+        project.getMaxOfficerSlots(),            // Explicit Max
+        project.getRemainingOfficerSlots()       // Explicit Remaining
+        ));
         List<String> approvedOfficers = project.getApprovedOfficerNrics(); // Assuming getter exists
         if (approvedOfficers == null || approvedOfficers.isEmpty()) {
             baseUI.displayMessage("Approved Officers: None");

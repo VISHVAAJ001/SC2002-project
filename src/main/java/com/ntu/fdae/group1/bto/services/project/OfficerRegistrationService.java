@@ -86,7 +86,7 @@ public class OfficerRegistrationService implements IOfficerRegistrationService {
             throw new RegistrationException("Registration " + registrationId + " is not PENDING.");
 
         if (approve) {
-            if (project.getApprovedOfficerNrics().size() >= project.getMaxOfficerSlots()) {
+            if (project.getApprovedOfficerNrics().size() >= project.getMaxOfficerSlots() || project.getRemainingOfficerSlots() <= 0) {
                 registration.setStatus(OfficerRegStatus.REJECTED);
                 registrationRepo.save(registration);
                 System.err.println("Service: Registration " + registrationId + " auto-rejected due to max slots.");
