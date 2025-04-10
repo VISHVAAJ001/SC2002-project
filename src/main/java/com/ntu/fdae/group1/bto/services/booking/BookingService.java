@@ -121,38 +121,22 @@ public class BookingService implements IBookingService {
             throw new BookingException(
                     "Project '" + project.getProjectName() + "' does not offer flat type: " + flatType.name());
         }
-        if (flatInfo.getRemainingUnits() <= 0) {
-            throw new BookingException("No remaining units available for " + flatType.name() + " in project '"
-                    + project.getProjectName() + "'.");
-        }
 
-        // 9. Decrease available units and update the project
-        // Assuming decreaseRemainingUnits handles the decrement and returns true/false
-        // Consider potential synchronization needs if this could be called concurrently
-        boolean decreased = flatInfo.decreaseRemainingUnits();
-        if (!decreased) {
-            // This might happen if remaining units became 0 between check and decrease
-            throw new BookingException("Failed to decrease remaining units for " + flatType.name()
-                    + ". Units might have been booked concurrently. Please retry.");
-        }
-        // Save the updated project state (persisting the decreased unit count)
-        projectRepo.save(project);
-
-        // 10. Create and save the new booking record
+        // 9. Create and save the new booking record
         String bookingId = IdGenerator.generateBookingId(); // Assuming static utility method
         LocalDate bookingDate = LocalDate.now();
         Booking newBooking = new Booking(bookingId, application.getApplicationId(), applicantNRIC,
                 project.getProjectId(), flatType, bookingDate);
         bookingRepo.save(newBooking);
 
-        // 11. Update the application status to BOOKED and save the application
+        // 10. Update the application status to BOOKED and save the application
         // (FAQ clarifies Officer manually sets status, system handles consequences -
         // this service method represents the whole transaction triggered by Officer UI
         // action)
         application.setStatus(ApplicationStatus.BOOKED);
         applicationRepo.save(application);
 
-        // 12. Return the newly created booking object
+        // 11. Return the newly created booking object
         return newBooking;
     }
 
