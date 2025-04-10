@@ -101,7 +101,7 @@ public class App {
             AuthenticationService authService = new AuthenticationService(userRepository);
             UserService userService = new UserService(userRepository);
             ProjectService projectService = new ProjectService(projectRepository,
-                    userRepository, eligibilityService, applicationRepository);
+                    userRepository, eligibilityService, applicationRepository, officerRegRepository);
             EnquiryService enquiryService = new EnquiryService(enquiryRepository);
             ApplicationService applicationService = new ApplicationService(
                     applicationRepository, projectRepository, eligibilityService,

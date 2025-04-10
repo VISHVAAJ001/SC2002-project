@@ -255,7 +255,6 @@ public class ApplicantUI extends BaseUI {
                 displayMessage("\n[0] Back");
                 promptForInt("Enter 0 to go back: ");
             }
-            System.out.println("[Placeholder: View, Edit, Delete own enquiries]");
         }
     }
 
