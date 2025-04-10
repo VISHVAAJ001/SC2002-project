@@ -61,7 +61,7 @@ public class HDBOfficerUI extends BaseUI {
         this.receiptController = Objects.requireNonNull(receiptCtrl);
         this.enquiryController = Objects.requireNonNull(enqCtrl);
         this.authController = Objects.requireNonNull(authCtrl);
-        this.projectUIHelper = new ProjectUIHelper(this, userController);
+        this.projectUIHelper = new ProjectUIHelper(this, userController, projectController, officerRegController);
         this.accountUIHelper = new AccountUIHelper(this, authController);
         this.enquiryUIHelper = new EnquiryUIHelper(this, userController, projectController);
         this.applicationUIHelper = new ApplicationUIHelper(this, applicationController, projectController);
