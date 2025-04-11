@@ -18,7 +18,7 @@ public class AccountUIHelper {
      * 
      * @param currentUser The currently logged-in user.
      */
-    public void handlePasswordChange(User currentUser) {
+    public boolean handlePasswordChange(User currentUser) {
         baseUI.displayHeader("Change Password");
         try {
             String newPassword = baseUI.promptForInput("Enter NEW password: ");
@@ -26,11 +26,11 @@ public class AccountUIHelper {
 
             if (newPassword == null || newPassword.isEmpty()) {
                 baseUI.displayError("Password cannot be empty.");
-                return;
+                return false;
             }
             if (!newPassword.equals(confirmPassword)) {
                 baseUI.displayError("Passwords do not match.");
-                return;
+                return false;
             }
 
             boolean success = authController.changePassword(currentUser, newPassword);
@@ -40,8 +40,11 @@ public class AccountUIHelper {
             } else {
                 baseUI.displayError("Password change failed. Please try again.");
             }
+
+            return success;
         } catch (Exception e) {
             baseUI.displayError("An error occurred during password change: " + e.getMessage());
         }
+        return false;
     }
 }

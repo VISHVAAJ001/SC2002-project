@@ -125,8 +125,8 @@ public class HDBOfficerUI extends BaseUI {
 
                     // Account
                     case 8:
-                        handleChangePassword();
-                        keepRunning = false; // Change password, then exit
+                        if (handleChangePassword())
+                            keepRunning = false; // Could just remove the break here, but this is clearer
                         break;
                     case 0:
                         keepRunning = false;
@@ -747,7 +747,7 @@ public class HDBOfficerUI extends BaseUI {
         }
     }
 
-    private void handleChangePassword() {
-        accountUIHelper.handlePasswordChange(this.user);
+    private boolean handleChangePassword() {
+        return accountUIHelper.handlePasswordChange(this.user);
     }
 }
