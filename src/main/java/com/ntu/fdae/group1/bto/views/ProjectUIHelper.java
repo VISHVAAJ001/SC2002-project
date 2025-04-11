@@ -29,8 +29,6 @@ public class ProjectUIHelper {
     private final BaseUI baseUI; // Use BaseUI for console interactions
     private final ProjectController projectController;
     private final UserController userController;
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE; // Or your preferred
-                                                                                              // format
 
     /**
      * Constructor for ProjectUIHelper.
@@ -72,7 +70,7 @@ public class ProjectUIHelper {
                     counter.getAndIncrement(),
                     p.getProjectName(),
                     p.getNeighborhood(),
-                    p.getClosingDate().format(DATE_FORMATTER));
+                    p.getClosingDate().format(BaseUI.DATE_FORMATTER));
             baseUI.displayMessage(basicInfo);
         });
         baseUI.displayMessage("[0] Back");
@@ -106,8 +104,8 @@ public class ProjectUIHelper {
 
         baseUI.displayHeader("Project Details: " + project.getProjectName() + " (" + project.getProjectId() + ")");
         baseUI.displayMessage("Neighborhood:     " + project.getNeighborhood());
-        baseUI.displayMessage("Application Open: " + project.getOpeningDate().format(DATE_FORMATTER));
-        baseUI.displayMessage("Application Close:" + project.getClosingDate().format(DATE_FORMATTER));
+        baseUI.displayMessage("Application Open: " + project.getOpeningDate().format(BaseUI.DATE_FORMATTER));
+        baseUI.displayMessage("Application Close:" + project.getClosingDate().format(BaseUI.DATE_FORMATTER));
 
         // Display Flat Type Information (relevant for applicants)
         displayFlatInfoSection(project);
@@ -145,8 +143,7 @@ public class ProjectUIHelper {
                 project.getMaxOfficerSlots(),
                 project.getMaxOfficerSlots(),
                 project.getRemainingOfficerSlots(),
-                pendingCount
-        ));
+                pendingCount));
 
         List<String> approvedOfficers = project.getApprovedOfficerNrics(); // Assuming getter exists
         if (approvedOfficers == null || approvedOfficers.isEmpty()) {

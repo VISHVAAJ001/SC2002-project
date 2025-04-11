@@ -28,7 +28,6 @@ public class ApplicationUIHelper {
     private final BaseUI baseUI;
     private final ApplicationController applicationController;
     private final ProjectController projectController; // Needed for preference check
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE;
 
     public ApplicationUIHelper(BaseUI baseUI, ApplicationController appCtrl, ProjectController projCtrl) {
         this.baseUI = Objects.requireNonNull(baseUI, "BaseUI cannot be null");
@@ -267,11 +266,13 @@ public class ApplicationUIHelper {
     }
 
     // Helper to display a list of Applications and return a map for selection
-     /**
+    /**
      * Displays a formatted list of applications and returns a map for selection.
-     * @param apps List of applications to display.
+     * 
+     * @param apps  List of applications to display.
      * @param title Title for the list header.
-     * @return Map where key is the displayed number, value is the Application. Empty map if list is null/empty.
+     * @return Map where key is the displayed number, value is the Application.
+     *         Empty map if list is null/empty.
      */
     public Map<Integer, Application> displayApplicationList(List<Application> apps, String title) {
         baseUI.displayHeader(title); // Use injected BaseUI
@@ -310,6 +311,6 @@ public class ApplicationUIHelper {
     }
 
     private String formatDateSafe(LocalDate date) {
-        return (date == null) ? "N/A" : DATE_FORMATTER.format(date);
+        return (date == null) ? "N/A" : BaseUI.DATE_FORMATTER.format(date);
     }
 }
