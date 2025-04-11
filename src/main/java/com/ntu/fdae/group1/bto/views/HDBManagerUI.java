@@ -50,6 +50,7 @@ public class HDBManagerUI extends BaseUI {
     private final ApplicationUIHelper applicationUIHelper;
     private final EnquiryUIHelper enquiryUIHelper;
     private final OfficerRegUIHelper officerRegUIHelper;
+    private Map<String, Object> currentProjectFilters;
 
     public HDBManagerUI(HDBManager user,
             UserController userCtrl,
@@ -80,6 +81,7 @@ public class HDBManagerUI extends BaseUI {
                                                                               // BaseUI and ProjController
         this.officerRegUIHelper = new OfficerRegUIHelper(this, projCtrl); // Initialize officer registration helper;
                                                                           // pass in BaseUI and ProjController
+        this.currentProjectFilters = new HashMap<>();
     }
 
     public void displayMainMenu() {
@@ -392,55 +394,59 @@ public class HDBManagerUI extends BaseUI {
     private void handleViewAllProjects() throws AuthorizationException {
         displayHeader("All BTO Projects - View & Filter");
 
-        Map<String, Object> filterMap = new HashMap<>();
-        boolean applyFilters = promptForConfirmation("Apply filters?: "); // Ask ONCE
-
-        if (applyFilters) {
-            displayMessage("Enter filter criteria (leave blank to skip a filter):");
-
-            // 1. Neighborhood Filter
-            String neighborhoodFilter = promptForInput("Filter by Neighborhood (contains, case-insensitive): ");
-            if (!neighborhoodFilter.trim().isEmpty()) {
-                filterMap.put("neighborhood", neighborhoodFilter.trim().toLowerCase()); // Consider lowercasing for
-                                                                                        // consistent matching
+        boolean filtersWereActive = !currentProjectFilters.isEmpty(); // Check if filters exist *before* asking
+        if (filtersWereActive) {
+            System.out.println("Current filters are active:");
+            for (Map.Entry<String, Object> entry : currentProjectFilters.entrySet()) {
+                String key = entry.getKey();
+                Object value = entry.getValue();
+                // Format the value nicely (especially for enums)
+                String valueStr = (value instanceof Enum) ? ((Enum<?>) value).name() : value.toString();
+                System.out.println("  - " + key + ": " + valueStr);
             }
+            System.out.println("----------------------------------");
+            System.out.println("\nFilter Options:");
+            System.out.println("[1] Keep current filters");
+            System.out.println("[2] Clear current filters and view all");
+            System.out.println("[3] Change/Set new filters");
+            System.out.println("[0] Back"); // Option to back out entirely
 
-            // 2. Flat Type Filter - Consider using promptForEnum if available
-            String flatTypeFilterInput = promptForInput("Filter by Flat Type Offered (e.g., TWO_ROOM, THREE_ROOM): ")
-                    .toUpperCase();
-            if (!flatTypeFilterInput.trim().isEmpty()) {
-                try {
-                    FlatType selectedType = FlatType.valueOf(flatTypeFilterInput);
-                    filterMap.put("flatType", selectedType);
-                } catch (IllegalArgumentException e) {
-                    displayError("Invalid flat type '" + flatTypeFilterInput + "'. Filter skipped.");
-                }
+            int filterAction = promptForInt("Choose filter action: ");
+
+            switch (filterAction) {
+                case 1:
+                    // Keep filters - Do nothing, proceed with currentProjectFilters
+                    displayMessage("Keeping existing filters.");
+                    break;
+                case 2:
+                    // Clear filters and view all
+                    this.currentProjectFilters.clear();
+                    displayMessage("Filters cleared.");
+                    // Proceed with empty filters map
+                    break;
+                case 3:
+                    // Change/Set new filters
+                    displayMessage("Clearing old filters to set new ones.");
+                    this.currentProjectFilters = projectUIHelper.promptForProjectFilters(true); // Get new filters
+                    break;
+                case 0:
+                default: // Includes Back or invalid choice
+                    displayMessage("Returning to main menu.");
+                    return; // Exit the handleView method
             }
-
-            // 3. Visibility Filter
-            String visibilityInput = promptForInput("Filter by Visibility (ON, OFF): ").toUpperCase();
-            if (!visibilityInput.trim().isEmpty()) {
-                if ("ON".equals(visibilityInput)) {
-                    filterMap.put("visibility", Boolean.TRUE);
-                } else if ("OFF".equals(visibilityInput)) {
-                    filterMap.put("visibility", Boolean.FALSE);
-                } else {
-                    displayError("Invalid visibility input '" + visibilityInput + "'. Filter skipped.");
-                }
-            }
-
-            if (!filterMap.isEmpty()) {
-                displayMessage("Applying filters: " + filterMap);
+        } else {
+            // No filters were active, ask if they want to apply some now
+            if (promptForConfirmation("Apply filters before viewing?:")) {
+                this.currentProjectFilters = projectUIHelper.promptForProjectFilters(true);
             } else {
-                displayMessage("No filters entered.");
+                this.currentProjectFilters.clear(); // Ensure empty if they say no
             }
         }
 
-        // --- Call Controller to Get Projects with Filters ---
         List<Project> projectsToDisplay;
         try {
             // Pass the authenticated manager and the filter map
-            projectsToDisplay = projectController.getAllProjects(this.user, filterMap);
+            projectsToDisplay = projectController.getAllProjects(this.user, currentProjectFilters);
         } catch (AuthorizationException ae) {
             displayError("Authorization Error: " + ae.getMessage());
             return; // Cannot proceed
@@ -453,14 +459,15 @@ public class HDBManagerUI extends BaseUI {
 
         // --- Display Results ---
         if (projectsToDisplay.isEmpty()) {
-            if (applyFilters && !filterMap.isEmpty()) { // Check if filters were actually applied
+            // Check if filter is empty
+            if (currentProjectFilters != null && !currentProjectFilters.isEmpty()) {
                 displayMessage("No projects match the specified filters.");
             } else {
                 displayMessage("No projects found in the system.");
             }
         } else {
             // Use the ProjectUIHelper to display the list and handle selection
-            String listTitle = (applyFilters && !filterMap.isEmpty())
+            String listTitle = (currentProjectFilters != null && !currentProjectFilters.isEmpty())
                     ? "Filtered Projects (" + projectsToDisplay.size() + " found)"
                     : "All Projects (" + projectsToDisplay.size() + " found)";
             Project selected = this.projectUIHelper.selectProjectFromList(projectsToDisplay, listTitle);
@@ -497,45 +504,52 @@ public class HDBManagerUI extends BaseUI {
     private void handleViewMyProjects() throws AuthorizationException {
         displayHeader("My Managed BTO Projects - View & Filter");
 
-        Map<String, Object> filterMap = new HashMap<>();
-        boolean applyFilters = promptForConfirmation("Apply filters to your managed projects?: ");
-        if (applyFilters) {
-            displayMessage("Enter filter criteria (leave blank to skip a filter):");
-
-            // 1. Neighborhood Filter
-            String neighborhoodFilter = promptForInput("Filter by Neighborhood (contains, case-insensitive): ");
-            if (!neighborhoodFilter.trim().isEmpty()) {
-                filterMap.put("neighborhood", neighborhoodFilter.trim().toLowerCase()); // Consistent matching
+        boolean filtersWereActive = !currentProjectFilters.isEmpty(); // Check if filters exist *before* asking
+        if (filtersWereActive) {
+            System.out.println("Current filters are active:");
+            for (Map.Entry<String, Object> entry : currentProjectFilters.entrySet()) {
+                String key = entry.getKey();
+                Object value = entry.getValue();
+                // Format the value nicely (especially for enums)
+                String valueStr = (value instanceof Enum) ? ((Enum<?>) value).name() : value.toString();
+                System.out.println("  - " + key + ": " + valueStr);
             }
+            System.out.println("----------------------------------");
+            System.out.println("\nFilter Options:");
+            System.out.println("[1] Keep current filters");
+            System.out.println("[2] Clear current filters and view all");
+            System.out.println("[3] Change/Set new filters");
+            System.out.println("[0] Back"); // Option to back out entirely
 
-            // 2. Flat Type Filter - Consider using promptForEnum
-            String flatTypeFilterInput = promptForInput("Filter by Flat Type Offered (e.g., TWO_ROOM, THREE_ROOM): ")
-                    .toUpperCase();
-            if (!flatTypeFilterInput.trim().isEmpty()) {
-                try {
-                    FlatType selectedType = FlatType.valueOf(flatTypeFilterInput);
-                    filterMap.put("flatType", selectedType);
-                } catch (IllegalArgumentException e) {
-                    displayError("Invalid flat type '" + flatTypeFilterInput + "'. Filter skipped.");
-                }
+            int filterAction = promptForInt("Choose filter action: ");
+
+            switch (filterAction) {
+                case 1:
+                    // Keep filters - Do nothing, proceed with currentProjectFilters
+                    displayMessage("Keeping existing filters.");
+                    break;
+                case 2:
+                    // Clear filters and view all
+                    this.currentProjectFilters.clear();
+                    displayMessage("Filters cleared.");
+                    // Proceed with empty filters map
+                    break;
+                case 3:
+                    // Change/Set new filters
+                    displayMessage("Clearing old filters to set new ones.");
+                    this.currentProjectFilters = projectUIHelper.promptForProjectFilters(true); // Get new filters
+                    break;
+                case 0:
+                default: // Includes Back or invalid choice
+                    displayMessage("Returning to main menu.");
+                    return; // Exit the handleView method
             }
-
-            // 3. Visibility Filter
-            String visibilityInput = promptForInput("Filter by Visibility (ON, OFF): ").toUpperCase();
-            if (!visibilityInput.trim().isEmpty()) {
-                if ("ON".equals(visibilityInput)) {
-                    filterMap.put("visibility", Boolean.TRUE);
-                } else if ("OFF".equals(visibilityInput)) {
-                    filterMap.put("visibility", Boolean.FALSE);
-                } else {
-                    displayError("Invalid visibility input '" + visibilityInput + "'. Filter skipped.");
-                }
-            }
-
-            if (!filterMap.isEmpty()) {
-                displayMessage("Applying filters: " + filterMap);
+        } else {
+            // No filters were active, ask if they want to apply some now
+            if (promptForConfirmation("Apply filters before viewing?:")) {
+                this.currentProjectFilters = projectUIHelper.promptForProjectFilters(true);
             } else {
-                displayMessage("No filters entered.");
+                this.currentProjectFilters.clear(); // Ensure empty if they say no
             }
         }
 
@@ -543,7 +557,7 @@ public class HDBManagerUI extends BaseUI {
         List<Project> projectsToDisplay;
         try {
             // Call the controller method specifically for projects managed by this user
-            projectsToDisplay = projectController.getManagedProjects(this.user, filterMap);
+            projectsToDisplay = projectController.getManagedProjects(this.user, currentProjectFilters);
         } catch (Exception e) { // Catch potential RuntimeExceptions from the controller/service
             displayError("Error retrieving managed projects: " + e.getMessage());
             // Consider logging e
@@ -553,7 +567,7 @@ public class HDBManagerUI extends BaseUI {
 
         // --- Display Results ---
         if (projectsToDisplay.isEmpty()) {
-            if (applyFilters && !filterMap.isEmpty()) { // Check if filters were the reason
+            if (currentProjectFilters != null && !currentProjectFilters.isEmpty()) { // Check if filters were the reason
                 displayMessage("No managed projects match the specified filters.");
             } else {
                 // If no filters applied and list is empty, they manage no projects
@@ -561,7 +575,7 @@ public class HDBManagerUI extends BaseUI {
             }
         } else {
             // Use the ProjectUIHelper to display the list and handle selection
-            String listTitle = (applyFilters && !filterMap.isEmpty())
+            String listTitle = (currentProjectFilters != null && !currentProjectFilters.isEmpty())
                     ? "Filtered Managed Projects (" + projectsToDisplay.size() + " found)"
                     : "My Managed Projects (" + projectsToDisplay.size() + " found)";
             Project selected = this.projectUIHelper.selectProjectFromList(projectsToDisplay, listTitle);
