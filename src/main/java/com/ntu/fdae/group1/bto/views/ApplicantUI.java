@@ -100,8 +100,8 @@ public class ApplicantUI extends BaseUI {
                         handleManageMyEnquiries();
                         break;
                     case 5:
-                        handleChangePassword();
-                        keepRunning = false; // Could just remove the break here, but this is clearer
+                        if (handleChangePassword())
+                            keepRunning = false; // Could just remove the break here, but this is clearer
                         break;
                     case 0:
                         keepRunning = false;
@@ -111,7 +111,6 @@ public class ApplicantUI extends BaseUI {
                 }
             } catch (Exception e) {
                 displayError("An error occurred: " + e.getMessage());
-                // e.printStackTrace(); // For debugging
             }
 
             if (keepRunning && choice != 0) {
@@ -294,7 +293,7 @@ public class ApplicantUI extends BaseUI {
         }
     }
 
-    private void handleChangePassword() {
-        accountUIHelper.handlePasswordChange(this.user);
+    private boolean handleChangePassword() {
+        return accountUIHelper.handlePasswordChange(this.user);
     }
 }

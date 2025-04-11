@@ -139,8 +139,8 @@ public class HDBManagerUI extends BaseUI {
                         break;
 
                     case 9:
-                        handleChangePassword();
-                        break;
+                        if (handleChangePassword())
+                            keepRunning = false; // Could just remove the break here, but this is clearer
                     case 0:
                         displayMessage("Logging out...");
                         keepRunning = false;
@@ -150,7 +150,6 @@ public class HDBManagerUI extends BaseUI {
                 }
             } catch (Exception e) {
                 displayError("An error occurred: " + e.getMessage());
-                // e.printStackTrace(); // For debugging
             }
 
             if (keepRunning && choice != 0) {
@@ -814,8 +813,8 @@ public class HDBManagerUI extends BaseUI {
         // pause();
     }
 
-    private void handleChangePassword() {
-        this.accountUIHelper.handlePasswordChange(this.user);
+    private boolean handleChangePassword() {
+        return this.accountUIHelper.handlePasswordChange(this.user);
     }
 
     private LocalDate promptForDateOrKeep(String prompt, LocalDate currentValue) {

@@ -146,7 +146,6 @@ public class ApplicationUIHelper {
         } catch (Exception e) {
             // Catch any other unexpected errors
             baseUI.displayError("An unexpected error occurred during application: " + e.getMessage());
-            e.printStackTrace(); // Helpful during development
         }
     }
 
@@ -207,7 +206,6 @@ public class ApplicationUIHelper {
             }
         } catch (Exception e) {
             baseUI.displayError("Error retrieving application status: " + e.getMessage());
-            e.printStackTrace();
         }
     }
 
