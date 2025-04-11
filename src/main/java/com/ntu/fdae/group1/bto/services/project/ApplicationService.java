@@ -219,8 +219,25 @@ public class ApplicationService implements IApplicationService {
                 throw new ApplicationException("Cannot approve application " + applicationId + ". No remaining "
                         + requestedType + " units available. Application rejected.");
             }
+
+            // Decrease unit count upon HDBManager's approval
+            boolean unitsDecremented = flatInfo.decreaseRemainingUnits(); 
+
+            if (!unitsDecremented) {
+                // This might happen in a concurrent scenario if units hit 0 between check and decrease.
+                // Or if decreaseRemainingUnits has internal logic preventing decrease below 0 (which it should).
+                application.setStatus(ApplicationStatus.UNSUCCESSFUL);
+                applicationRepo.save(application);
+                 System.err.println("Service Error: Failed to decrease remaining units for " + requestedType + " for application " + applicationId + ". Application rejected.");
+                throw new ApplicationException("Failed to reserve unit due to availability change. Application rejected.");
+            }
+
+            // If units were successfully decremented:
             application.setStatus(ApplicationStatus.SUCCESSFUL);
-            System.out.println("Service: Application " + applicationId + " approved by manager " + manager.getNric());
+            applicationRepo.save(application); // Save updated application status FIRST
+            projectRepo.save(project);       // THEN save the project with updated unit count
+            System.out.println("Service: Application " + applicationId + " approved by manager " + manager.getNric()
+                  + ". Remaining " + requestedType + " units for project " + project.getProjectId() + ": " + flatInfo.getRemainingUnits());
         }
 
         else { // Reject

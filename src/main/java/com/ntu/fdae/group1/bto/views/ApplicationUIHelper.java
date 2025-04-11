@@ -28,7 +28,6 @@ public class ApplicationUIHelper {
     private final BaseUI baseUI;
     private final ApplicationController applicationController;
     private final ProjectController projectController; // Needed for preference check
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE;
 
     public ApplicationUIHelper(BaseUI baseUI, ApplicationController appCtrl, ProjectController projCtrl) {
         this.baseUI = Objects.requireNonNull(baseUI, "BaseUI cannot be null");
@@ -310,6 +309,6 @@ public class ApplicationUIHelper {
     }
 
     private String formatDateSafe(LocalDate date) {
-        return (date == null) ? "N/A" : DATE_FORMATTER.format(date);
+        return (date == null) ? "N/A" : BaseUI.DATE_FORMATTER.format(date);
     }
 }

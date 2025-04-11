@@ -1,12 +1,17 @@
 package com.ntu.fdae.group1.bto.views;
 
 import com.ntu.fdae.group1.bto.controllers.user.UserController;
+import com.ntu.fdae.group1.bto.controllers.project.OfficerRegistrationController;
+import com.ntu.fdae.group1.bto.controllers.project.ProjectController;
+import com.ntu.fdae.group1.bto.models.project.OfficerRegistration;
+import com.ntu.fdae.group1.bto.enums.OfficerRegStatus;
 import com.ntu.fdae.group1.bto.enums.FlatType;
 import com.ntu.fdae.group1.bto.models.project.Project;
 import com.ntu.fdae.group1.bto.models.project.ProjectFlatInfo;
 
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -22,18 +27,18 @@ import java.util.concurrent.atomic.AtomicInteger; // For numbered lists
 public class ProjectUIHelper {
 
     private final BaseUI baseUI; // Use BaseUI for console interactions
+    private final ProjectController projectController;
     private final UserController userController;
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE; // Or your preferred
-                                                                                              // format
 
     /**
      * Constructor for ProjectUIHelper.
      * 
      * @param baseUI An instance of BaseUI (or a subclass) to handle console I/O.
      */
-    public ProjectUIHelper(BaseUI baseUI, UserController userController) {
-        this.userController = Objects.requireNonNull(userController);
+    public ProjectUIHelper(BaseUI baseUI, UserController userCtrl, ProjectController projCtrl) {
         this.baseUI = Objects.requireNonNull(baseUI, "BaseUI cannot be null");
+        this.userController = Objects.requireNonNull(userCtrl, "UserController cannot be null");
+        this.projectController = Objects.requireNonNull(projCtrl, "ProjectController cannot be null");
     }
 
     /**
@@ -65,7 +70,7 @@ public class ProjectUIHelper {
                     counter.getAndIncrement(),
                     p.getProjectName(),
                     p.getNeighborhood(),
-                    p.getClosingDate().format(DATE_FORMATTER));
+                    p.getClosingDate().format(BaseUI.DATE_FORMATTER));
             baseUI.displayMessage(basicInfo);
         });
         baseUI.displayMessage("[0] Back");
@@ -99,8 +104,8 @@ public class ProjectUIHelper {
 
         baseUI.displayHeader("Project Details: " + project.getProjectName() + " (" + project.getProjectId() + ")");
         baseUI.displayMessage("Neighborhood:     " + project.getNeighborhood());
-        baseUI.displayMessage("Application Open: " + project.getOpeningDate().format(DATE_FORMATTER));
-        baseUI.displayMessage("Application Close:" + project.getClosingDate().format(DATE_FORMATTER));
+        baseUI.displayMessage("Application Open: " + project.getOpeningDate().format(BaseUI.DATE_FORMATTER));
+        baseUI.displayMessage("Application Close:" + project.getClosingDate().format(BaseUI.DATE_FORMATTER));
 
         // Display Flat Type Information (relevant for applicants)
         displayFlatInfoSection(project);
@@ -113,7 +118,7 @@ public class ProjectUIHelper {
      *
      * @param project The Project object whose details are to be displayed.
      */
-    public void displayStaffProjectDetails(Project project) {
+    public void displayStaffProjectDetails(Project project, int pendingCount) {
         if (project == null) {
             baseUI.displayError("Cannot display details for a null project.");
             return;
@@ -121,18 +126,25 @@ public class ProjectUIHelper {
 
         baseUI.displayHeader("Project Details: " + project.getProjectName() + " (" + project.getProjectId() + ")");
         baseUI.displayMessage("Neighborhood:     " + project.getNeighborhood());
-        baseUI.displayMessage("Application Open: " + project.getOpeningDate().format(DATE_FORMATTER));
-        baseUI.displayMessage("Application Close:" + project.getClosingDate().format(DATE_FORMATTER));
+        baseUI.displayMessage("Application Open: " + baseUI.formatDateSafe(project.getOpeningDate()));
+        baseUI.displayMessage("Application Close:" + baseUI.formatDateSafe(project.getClosingDate()));
 
-        // Display Flat Type Information
-        displayFlatInfoSection(project);
+        displayFlatInfoSection(project); // Display flat info
 
-        // --- Staff-Specific Administrative Details ---
         baseUI.displayMessage("--- Administrative Details ---");
+        // Use injected userController to get manager name
         baseUI.displayMessage("Managed By: " + project.getManagerNric() +
-                " (" + userController.getUserName(project.getManagerNric()) + ")");
+                " (" + this.userController.getUserName(project.getManagerNric()) + ")"); // Use field
         baseUI.displayMessage("Visibility Status: " + (project.isVisible() ? "ON (Visible)" : "OFF (Hidden)"));
-        baseUI.displayMessage("Officer Slots Max: " + project.getMaxOfficerSlots());
+
+        // --- Display Officer Slot Counts (using passed-in pendingCount) ---
+        baseUI.displayMessage(String.format("Officer Slots    : %d / %d (Max: %d, Remaining: %d, Pending: %d)",
+                project.getApprovedOfficerNrics().size(),
+                project.getMaxOfficerSlots(),
+                project.getMaxOfficerSlots(),
+                project.getRemainingOfficerSlots(),
+                pendingCount));
+
         List<String> approvedOfficers = project.getApprovedOfficerNrics(); // Assuming getter exists
         if (approvedOfficers == null || approvedOfficers.isEmpty()) {
             baseUI.displayMessage("Approved Officers: None");

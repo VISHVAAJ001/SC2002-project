@@ -12,7 +12,6 @@ import java.time.LocalDate;
 import com.ntu.fdae.group1.bto.enums.OfficerRegStatus;
 import com.ntu.fdae.group1.bto.exceptions.DataAccessException;
 import com.ntu.fdae.group1.bto.exceptions.RegistrationException;
-import com.ntu.fdae.group1.bto.models.project.OfficerRegistration;
 import com.ntu.fdae.group1.bto.models.user.HDBManager;
 import com.ntu.fdae.group1.bto.models.user.HDBOfficer;
 import com.ntu.fdae.group1.bto.repository.project.IApplicationRepository;
@@ -86,7 +85,7 @@ public class OfficerRegistrationService implements IOfficerRegistrationService {
             throw new RegistrationException("Registration " + registrationId + " is not PENDING.");
 
         if (approve) {
-            if (project.getApprovedOfficerNrics().size() >= project.getMaxOfficerSlots()) {
+            if (project.getApprovedOfficerNrics().size() >= project.getMaxOfficerSlots() || project.getRemainingOfficerSlots() <= 0) {
                 registration.setStatus(OfficerRegStatus.REJECTED);
                 registrationRepo.save(registration);
                 System.err.println("Service: Registration " + registrationId + " auto-rejected due to max slots.");
@@ -169,6 +168,46 @@ public class OfficerRegistrationService implements IOfficerRegistrationService {
         return regMap.values().stream()
                 .filter(reg -> reg.getStatus() == OfficerRegStatus.PENDING)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<OfficerRegistration> getPendingRegistrationsForProject(String projectId) {
+        if (projectId == null || projectId.trim().isEmpty()) {
+            System.err.println("Service Warning: getPendingRegistrationsForProject called with invalid projectId.");
+            return Collections.emptyList(); // Return empty list for invalid input
+        }
+        try {
+            // Assuming findByProjectId returns a List<OfficerRegistration>
+            // If it returns null, handle that case.
+            List<OfficerRegistration> projectRegistrations = registrationRepo.findByProjectId(projectId);
+
+            if (projectRegistrations == null || projectRegistrations.isEmpty()) {
+                return Collections.emptyList();
+            }
+
+            // Filter the results for PENDING status
+            return projectRegistrations.stream()
+                    .filter(reg -> reg != null && reg.getStatus() == OfficerRegStatus.PENDING) // Add null check just in case
+                    .collect(Collectors.toList());
+
+        } catch (DataAccessException e) {
+             System.err.println("Service DataAccess ERROR: Failed to get registrations for project " + projectId + ": " + e.getMessage());
+             // Re-throw or wrap in a service-level runtime exception
+             throw new RuntimeException("Data access error while fetching pending registrations for project.", e);
+        } catch (Exception e) {
+            // Catch any other unexpected errors from the repository layer
+            System.err.println("Service ERROR: Unexpected error getting pending registrations for project " + projectId + ": " + e.getMessage());
+            throw new RuntimeException("Failed to retrieve pending registrations for project due to an internal error.", e);
+        }
+    }
+
+    @Override
+    public int getPendingRegistrationCountForProject(String projectId) {
+        // Simply call the other method and get the size.
+        // This avoids duplicating the filtering logic.
+        // If performance becomes an issue AND the repository supports a direct count,
+        // this could be optimized later.
+        return getPendingRegistrationsForProject(projectId).size();
     }
 
     @Override

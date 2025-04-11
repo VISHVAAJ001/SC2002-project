@@ -26,7 +26,6 @@ public class EnquiryUIHelper {
     private final BaseUI baseUI; // Use BaseUI for console interactions
     private final UserController userController;
     private final ProjectController projectController;
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE; 
     private static final int SNIPPET_LENGTH = 40; // Max length for content snippet in list view
 
     /**
@@ -36,7 +35,8 @@ public class EnquiryUIHelper {
      */
     public EnquiryUIHelper(BaseUI baseUI, UserController userController, ProjectController projectController) {
         this.userController = Objects.requireNonNull(userController);
-        this.projectController = Objects.requireNonNull(projectController, "ProjectController cannot be null for EnquiryUIHelper");
+        this.projectController = Objects.requireNonNull(projectController,
+                "ProjectController cannot be null for EnquiryUIHelper");
         this.baseUI = Objects.requireNonNull(baseUI, "BaseUI cannot be null for EnquiryUIHelper");
     }
 
@@ -65,7 +65,8 @@ public class EnquiryUIHelper {
             String projectIdDisplay = (enq.getProjectId() == null || enq.getProjectId().trim().isEmpty()) ? "General"
                     : enq.getProjectId();
             String repliedStatus = enq.isReplied()
-                    ? "Yes (" + (enq.getReplyDate() != null ? enq.getReplyDate().format(DATE_FORMATTER) : "N/A") + ")"
+                    ? "Yes (" + (enq.getReplyDate() != null ? enq.getReplyDate().format(BaseUI.DATE_FORMATTER) : "N/A")
+                            + ")"
                     : "No";
 
             // Create a snippet of the content
@@ -81,7 +82,7 @@ public class EnquiryUIHelper {
                     enq.getUserNric(), // Submitter NRIC
                     userController.getUserName(enq.getUserNric()), // Submitter Name
                     projectIdDisplay,
-                    enq.getSubmissionDate().format(DATE_FORMATTER),
+                    enq.getSubmissionDate().format(BaseUI.DATE_FORMATTER),
                     repliedStatus);
             baseUI.displayMessage(summaryInfo);
         });
@@ -119,7 +120,7 @@ public class EnquiryUIHelper {
         baseUI.displayMessage("Project Ref:   "
                 + ((enquiry.getProjectId() == null || enquiry.getProjectId().trim().isEmpty()) ? "General Enquiry"
                         : enquiry.getProjectId()));
-        baseUI.displayMessage("Submitted On:  " + enquiry.getSubmissionDate().format(DATE_FORMATTER));
+        baseUI.displayMessage("Submitted On:  " + enquiry.getSubmissionDate().format(BaseUI.DATE_FORMATTER));
         baseUI.displayMessage("--- Enquiry Content ---");
         // Print content potentially over multiple lines if long
         baseUI.displayMessage(enquiry.getContent());
@@ -128,7 +129,7 @@ public class EnquiryUIHelper {
 
         if (enquiry.isReplied()) {
             baseUI.displayMessage("Replied On:    "
-                    + (enquiry.getReplyDate() != null ? enquiry.getReplyDate().format(DATE_FORMATTER) : "N/A"));
+                    + (enquiry.getReplyDate() != null ? enquiry.getReplyDate().format(BaseUI.DATE_FORMATTER) : "N/A"));
             baseUI.displayMessage("--- Reply Content ---");
             baseUI.displayMessage(enquiry.getReply() != null ? enquiry.getReply() : "(No reply content recorded)");
             baseUI.displayMessage("---------------------");
@@ -139,9 +140,11 @@ public class EnquiryUIHelper {
     /**
      * Displays a formatted list of enquiries, sorted by unreplied first,
      * and returns a map for selection.
+     * 
      * @param enquiries List of enquiries to display.
-     * @param title Title for the list header.
-     * @return Map where key is the displayed number, value is the Enquiry. Empty map if list is null/empty.
+     * @param title     Title for the list header.
+     * @return Map where key is the displayed number, value is the Enquiry. Empty
+     *         map if list is null/empty.
      */
     public Map<Integer, Enquiry> displayEnquiryList(List<Enquiry> enquiries, String title) {
         baseUI.displayHeader(title);
@@ -154,7 +157,10 @@ public class EnquiryUIHelper {
         // Sort unreplied first, then perhaps by date?
         List<Enquiry> sortedEnquiries = enquiries.stream()
                 .sorted(Comparator.comparing(Enquiry::isReplied) // false (unreplied) comes first
-                          .thenComparing(Enquiry::getSubmissionDate, Comparator.nullsLast(Comparator.reverseOrder()))) // Newest first within replied/unreplied
+                        .thenComparing(Enquiry::getSubmissionDate, Comparator.nullsLast(Comparator.reverseOrder()))) // Newest
+                                                                                                                     // first
+                                                                                                                     // within
+                                                                                                                     // replied/unreplied
                 .collect(Collectors.toList());
 
         int index = 1;
@@ -170,7 +176,11 @@ public class EnquiryUIHelper {
             baseUI.displayMessage(String.format("   Q: %s", enq.getContent())); // Question on new line
 
             if (enq.isReplied()) {
-                baseUI.displayMessage(String.format("   A: %s (on %s)", enq.getReply(), formatDateSafe(enq.getReplyDate()))); // Reply on new line
+                baseUI.displayMessage(
+                        String.format("   A: %s (on %s)", enq.getReply(), formatDateSafe(enq.getReplyDate()))); // Reply
+                                                                                                                // on
+                                                                                                                // new
+                                                                                                                // line
             }
             enquiryMap.put(index, enq);
             index++;
@@ -180,6 +190,6 @@ public class EnquiryUIHelper {
     }
 
     private String formatDateSafe(LocalDate date) {
-        return (date == null) ? "N/A" : DATE_FORMATTER.format(date);
+        return (date == null) ? "N/A" : BaseUI.DATE_FORMATTER.format(date);
     }
 }
