@@ -785,13 +785,16 @@ public class HDBManagerUI extends BaseUI {
 
         displayMessage("Enter filter criteria (leave blank to ignore):");
         // --- Flat Type Filter ---
-        String flatTypeInput = promptForInput("Filter by Flat Type (TWO_ROOM, THREE_ROOM): ").toUpperCase();
-        if (!flatTypeInput.trim().isEmpty()) {
-            try {
-                filters.put("FLAT_TYPE", FlatType.valueOf(flatTypeInput).name());
-            } catch (IllegalArgumentException e) {
-                displayError("Invalid flat type '" + flatTypeInput + "'. Ignoring filter.");
-            }
+        List<FlatType> availableFlatTypes = Arrays.asList(FlatType.values()); // Or create dynamically if needed
+        FlatType selectedFlatType = promptForEnum(
+                "Filter by Flat Type (Choose number or 0 to cancel/skip):",
+                FlatType.class,
+                availableFlatTypes);
+
+        if (selectedFlatType != null) { // Only add filter if user didn't cancel/skip
+            filters.put("FLAT_TYPE", selectedFlatType.name());
+        } else {
+            displayMessage("Flat type filter skipped.");
         }
         // --- Project Name Filter ---
         String projectNameFilter = promptForInput("Filter by Project Name (exact match): ");
@@ -810,13 +813,15 @@ public class HDBManagerUI extends BaseUI {
         }
 
         // --- Marital Status Filter ---
-        String maritalStatusInput = promptForInput("Filter by Marital Status (SINGLE, MARRIED): ").toUpperCase();
-        if (!maritalStatusInput.trim().isEmpty()) {
-            try {
-                filters.put("MARITAL_STATUS", MaritalStatus.valueOf(maritalStatusInput).name());
-            } catch (IllegalArgumentException e) {
-                displayError("Invalid marital status '" + maritalStatusInput + "'. Ignoring filter.");
-            }
+        MaritalStatus selectedMaritalStatus = promptForEnum(
+                "Filter by Marital Status (Choose number or 0 to cancel/skip):",
+                MaritalStatus.class,
+                Arrays.asList(MaritalStatus.values()));
+
+        if (selectedMaritalStatus != null) { // Only add filter if user didn't cancel/skip
+            filters.put("MARITAL_STATUS", selectedMaritalStatus.name());
+        } else {
+            displayMessage("Marital status filter skipped.");
         }
 
         displayMessage("Generating report with filters: " + filters);

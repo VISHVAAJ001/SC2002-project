@@ -37,12 +37,20 @@ public class ReportService implements IReportService {
 
         StringBuilder report = new StringBuilder();
         String headerFormat = "%-11s | %-15s | %-20s | %-3s | %-10s | %-10s%n";
-        String rowFormat =    "%-11s | %-15s | %-20s | %-3d | %-10s | %-10s%n"; // Added NRIC
-
+        String rowFormat = "%-11s | %-15s | %-20s | %-3d | %-10s | %-10s%n"; // Added NRIC
         report.append("--- BTO Booking Report ---\n");
-        report.append(String.format("Filters Applied: %s%n", filters.isEmpty() ? "None" : filters));
+        report.append("Filters Applied: ");
+        if (filters.isEmpty()) {
+            report.append("None\n");
+        } else {
+            String filterString = filters.entrySet().stream()
+                    .map(entry -> entry.getKey() + ": " + entry.getValue())
+                    .collect(Collectors.joining(", "));
+            report.append(filterString).append("\n");
+        }
         report.append("-----------------------------------------------------------------------------------\n");
-        report.append(String.format(headerFormat, "Booking ID", "Applicant NRIC", "Project Name", "Age", "Marital", "Flat Type"));
+        report.append(String.format(headerFormat, "Booking ID", "Applicant NRIC", "Project Name", "Age", "Marital",
+                "Flat Type"));
         report.append("-----------------------------------------------------------------------------------\n");
 
         // 1. Fetch all necessary data
@@ -64,11 +72,13 @@ public class ReportService implements IReportService {
             Project project = projectRepo.findById(booking.getProjectId()); // Assuming Booking has getProjectId()
 
             if (user == null) {
-                System.err.println("Report Warning: Skipping booking " + booking.getBookingId() + " - Applicant User ("+ booking.getApplicantNric() +") not found.");
+                System.err.println("Report Warning: Skipping booking " + booking.getBookingId() + " - Applicant User ("
+                        + booking.getApplicantNric() + ") not found.");
                 continue;
             }
             if (project == null) {
-                System.err.println("Report Warning: Skipping booking " + booking.getBookingId() + " - Project ("+ booking.getProjectId() +") not found.");
+                System.err.println("Report Warning: Skipping booking " + booking.getBookingId() + " - Project ("
+                        + booking.getProjectId() + ") not found.");
                 continue;
             }
 
@@ -84,8 +94,9 @@ public class ReportService implements IReportService {
                         passesFilters = false;
                     }
                 } catch (IllegalArgumentException e) {
-                     System.err.println("Report Warning: Invalid FLAT_TYPE filter value '" + filterFlatTypeStr + "' skipped.");
-                     // Decide: skip this booking or ignore the filter? Let's ignore filter.
+                    System.err.println(
+                            "Report Warning: Invalid FLAT_TYPE filter value '" + filterFlatTypeStr + "' skipped.");
+                    // Decide: skip this booking or ignore the filter? Let's ignore filter.
                 }
             }
 
@@ -106,7 +117,7 @@ public class ReportService implements IReportService {
                         passesFilters = false;
                     }
                 } catch (NumberFormatException e) {
-                     System.err.println("Report Warning: Invalid AGE filter value '" + filterAgeStr + "' skipped.");
+                    System.err.println("Report Warning: Invalid AGE filter value '" + filterAgeStr + "' skipped.");
                 }
             }
 
@@ -119,7 +130,8 @@ public class ReportService implements IReportService {
                         passesFilters = false;
                     }
                 } catch (IllegalArgumentException e) {
-                      System.err.println("Report Warning: Invalid MARITAL_STATUS filter value '" + filterMaritalStr + "' skipped.");
+                    System.err.println(
+                            "Report Warning: Invalid MARITAL_STATUS filter value '" + filterMaritalStr + "' skipped.");
                 }
             }
 
@@ -132,8 +144,7 @@ public class ReportService implements IReportService {
                         project.getProjectName(),
                         user.getAge(),
                         user.getMaritalStatus(),
-                        booking.getBookedFlatType()
-                ));
+                        booking.getBookedFlatType()));
             }
         } // End loop through bookings
 
