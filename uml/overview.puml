@@ -203,8 +203,6 @@ package Entity <<Folder>> {
         + getReplyDate() : LocalDate <<nullable>>
         + setContent(content : String) : void
         + isReplied() : boolean
-        + addReply(replyContent: String, replyDate: LocalDate) : void
-        + editContent(newContent : String) : void
     }
 
      class OfficerRegistration {
@@ -376,7 +374,7 @@ package Repository <<Folder>> {
         - OFFICER_REGISTRATION_FILE_PATH : String <<static>> final
         - registrations : Map<String, OfficerRegistration>
         - getRegistrationCsvHeader() : String[]
-        - deserializeRegistrations(registrationData : List<String[]>) : Map<String, Booking>
+        - deserializeRegistrations(registrationData : List<String[]>) : Map<String, OfficerRegistration>
         - serializeRegistrations() : List<String[]>
         + OfficerRegistrationRepository()
         + loadAll() : Map<String, OfficerRegistration> <<throws DataAccessException>>
@@ -402,7 +400,7 @@ package Utility <<Folder>> {
         + {static} parseIntOrDefault(value: String, defaultValue: Integer) : Integer
         + {static} parseDoubleOrDefault(value: String, defaultValue: Double) : Double
     }
-    class ValidatationUtil <<Utility>> {
+    class ValidationUtil <<Utility>> {
         + {static} isValidNric(nric: String) : boolean
         ' Add other necessary static input methods
     }
@@ -477,6 +475,7 @@ package Service <<Folder>> {
          + checkManagerProjectHandlingEligibility(manager : HDBManager, newProjectOpenDate : LocalDate, newProjectCloseDate : LocalDate, allExistingProjects : Collection<Project>)
      }
      class EligibilityService implements IEligibilityService {
+         - projectRepository : IProjectRepository ' Added dependency based on method signature
          + EligibilityService(projectRepository : IProjectRepository)
          + canApplicantApply(user: User, project: Project) : boolean
          + isApplicantEligibleForFlatType(user : User, flatType : FlatType) : boolean
@@ -509,7 +508,7 @@ package Service <<Folder>> {
         + toggleVisibility(manager: HDBManager, projectId: String) : boolean;
         + getVisibleProjectsForUser(user: User, filters: Map<String, Object>) : List<Project>;
         + getVisibleProjectsForUser(user: User) : List<Project>;
-        + getAllProjects(user: User, filters: Map<String, Object>) : List<Project>;
+        + getAllProjects(user: User, filters: Map<String, Object>) : List<Project>; ' Corrected user type
         + getProjectsManagedBy(managerNric: String) : List<Project>;
         + getProjectsManagedBy(managerNric: String, filters : Map<String, Object>) : List<Project>;
         + findProjectById(projectId: String) : Project <<nullable>>;
@@ -565,6 +564,7 @@ package Service <<Folder>> {
         + getPendingRegistrationsForProject(projectId : String) : List<OfficerRegistration>;
         + getPendingRegistrationsCountForProject(projectId : String) : int;
         + getRegistrationsByProject(projectId: String) : List<OfficerRegistration>;
+        + getRegistrationsByOfficer(officerNric: String) : List<OfficerRegistration>;
     }
 
     interface IEnquiryService <<ISP>> {
@@ -597,7 +597,8 @@ package Service <<Folder>> {
          - bookingRepo : IBookingRepository;
          - projectRepo : IProjectRepository;
          - userRepo : IUserRepository;
-         + ReportService(bookRepo: IBookingRepository, projRepo: IProjectRepository, userRepo: IUserRepository);
+         - applicationRepo : IApplicationRepository;
+         + ReportService(bookRepo: IBookingRepository, projRepo: IProjectRepository, userRepo: IUserRepository, appRepo: IApplicationRepository);
          + generateBookingReport(filters: Map<String, String>) : String;
      }
 }
@@ -614,7 +615,7 @@ package Controller <<Folder>> {
        + receiptController : ReceiptController
        + enquiryController : EnquiryController
        + reportController : ReportController
-       + ControllerContainer(auth: AuthenticationController, proj: ProjectController, app: ApplicationController, reg: OfficerRegistrationController, book: BookingController, receipt: ReceiptController, enq: EnquiryController, report: ReportController)
+       + ControllerContainer(auth: AuthenticationController, user: UserController, proj: ProjectController, app: ApplicationController, reg: OfficerRegistrationController, book: BookingController, receipt: ReceiptController, enq: EnquiryController, report: ReportController)
     }
 
     class UserController {
@@ -667,9 +668,9 @@ package Controller <<Folder>> {
         + reviewRegistration(manager: HDBManager, registrationId: String, approve: boolean) : boolean <<throws RegistrationException>>;
         + getMyRegistrationStatus(officer: HDBOfficer, projectId: String) : OfficerRegStatus <<nullable>>;
         + getPendingRegistrations(manager: HDBManager) : List<OfficerRegistration>;
-        + getPendingRegistrationCountForProject(staff : HDBStaff, projectId : String) : int <<throws AuthorizationException>>
+        + getPendingRegistrationCountForProject(staff : HDBStaff, projectId : String) : int
         + getProjectRegistrations(staff: HDBStaff, projectId: String) : List<OfficerRegistration>;
-        + getApprovedHandlingProject(officer: HDBOfficer) : Project;
+        + getApprovedHandlingProject(officer: HDBOfficer) : Project <<nullable>>
         + getMyRegistrations(officer: HDBOfficer): List<OfficerRegistration>;
     }
 
@@ -758,8 +759,8 @@ package Views <<Folder>> {
         - handleManageMyEnquiries() : void
         - handleEditEnquiryAction() : void
         - handleDeleteEnquiryAction() : void
-        - handleChangePassword() : boolean
-        + ApplicantUI(user: Applicant, projCtrl: ProjectController, appCtrl: ApplicationController, enqCtrl: EnquiryController, authCtrl: AuthenticationController, scanner: Scanner)
+        - handleChangePassword() : void
+        + ApplicantUI(user: Applicant, userCtrl: UserController, projCtrl: ProjectController, appCtrl: ApplicationController, enqCtrl: EnquiryController, authCtrl: AuthenticationController, scanner: Scanner)
         + displayMainMenu() : void
     }
 
@@ -777,9 +778,10 @@ package Views <<Folder>> {
         - accountUIHelper : AccountUIHelper
         - enquiryUIHelper : EnquiryUIHelper
         - applicationUIHelper : ApplicationUIHelper
+        - officerRegUIHelper : OfficerRegUIHelper
+        - bookingUIHelper : BookingUIHelper
         - currentProjectFilters : Map<String, Object>
         - handleViewAndApplyProjects() : void
-        - handleViewAndWithdrawApplication() : void
         - handleSubmitEnquiry() : void
         - handleManageMyEnquiries() : void
         - handleEditEnquiryAction() : void
@@ -791,7 +793,7 @@ package Views <<Folder>> {
         - handleGenerateReceiptAction() : void
         - handleViewAndReplyProjectEnquiriesAction() : void
         - handleChangePassword() : void
-        + HDBOfficerUI(user: HDBOfficer, projCtrl: ProjectController, appCtrl: ApplicationController, offRegCtrl: OfficerRegistrationController, bookCtrl: BookingController, receiptCtrl: ReceiptController, enqCtrl: EnquiryController, authCtrl: AuthenticationController, scanner: Scanner)
+        + HDBOfficerUI(user: HDBOfficer, userCtrl: UserController, projCtrl: ProjectController, appCtrl: ApplicationController, offRegCtrl: OfficerRegistrationController, bookCtrl: BookingController, receiptCtrl: ReceiptController, enqCtrl: EnquiryController, authCtrl: AuthenticationController, scanner: Scanner)
         + displayMainMenu() : void
      }
 
@@ -808,90 +810,135 @@ package Views <<Folder>> {
         - accountUIHelper : AccountUIHelper
         - applicationUIHelper : ApplicationUIHelper
         - enquiryUIHelper : EnquiryUIHelper
-        - officerRegUIHelper : officerRegUIHelper
+        - officerRegUIHelper : OfficerRegUIHelper
         - currentProjectFilters : Map<String, Object>
-        - handleManageProjects() : void <<throws RegistrationException, InvalidInputException>>
-        - handleCreateProject() : void <<throws RegistrationException, InvalidInputException>>
-        - handleEditProject() : void <<throws InvalidInputException>>
+        - handleManageProjects() : void
+        - handleCreateProject() : void
+        - handleEditProject() : void
         - handleDeleteProject() : void
         - handleToggleVisibility() : void
-        - handleViewAllProjects() : void <<throws AuthorizationException>>
-        - handleViewMyProjects() : void <<throws AuthorizationException>>
-        - handleReviewOfficerRegistrations() : void <<RegistrationException>>
-        - handleReviewApplications() : void <<throws ApplicationException>>
-        - handleReviewWithdrawal() : void <<throws ApplicationException>>
-        - handleViewReplyEnquiries() : void <<InvalidInputException>>
+        - handleViewAllProjects() : void
+        - handleViewMyProjects() : void
+        - handleReviewOfficerRegistrations() : void
+        - handleReviewApplications() : void
+        - handleReviewWithdrawal() : void
+        - handleViewReplyEnquiries() : void
         - handleGenerateReport() : void
         - handleChangePassword() : void
         - promptForDateOrKeep(prompt : String, currentValue : LocalDate) : LocalDate
         - promptForIntOrKeep(prompt : String, currentValue : int) : int
         - promptForOptionalInput(prompt : String, originalValue : String) : String
-        + HDBManagerUI(user: HDBManager, projCtrl: ProjectController, appCtrl: ApplicationController, offRegCtrl: OfficerRegistrationController, enqCtrl: EnquiryController, reportCtrl: ReportController, authCtrl: AuthenticationController, scanner: Scanner)
+        + HDBManagerUI(user: HDBManager, userCtrl: UserController, projCtrl: ProjectController, appCtrl: ApplicationController, offRegCtrl: OfficerRegistrationController, enqCtrl: EnquiryController, reportCtrl: ReportController, authCtrl: AuthenticationController, scanner: Scanner)
         + displayMainMenu() : void
      }
 
     class AccountUIHelper {
         - baseUI : BaseUI
         - authController : AuthenticationController
-        + AccountUIHelper(BaseUI baseUI, AuthenticationController authController)
-        + handlePasswordChange(User currentUser) : boolean
+        + AccountUIHelper(baseUI: BaseUI, authController: AuthenticationController)
+        + handlePasswordChange(currentUser: User) : boolean
     }
 
     class ProjectUIHelper {
         - baseUI : BaseUI
         - projectController : ProjectController
         - userController : UserController
-        + ProjectUIHelper(BaseUI baseUI, userCtrl : UserController, projCtrl : ProjectController)
-        + selectProjectFromList(List<Project> projects, String listTitle) : Project
-        + displayApplicantProjectDetails(Project project) : void
-        + displayStaffProjectDetails(Project project, pendingCount : int) : void
-        + displayFlatInfoSection(Project project) : void
-        + promptForProjectFilters(allowStaffFilters : boolean) : Map<String, Object>
-        + displayFlatAvailability(project : Project) : void
+        + ProjectUIHelper(baseUI: BaseUI, userCtrl: UserController, projCtrl: ProjectController)
+        + selectProjectFromList(projects: List<Project>, listTitle: String) : Project <<nullable>>
+        + displayApplicantProjectDetails(project: Project) : void
+        + displayStaffProjectDetails(project: Project, pendingCount: int) : void
+        + displayFlatInfoSection(project: Project) : void
+        + promptForProjectFilters(allowStaffFilters: boolean) : Map<String, Object>
+        + displayFlatAvailability(project: Project) : void
     }
 
-    class ApplicantionUIHelper {
+    class ApplicationUIHelper {
         - baseUI : BaseUI
         - applicationController : ApplicationController
         - projectController : ProjectController
+        - eligibilityService : IEligibilityService
         - performWithdrawalAction(user : User) : void
         - isApplicantEligibleForFlatType(user: User, flatType: FlatType) : boolean
-        + ApplicationUIHelper(baseUI : BaseUI, appCtrl : ApplicationController, projCtrl : ProjectController)
-        + performApplicationSubmission(user : User, projectId : String) : void
-        + performViewAndWithdraw(user : User) : void
+        + ApplicationUIHelper(baseUI: BaseUI, appCtrl: ApplicationController, projCtrl: ProjectController, eligSvc: IEligibilityService)
+        + performApplicationSubmission(user: User, projectId: String) : void
+        + performViewAndWithdraw(user: User) : void
         + displayApplicationList(apps: List<Application>, title: String) : Map<Integer, Application>
     }
 
     class OfficerRegUIHelper {
         - baseUI : BaseUI
         - projectController : ProjectController
-        + OfficerRegUIHelper(baseUI : BaseUI, projectController : ProjectController)
+        - userController : UserController ' Added
+        + OfficerRegUIHelper(baseUI: BaseUI, projectController: ProjectController, userController: UserController)
         + displayOfficerRegList(regs: List<OfficerRegistration>, title: String) : Map<Integer, OfficerRegistration>
-        + displayOfficerRegistrationDetails(reg : OfficerRegistration) : void
-        + displayOfficerRegListForViewing(regs : List<OfficerRegistration>, title : String) : void
+        + selectOfficerRegFromList(regs: List<OfficerRegistration>, title: String) : OfficerRegistration <<nullable>>
+        + displayOfficerRegistrationDetails(reg: OfficerRegistration) : void
+        + displayOfficerRegListForViewing(regs: List<OfficerRegistration>, title: String) : void
     }
 
     class EnquiryUIHelper {
         - baseUI : BaseUI
         - projectController : ProjectController
         - userController : UserController
-        - SNIPPET_LENGTH : <<static>> final
-        + EnquiryUIHelper(baseUI: BaseUI, userController : UserController, projectController : ProjectController)
-        + selectEnquiryFromList(enquiries: List<Enquiry>, listTitle: String) : Enquiry
-        + displayEnquiryDetails(enquiry : Enquiry)
-        + displayEnquiryList(enquiries: List<Enquiry>, title: String) : Map<Integer, Enquiry>
+        - SNIPPET_LENGTH : int <<static>> final
+        + EnquiryUIHelper(baseUI: BaseUI, userController: UserController, projectController: ProjectController)
+        + selectEnquiryFromList(enquiries: List<Enquiry>, listTitle: String) : Enquiry <<nullable>>
+        + displayEnquiryDetails(enquiry: Enquiry): void
+        + displayEnquiryList(enquiries: List<Enquiry>, title: String): Map<Integer, Enquiry>
     }
 
     class BookingUIHelper {
         - baseUI : BaseUI
         - userController : UserController
-        + BookingUIHelper(baseUI : BaseUI, userController : UserController)
-        + selectBookingFromList(bookings : List<Booking>, title : String) : Booking
-        + displayBookingReceipt(receiptInfo : BookingReceiptInfo) : void
+        + BookingUIHelper(baseUI: BaseUI, userController: UserController)
+        + selectBookingFromList(bookings: List<Booking>, title: String) : Booking <<nullable>>
+        + displayBookingReceipt(receiptInfo: BookingReceiptInfo) : void
     }
 }
 
 ' --- Relationships ---
+
+' Inheritance
+User <|-- Applicant
+User <|-- HDBStaff
+HDBStaff <|-- HDBOfficer
+HDBStaff <|-- HDBManager
+Exception <|-- ApplicationException
+Exception <|-- AuthenticationException
+Exception <|-- BookingException
+RuntimeException <|-- DataAccessException
+Exception <|-- RegistrationException
+Exception <|-- InvalidInputException
+BaseUI <|-- LoginUI
+BaseUI <|-- ApplicantUI
+BaseUI <|-- HDBOfficerUI
+BaseUI <|-- HDBManagerUI
+
+' Interface Implementation
+IRepository <|.. IUserRepository
+IRepository <|.. IProjectRepository
+IRepository <|.. IApplicationRepository
+IRepository <|.. IBookingRepository
+IRepository <|.. IEnquiryRepository
+IRepository <|.. IOfficerRegistrationRepository
+
+IUserRepository <|.. UserRepository
+IProjectRepository <|.. ProjectRepository
+IApplicationRepository <|.. ApplicationRepository
+IBookingRepository <|.. BookingRepository
+IEnquiryRepository <|.. EnquiryRepository
+IOfficerRegistrationRepository <|.. OfficerRegistrationRepository
+
+IUserService <|.. UserService
+IAuthenticationService <|.. AuthenticationService
+IBookingService <|.. BookingService
+IReceiptService <|.. ReceiptService
+IEligibilityService <|.. EligibilityService
+IProjectService <|.. ProjectService
+IApplicationService <|.. ApplicationService
+IOfficerRegistrationService <|.. OfficerRegistrationService
+IEnquiryService <|.. EnquiryService
+IReportService <|.. ReportService
 
 ' Layer Dependencies (Conceptual)
 Views ..> Controller : uses >
@@ -908,101 +955,162 @@ Project "1" o-- "*" Application : has >
 Project "1" o-- "*" Booking : results in >
 Project "1" o-- "*" Enquiry : related to >
 Project "1" o-- "*" OfficerRegistration : requests for >
-Project "1" -- "1" User : managed by (via managerNric) >
-Project "1" -- "0..*" User : approved officers (via officerNric list) >
+Project "1" ..> User : managerNric
+Project "1" ..> User : approvedOfficerNrics
 
-Application "1" -- "1" User : submitted by (via applicantNric) >
-Application "1" -- "1" Project : for >
-Booking "1" -- "1" Application : fulfills >
-Booking "1" -- "1" Project : for >
-Booking "1" -- "1" User : by (via applicantNric) >
-Enquiry "1" -- "1" User : submitted by (via userNric) >
-OfficerRegistration "1" -- "1" User : requested by (via officerNric) >
-OfficerRegistration "1" -- "1" Project : for >
+Application ..> User : applicantNric
+Application ..> Project : projectId
+Booking ..> Application : applicationId
+Booking ..> Project : projectId
+Booking ..> User : applicantNric
+Enquiry ..> User : userNric
+Enquiry ..> Project : projectId (nullable)
+OfficerRegistration ..> User : officerNric
+OfficerRegistration ..> Project : projectId
 
-' Interface Implementation
-IUserRepository <|.. UserRepository
-IProjectRepository <|.. ProjectRepository
-IApplicationRepository <|.. ApplicationRepository
-IBookingRepository <|.. BookingRepository
-IEnquiryRepository <|.. EnquiryRepository
-IOfficerRegistrationRepository <|.. OfficerRegistrationRepository
-
-IAuthenticationService <|.. AuthenticationService
-IBookingService <|.. BookingService
-IReceiptService <|.. ReceiptService
-IEligibilityService <|.. EligibilityService
-IProjectService <|.. ProjectService
-IApplicationService <|.. ApplicationService
-IOfficerRegistrationService <|.. OfficerRegistrationService
-IEnquiryService <|.. EnquiryService
-IReportService <|.. ReportService
-
-' Key Service Dependencies (Illustrative)
-AuthenticationService ..> IUserRepository : uses >
-ProjectService ..> IProjectRepository : uses >
-ProjectService ..> IUserRepository : uses >
-ApplicationService ..> IApplicationRepository : uses >
-ApplicationService ..> IProjectRepository : uses >
-ApplicationService ..> IUserRepository : uses >
-ApplicationService ..> IBookingRepository : uses >
-ApplicationService ..> IEligibilityService : uses >
-BookingService ..> IApplicationRepository : uses >
-BookingService ..> IProjectRepository : uses >
-BookingService ..> IBookingRepository : uses >
-BookingService ..> IUserRepository : uses >
-ReceiptService ..> IBookingRepository : uses >
-ReceiptService ..> IUserRepository : uses >
-ReceiptService ..> IProjectRepository : uses >
-OfficerRegistrationService ..> IOfficerRegistrationRepository : uses >
-OfficerRegistrationService ..> IProjectRepository : uses >
-OfficerRegistrationService ..> IApplicationRepository : uses >
-OfficerRegistrationService ..> IEligibilityService : uses >
-EnquiryService ..> IEnquiryRepository : uses >
-ReportService ..> IApplicationRepository : uses >
-ReportService ..> IBookingRepository : uses >
-ReportService ..> IProjectRepository : uses >
-ReportService ..> IUserRepository : uses >
+' Service Dependencies
+UserService ..> IUserRepository
+AuthenticationService ..> IUserRepository
+AuthenticationService ..> PasswordUtil
+ProjectService ..> IProjectRepository
+ProjectService ..> IUserRepository
+ProjectService ..> IEligibilityService
+ProjectService ..> IdGenerator
+ApplicationService ..> IApplicationRepository
+ApplicationService ..> IProjectRepository
+ApplicationService ..> IUserRepository
+ApplicationService ..> IBookingRepository
+ApplicationService ..> IOfficerRegistrationRepository
+ApplicationService ..> IEligibilityService
+ApplicationService ..> IdGenerator
+BookingService ..> IApplicationRepository
+BookingService ..> IProjectRepository
+BookingService ..> IBookingRepository
+BookingService ..> IUserRepository
+BookingService ..> IdGenerator
+ReceiptService ..> IBookingRepository
+ReceiptService ..> IUserRepository
+ReceiptService ..> IProjectRepository
+OfficerRegistrationService ..> IOfficerRegistrationRepository
+OfficerRegistrationService ..> IProjectRepository
+OfficerRegistrationService ..> IApplicationRepository
+OfficerRegistrationService ..> IEligibilityService
+OfficerRegistrationService ..> IdGenerator
+EnquiryService ..> IEnquiryRepository
+EnquiryService ..> IdGenerator
+EligibilityService ..> IProjectRepository
+ReportService ..> IApplicationRepository
+ReportService ..> IBookingRepository
+ReportService ..> IProjectRepository
+ReportService ..> IUserRepository
 
 ' Controller Dependencies
-AuthenticationController ..> IAuthenticationService : uses >
-ProjectController ..> IProjectService : uses >
-ApplicationController ..> IApplicationService : uses >
-OfficerRegistrationController ..> IOfficerRegistrationService : uses >
-BookingController ..> IBookingService : uses >
-ReceiptController ..> IReceiptService : uses >
-EnquiryController ..> IEnquiryService : uses >
-ReportController ..> IReportService : uses >
+ControllerContainer *-- AuthenticationController
+ControllerContainer *-- UserController
+ControllerContainer *-- ProjectController
+ControllerContainer *-- ApplicationController
+ControllerContainer *-- OfficerRegistrationController
+ControllerContainer *-- BookingController
+ControllerContainer *-- ReceiptController
+ControllerContainer *-- EnquiryController
+ControllerContainer *-- ReportController
+
+UserController ..> IUserService
+AuthenticationController ..> IAuthenticationService
+ProjectController ..> IProjectService
+ApplicationController ..> IApplicationService
+OfficerRegistrationController ..> IOfficerRegistrationService
+OfficerRegistrationController ..> IProjectService
+BookingController ..> IBookingService
+ReceiptController ..> IReceiptService
+EnquiryController ..> IEnquiryService
+ReportController ..> IReportService
 
 ' UI Dependencies
-MainApp --> ControllerContainer : aggregates >
-MainApp --> LoginUI : creates >
-MainApp --> ApplicantUI : creates >
-MainApp --> HDBOfficerUI : creates >
-MainApp --> HDBManagerUI : creates >
+MainApp *--> ControllerContainer : aggregates
+MainApp --> LoginUI : creates
+MainApp --> ApplicantUI : creates
+MainApp --> HDBOfficerUI : creates
+MainApp --> HDBManagerUI : creates
 
-LoginUI ..> AuthenticationController : uses >
-ApplicantUI ..> ProjectController : uses >
-ApplicantUI ..> ApplicationController : uses >
-ApplicantUI ..> EnquiryController : uses >
-HDBOfficerUI ..> ProjectController : uses >
-HDBOfficerUI ..> ApplicationController : uses >
-HDBOfficerUI ..> OfficerRegistrationController : uses >
-HDBOfficerUI ..> BookingController : uses >
-HDBOfficerUI ..> ReceiptController : uses >
-HDBOfficerUI ..> EnquiryController : uses >
-HDBManagerUI ..> ProjectController : uses >
-HDBManagerUI ..> ApplicationController : uses >
-HDBManagerUI ..> OfficerRegistrationController : uses >
-HDBManagerUI ..> EnquiryController : uses >
-HDBManagerUI ..> ReportController : uses >
+LoginUI ..> AuthenticationController
+LoginUI ..> BaseUI
 
-' Utility Dependencies
-Views .> InputUtil : uses >
-Views .> FileUtil : uses >
-Repository ..> FileUtil : uses >
-Service ..> PasswordUtil : uses >
-Service ..> IdGenerator : uses >
-Service ..> FileUtil : uses >
+ApplicantUI ..> UserController
+ApplicantUI ..> ProjectController
+ApplicantUI ..> ApplicationController
+ApplicantUI ..> EnquiryController
+ApplicantUI ..> AuthenticationController
+ApplicantUI --> AccountUIHelper
+ApplicantUI --> ProjectUIHelper
+ApplicantUI --> ApplicationUIHelper
+ApplicantUI --> EnquiryUIHelper
+
+HDBOfficerUI ..> UserController
+HDBOfficerUI ..> ProjectController
+HDBOfficerUI ..> ApplicationController
+HDBOfficerUI ..> OfficerRegistrationController
+HDBOfficerUI ..> BookingController
+HDBOfficerUI ..> ReceiptController
+HDBOfficerUI ..> EnquiryController
+HDBOfficerUI ..> AuthenticationController
+HDBOfficerUI --> AccountUIHelper
+HDBOfficerUI --> ProjectUIHelper
+HDBOfficerUI --> ApplicationUIHelper
+HDBOfficerUI --> EnquiryUIHelper
+HDBOfficerUI --> OfficerRegUIHelper
+HDBOfficerUI --> BookingUIHelper
+
+HDBManagerUI ..> UserController
+HDBManagerUI ..> ProjectController
+HDBManagerUI ..> ApplicationController
+HDBManagerUI ..> OfficerRegistrationController
+HDBManagerUI ..> EnquiryController
+HDBManagerUI ..> ReportController
+HDBManagerUI ..> AuthenticationController
+HDBManagerUI --> AccountUIHelper
+HDBManagerUI --> ProjectUIHelper
+HDBManagerUI --> ApplicationUIHelper
+HDBManagerUI --> EnquiryUIHelper
+HDBManagerUI --> OfficerRegUIHelper
+
+' UI Helper Dependencies
+AccountUIHelper ..> BaseUI
+AccountUIHelper ..> AuthenticationController
+
+ProjectUIHelper ..> BaseUI
+ProjectUIHelper ..> ProjectController
+ProjectUIHelper ..> UserController
+
+ApplicationUIHelper ..> BaseUI
+ApplicationUIHelper ..> ApplicationController
+ApplicationUIHelper ..> ProjectController
+ApplicationUIHelper ..> IEligibilityService
+
+OfficerRegUIHelper ..> BaseUI
+OfficerRegUIHelper ..> ProjectController
+OfficerRegUIHelper ..> UserController
+
+EnquiryUIHelper ..> BaseUI
+EnquiryUIHelper ..> ProjectController
+EnquiryUIHelper ..> UserController
+
+BookingUIHelper ..> BaseUI
+BookingUIHelper ..> UserController
+
+' Repository Dependencies
+UserRepository ..> FileUtil
+ProjectRepository ..> FileUtil
+ApplicationRepository ..> FileUtil
+BookingRepository ..> FileUtil
+EnquiryRepository ..> FileUtil
+OfficerRegistrationRepository ..> FileUtil
+
+' Utility Dependencies (General Usage)
+Views ..> ValidationUtil
+Service ..> PasswordUtil
+Service ..> IdGenerator
+Repository ..> FileUtil
+Service ..> FileUtil
 
 @enduml
