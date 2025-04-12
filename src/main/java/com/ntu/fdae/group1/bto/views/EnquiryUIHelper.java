@@ -172,12 +172,12 @@ public class EnquiryUIHelper {
             // Use displayMessage for potentially multi-line output
             baseUI.displayMessage(String.format("%d. %s EnqID: %s | User: %s | Project: %s (%s) | Date: %s",
                     index, repliedStatus, enq.getEnquiryId(), enq.getUserNric(), projName,
-                    enq.getProjectId() == null ? "N/A" : enq.getProjectId(), formatDateSafe(enq.getSubmissionDate())));
+                    enq.getProjectId() == null ? "N/A" : enq.getProjectId(), baseUI.formatDateSafe(enq.getSubmissionDate())));
             baseUI.displayMessage(String.format("   Q: %s", enq.getContent())); // Question on new line
 
             if (enq.isReplied()) {
                 baseUI.displayMessage(
-                        String.format("   A: %s (on %s)", enq.getReply(), formatDateSafe(enq.getReplyDate()))); // Reply
+                        String.format("   A: %s (on %s)", enq.getReply(), baseUI.formatDateSafe(enq.getReplyDate()))); // Reply
                                                                                                                 // on
                                                                                                                 // new
                                                                                                                 // line
@@ -189,7 +189,4 @@ public class EnquiryUIHelper {
         return enquiryMap;
     }
 
-    private String formatDateSafe(LocalDate date) {
-        return (date == null) ? "N/A" : BaseUI.DATE_FORMATTER.format(date);
-    }
 }

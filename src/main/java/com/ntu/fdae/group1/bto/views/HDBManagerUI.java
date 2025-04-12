@@ -557,7 +557,7 @@ public class HDBManagerUI extends BaseUI {
         List<Project> projectsToDisplay;
         try {
             // Call the controller method specifically for projects managed by this user
-            projectsToDisplay = projectController.getManagedProjects(this.user, currentProjectFilters);
+            projectsToDisplay = projectController.getProjectsManagedBy(this.user, currentProjectFilters);
         } catch (Exception e) { // Catch potential RuntimeExceptions from the controller/service
             displayError("Error retrieving managed projects: " + e.getMessage());
             // Consider logging e

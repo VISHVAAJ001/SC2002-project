@@ -147,7 +147,7 @@ public class ProjectController {
     }
 
     // Overload accepting HDBManager and filters
-    public List<Project> getManagedProjects(HDBManager manager, Map<String, Object> filters) { // Renamed slightly for clarity
+    public List<Project> getProjectsManagedBy(HDBManager manager, Map<String, Object> filters) { // Renamed slightly for clarity
         if (manager == null) {
             System.err.println("Controller Warning: Manager object required for getManagedProjects.");
             return Collections.emptyList();

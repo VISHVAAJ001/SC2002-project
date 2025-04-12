@@ -35,10 +35,12 @@ public class HDBOfficerUI extends BaseUI {
     private final ReceiptController receiptController;
     private final EnquiryController enquiryController;
     private final AuthenticationController authController;
-    private final ProjectUIHelper projectUIHelper; // Use the helper
+    private final ProjectUIHelper projectUIHelper; 
     private final AccountUIHelper accountUIHelper;
-    private final EnquiryUIHelper enquiryUIHelper; // Use the helper
+    private final EnquiryUIHelper enquiryUIHelper; 
     private final ApplicationUIHelper applicationUIHelper;
+    private final OfficerRegUIHelper officerRegUIHelper; 
+    private final BookingUIHelper bookingUIHelper;
     private Map<String, Object> currentProjectFilters;
 
     public HDBOfficerUI(HDBOfficer user,
@@ -65,6 +67,8 @@ public class HDBOfficerUI extends BaseUI {
         this.accountUIHelper = new AccountUIHelper(this, authController);
         this.enquiryUIHelper = new EnquiryUIHelper(this, userController, projectController);
         this.applicationUIHelper = new ApplicationUIHelper(this, applicationController, projectController);
+        this.officerRegUIHelper = new OfficerRegUIHelper(this, projectController);
+        this.bookingUIHelper = new BookingUIHelper(this, userController);
         this.currentProjectFilters = new HashMap<>();
     }
 
@@ -306,7 +310,6 @@ public class HDBOfficerUI extends BaseUI {
         }
     }
 
-    // Helper method to handle actual delete action
     private void handleDeleteEnquiryAction(String enquiryId) {
         try {
             boolean success = enquiryController.deleteEnquiry(enquiryId, this.user);
@@ -328,53 +331,25 @@ public class HDBOfficerUI extends BaseUI {
      */
     private void handleRequestRegistration() {
         displayHeader("Register for Project Handling");
-
         try {
-            // 1. Get the list of projects available for registration
             List<Project> availableProjects = projectController.getProjectsAvailableForRegistration(this.user);
+            if (availableProjects == null || availableProjects.isEmpty()) { return; }
 
-            if (availableProjects == null || availableProjects.isEmpty()) {
-                displayMessage(
-                        "No projects available for registration. You already applied for or are registered for all.");
-                return;
-            }
-
-            // 2. Use ProjectUIHelper to display the list and get selection
-            Project selectedProject = projectUIHelper.selectProjectFromList(
-                    availableProjects,
-                    "Select Project to Register For (Projects you applied for or are registered for are hidden)");
-
-            // 3. Handle selection
-            if (selectedProject == null) {
-                // User chose 'Back' or the list was empty
-                displayMessage("Registration request cancelled or no projects available.");
-                return;
-            }
+            Project selectedProject = projectUIHelper.selectProjectFromList(availableProjects, "Select Project to Register For...");
+            if (selectedProject == null) { return; }
 
             String projectIdToRegister = selectedProject.getProjectId();
-            displayMessage(
-                    "You selected Project: " + selectedProject.getProjectName() + " (ID: " + projectIdToRegister + ")");
+            displayMessage("You selected Project: " + selectedProject.getProjectName() + " (ID: " + projectIdToRegister + ")");
 
-            // 4. Confirmation
-            if (!promptForConfirmation("Confirm registration request for this project? (yes/no): ")) {
-                displayMessage("Registration request cancelled.");
-                return;
-            }
+            if (!promptForConfirmation("Confirm registration request...?")) { return; }
 
-            // 5. Call the controller to make the request
             OfficerRegistration registration = officerRegController.requestRegistration(this.user, projectIdToRegister);
             displayMessage("Registration requested successfully!");
-            // Display details from the returned registration object...
-            displayMessage("Registration ID: " + registration.getRegistrationId());
-            displayMessage("Project ID:      " + registration.getProjectId());
-            displayMessage("Request Date:    " + registration.getRequestDate().format(DATE_FORMATTER));
-            displayMessage("Current Status:  " + registration.getStatus());
 
-        } catch (RegistrationException e) {
-            displayError("Registration Failed: " + e.getMessage());
-        } catch (Exception e) { // Catch other potential errors (e.g., data access in controller/service)
-            displayError("An unexpected error occurred: " + e.getMessage());
-        }
+            this.officerRegUIHelper.displayOfficerRegistrationDetails(registration);
+
+        } catch (RegistrationException e) {}
+          catch (Exception e) {}
     }
 
     /**
@@ -384,34 +359,17 @@ public class HDBOfficerUI extends BaseUI {
      */
     private void handleViewRegistrationStatus() {
         displayHeader("View My Project Registration Status");
-
         try {
-            List<OfficerRegistration> myRegistrations = officerRegController.getMyRegistrations(this.user); // Assumes
-                                                                                                            // this
-                                                                                                            // method
-                                                                                                            // exists
-
+            List<OfficerRegistration> myRegistrations = officerRegController.getMyRegistrations(this.user);
             if (myRegistrations == null || myRegistrations.isEmpty()) {
                 displayMessage("You have no submitted registration requests.");
                 return;
             }
 
-            displayMessage("Your Registration Requests:");
-            displayMessage("--------------------------------------------------");
-            System.out.printf("%-10s | %-15s | %-12s | %s\n", "Reg ID", "Project ID", "Request Date", "Status");
-            System.out.println("--------------------------------------------------");
-
-            myRegistrations.forEach(reg -> {
-                System.out.printf("%-10s | %-15s | %-12s | %s\n",
-                        reg.getRegistrationId(),
-                        reg.getProjectId(),
-                        reg.getRequestDate().format(DATE_FORMATTER),
-                        reg.getStatus().name());
-            });
-            displayMessage("--------------------------------------------------");
+            this.officerRegUIHelper.displayOfficerRegListForViewing(myRegistrations, "Your Registration Requests");
 
         } catch (Exception e) {
-            displayError("An unexpected error occurred while retrieving registration status: " + e.getMessage());
+            displayError("An unexpected error occurred: " + e.getMessage());
         }
     }
 
@@ -514,186 +472,123 @@ public class HDBOfficerUI extends BaseUI {
 
     /**
      * Handles booking by first listing eligible (SUCCESSFUL) applicants for the
-     * project.
-     * 
-     * @param project The project being managed.
+     * project. Uses ProjectUIHelper for flat availability.
      */
     private void handlePerformBookingAction(Project project)
             throws BookingException, InvalidInputException, DataAccessException {
         displayHeader("Book Flat for Applicant (Project: " + project.getProjectId() + ")");
 
-        // 1. Get ALL applications for this project
+        // 1. Get and filter applications (Keep UI logic for now)
         List<Application> allProjectApps;
-        try {
-            allProjectApps = applicationController.getProjectApplications(this.user,
-                    project.getProjectId());
-        } catch (ApplicationException e) {
-            displayError("Failed to retrieve applications for project " + project.getProjectId());
-            return;
-        }
+        try { allProjectApps = applicationController.getProjectApplications(this.user, project.getProjectId()); }
+        catch (ApplicationException e) { displayError("Failed to retrieve applications"); return; }
+        List<Application> successfulApps = allProjectApps.stream().filter(a -> a.getStatus() == ApplicationStatus.SUCCESSFUL).collect(Collectors.toList());
+        if (successfulApps.isEmpty()) { displayMessage("No applicants ready for booking."); return; }
 
-        // 2. Filter for SUCCESSFUL status within the UI method
-        List<Application> successfulApps = allProjectApps.stream()
-                .filter(app -> app.getStatus() == ApplicationStatus.SUCCESSFUL)
-                .collect(Collectors.toList());
-
-        if (successfulApps.isEmpty()) {
-            displayMessage("No applicants with 'SUCCESSFUL' status found for this project.");
-            return;
-        }
-
-        // 2. Display list of eligible applicants
+        // 2. Display list of eligible applicants (Manual display linked to selection)
         displayMessage("--- Applicants Ready for Booking ---");
         AtomicInteger counter = new AtomicInteger(1);
         successfulApps.forEach(app -> {
-            // Optional: Fetch applicant name for better display
-            String applicantName = userController.getUserName(app.getApplicantNric()); // Use helper
-            String preference = (app.getPreferredFlatType() != null) ? "Pref: " + app.getPreferredFlatType()
-                    : "Pref: N/A";
+            String applicantName = userController.getUserName(app.getApplicantNric());
+            String preference = (app.getPreferredFlatType() != null) ? "Pref: " + app.getPreferredFlatType() : "Pref: N/A";
             displayMessage(String.format("[%d] AppID: %s | NRIC: %s (%s) | %s",
-                    counter.getAndIncrement(),
-                    app.getApplicationId(),
-                    app.getApplicantNric(),
-                    applicantName,
-                    preference));
+                    counter.getAndIncrement(), app.getApplicationId(), app.getApplicantNric(), applicantName, preference));
         });
-        displayMessage("[0] Cancel Booking Process");
-        displayMessage("----------------------------------");
+        displayMessage("[0] Cancel"); displayMessage("----------------------------------");
 
-        // 3. Prompt Officer to select an applicant
-        int choice = promptForInt("Select applicant number to book for: ");
-        if (choice <= 0 || choice > successfulApps.size()) {
-            if (choice != 0)
-                displayError("Invalid selection.");
-            displayMessage("Booking cancelled.");
-            return;
-        }
+        // 3. Prompt Officer to select applicant
+        int choice = promptForInt("Select applicant number: ");
+        if (choice <= 0 || choice > successfulApps.size()) { displayMessage("Booking cancelled."); return; }
         Application selectedApp = successfulApps.get(choice - 1);
-        String selectedApplicantNric = selectedApp.getApplicantNric();
         FlatType applicantPreference = selectedApp.getPreferredFlatType();
 
-        // 4. Display available flats for *this* project (refresh data)
-        Project currentProject = projectController.findProjectById(project.getProjectId());
-        if (currentProject == null)
-            throw new DataAccessException("Cannot find project " + project.getProjectId() + " for booking.", null);
+        // 4. DELEGATE display of available flats to ProjectUIHelper
+        Project currentProject = projectController.findProjectById(project.getProjectId()); // Refresh project data
+        if (currentProject == null) throw new DataAccessException("Project " + project.getProjectId() + " not found for booking.", null);
+        this.projectUIHelper.displayFlatAvailability(currentProject);
+        if (applicantPreference != null) { displayMessage("Applicant's Preference: " + applicantPreference); }
 
-        displayMessage("\n--- Available Flats for Project " + project.getProjectId() + "(" + project.getProjectName()
-                + ")" + " ---");
-        boolean flatsAvailable = false;
-        for (Map.Entry<FlatType, ProjectFlatInfo> entry : currentProject.getFlatTypes().entrySet()) {
-            // Display only if remaining > 0 ? Or show all? Let's show all for clarity.
-            displayMessage(String.format("  Type: %s | Remaining: %d",
-                    entry.getKey().name(), entry.getValue().getRemainingUnits()));
-            if (entry.getValue().getRemainingUnits() > 0)
-                flatsAvailable = true;
-        }
-        if (!flatsAvailable) {
-            displayMessage("\nWarning: No flats seem available according to current data!");
-            // Maybe still allow trying? Controller should have final check.
-        }
-        if (applicantPreference != null) {
-            displayMessage("Applicant's Preference: " + applicantPreference);
-        } else {
-            displayMessage("Applicant Preference: Not specified.");
-        }
-        displayMessage("----------------------------------");
-
-        // 5. Prompt Officer for the Flat Type chosen by the applicant (validated
-        // against preference)
-        FlatType finalFlatType = promptForEnum("Enter FINAL Flat Type chosen by applicant: ", FlatType.class,
-                currentProject.getFlatTypes().keySet().stream()
-                        .filter(flatType -> applicantPreference == null || flatType == applicantPreference)
+        // 5. Prompt for final flat type
+        FlatType finalFlatType = promptForEnum("Enter FINAL Flat Type chosen: ", FlatType.class,
+                currentProject.getFlatTypes().keySet().stream() // Filter choices based on project offering
                         .collect(Collectors.toList()));
-
-        if (finalFlatType == null) {
-            return;
-        }
+        if (finalFlatType == null) { displayMessage("Booking cancelled."); return; }
 
         // 6. Confirmation
-        if (!promptForConfirmation(String.format("Confirm booking of %s flat for %s in project %s?",
-                finalFlatType, selectedApplicantNric, project.getProjectId()))) {
-            displayMessage("Booking cancelled.");
-            return;
+        if (!promptForConfirmation(String.format("Confirm booking %s for %s?", finalFlatType, selectedApp.getApplicantNric()))) {
+             displayMessage("Booking cancelled."); return;
         }
 
-        // 7. Call the Booking Controller
-        Booking booking = bookingController.createBooking(this.user, selectedApplicantNric, finalFlatType);
+        // 7. Call Controller
+        Booking booking = bookingController.createBooking(this.user, selectedApp.getApplicantNric(), finalFlatType);
 
         // 8. Display Success
-        displayMessage("Booking successful!");
-        displayMessage("Booking ID: " + booking.getBookingId());
+        displayMessage("Booking successful! Booking ID: " + booking.getBookingId());
         displayMessage("Booked Flat Type: " + booking.getBookedFlatType());
-        displayMessage("Applicant " + selectedApplicantNric + "'s application status updated to BOOKED.");
     }
 
     /**
-     * Handles receipt generation by first listing completed bookings for the
-     * project.
-     * 
-     * @param project The project being managed.
+     * Handles the process of generating a booking receipt for a specific project.
+     * It retrieves completed bookings for the project, delegates the selection
+     * process to BookingUIHelper, retrieves receipt details from the ReceiptController,
+     * and delegates the final display to BookingUIHelper.
+     *
+     * @param project The project for which to generate receipts. Must not be null.
+     * @throws DataAccessException If there's an error accessing data for bookings or receipt info.
+     * @throws InvalidInputException If invalid input is somehow passed (less likely here).
+     * @throws BookingException If there's an error specifically related to fetching bookings.
      */
-    private void handleGenerateReceiptAction(Project project) throws DataAccessException, InvalidInputException {
+    private void handleGenerateReceiptAction(Project project)
+            throws DataAccessException, InvalidInputException, BookingException { // Declare exceptions controller/service might throw
+
+        Objects.requireNonNull(project, "Project cannot be null for generating receipts.");
         displayHeader("Generate Booking Receipt (Project: " + project.getProjectId() + ")");
 
-        // 1. Get completed bookings for this project
-        // Assumes bookingController has a method like getBookingsForProject
+        // 1. Get completed bookings for this project from the controller
         List<Booking> projectBookings;
         try {
             projectBookings = bookingController.getBookingsForProject(project.getProjectId());
         } catch (BookingException e) {
-            displayError("Failed to retrieve bookings for project " + project.getProjectId());
-            return; // Cannot proceed
+            displayError("Failed to retrieve bookings: " + e.getMessage());
+            return;
+        } catch (Exception e) {
+            displayError("An unexpected error occurred while retrieving bookings: " + e.getMessage());
+            return;
         }
 
-        if (projectBookings.isEmpty()) {
+        // 2. Check if there are any bookings to process
+        if (projectBookings == null || projectBookings.isEmpty()) { // Added null check
             displayMessage("No completed bookings found for this project.");
             return;
         }
 
-        // 2. Display list of completed bookings
-        displayMessage("--- Completed Bookings for Project " + project.getProjectId() + " ---");
-        AtomicInteger counter = new AtomicInteger(1);
-        projectBookings.forEach(booking -> {
-            String applicantName = userController.getUserName(booking.getApplicantNric()); // Use helper
-            displayMessage(String.format("[%d] BookingID: %s | NRIC: %s (%s) | Flat: %s | Date: %s",
-                    counter.getAndIncrement(),
-                    booking.getBookingId(),
-                    booking.getApplicantNric(),
-                    applicantName,
-                    booking.getBookedFlatType(),
-                    booking.getBookingDate() // Add formatting
-            ));
-        });
-        displayMessage("[0] Cancel Receipt Generation");
-        displayMessage("----------------------------------");
+        // 3. Delegate booking list display AND selection to BookingUIHelper
+        String listTitle = "--- Completed Bookings for Project " + project.getProjectId() + " ---";
+        Booking selectedBooking = this.bookingUIHelper.selectBookingFromList(projectBookings, listTitle);
 
-        // 3. Prompt Officer to select a booking
-        int choice = promptForInt("Select booking number to generate receipt for: ");
-        if (choice <= 0 || choice > projectBookings.size()) {
-            if (choice != 0)
-                displayError("Invalid selection.");
-            displayMessage("Receipt generation cancelled.");
+        // 4. Check if the user made a valid selection or cancelled
+        if (selectedBooking == null) {
             return;
         }
-        Booking selectedBooking = projectBookings.get(choice - 1);
 
-        // 4. Call Receipt Controller
-        BookingReceiptInfo receiptInfo = receiptController.getBookingReceiptInfo(this.user, selectedBooking);
+        // 5. Call Receipt Controller to get the detailed info object
+        BookingReceiptInfo receiptInfo = null; // Initialize
+        try {
+            // Pass the current HDBOfficer user for context/authorization if needed by controller/service
+            receiptInfo = receiptController.getBookingReceiptInfo(this.user, selectedBooking);
+        } catch (Exception e) { 
+            displayError("Failed to generate receipt information: " + e.getMessage());
+            return; // Cannot proceed if receipt info fails
+        }
 
-        // 5. Display Receipt
-        displayMessage("\n--- Booking Receipt ---");
-        displayMessage("Booking ID: " + receiptInfo.getBookingId());
-        displayMessage("Booking Date: " + receiptInfo.getBookingDate()); // Add formatting
-        displayMessage("-----------------------");
-        displayMessage("Applicant Name: " + receiptInfo.getApplicantName());
-        displayMessage("Applicant NRIC: " + receiptInfo.getApplicantNric());
-        displayMessage("Applicant Age: " + receiptInfo.getApplicantAge());
-        displayMessage("Marital Status: " + receiptInfo.getApplicantMaritalStatus());
-        displayMessage("-----------------------");
-        displayMessage("Project Name: " + receiptInfo.getProjectName());
-        displayMessage("Neighbourhood: " + receiptInfo.getProjectNeighborhood());
-        displayMessage("Booked Flat Type: " + receiptInfo.getBookedFlatType());
-        displayMessage("--- End of Receipt ---\n");
+        // 6. Defensive Check: Ensure receiptInfo is not null
+        if (receiptInfo == null) {
+             displayError("Failed to retrieve receipt details (null returned from controller).");
+             return;
+        }
+
+        // 7. Delegate the formatted display of the receipt to BookingUIHelper
+        this.bookingUIHelper.displayBookingReceipt(receiptInfo);
     }
 
     /**
