@@ -1,0 +1,206 @@
+@startuml repositories
+
+' --- Settings ---
+skinparam classAttributeIconSize 0
+hide empty members
+skinparam packageStyle rect
+skinparam linetype ortho
+
+' --- Repository Package ---
+package Repository <<Folder>> {
+
+    ' --- Helper Class ---
+    class CsvRepositoryHelper<ID, T> <<Helper>> {
+        - filePath : String <<final>>
+        - header : String[] <<final>>
+        - deserializer : Function<List<String[]>, Map<ID, T>> <<final>>
+        - serializer : Function<Map<ID, T>, List<String[]>> <<final>>
+        + CsvRepositoryHelper(filePath: String, header: String[], deserializer: Function<List<String[]>, Map<ID, T>>, serializer: Function<Map<ID, T>, List<String[]>>)
+        + loadData() : Map<ID, T> <<throws DataAccessException>>
+        + saveData(entities: Map<ID, T>) : void <<throws DataAccessException>>
+    }
+    ' Dependency: CsvRepositoryHelper uses FileUtil from the Utility package (conceptual)
+    ' CsvRepositoryHelper ..> FileUtil : uses >
+    ' Dependency: CsvRepositoryHelper throws DataAccessException (conceptual)
+    ' CsvRepositoryHelper ..> DataAccessException : throws >
+
+    interface IRepository<T, ID> <<DIP>> {
+        + findById(id : ID) : T <<nullable>>
+        + findAll() : Map<ID, T>
+        + save(entity : T) : void
+        + saveAll(entities: Map<ID, T>) : void
+        + loadAll() : Map<ID, T> <<throws DataAccessException>>
+    }
+
+    interface IUserRepository extends IRepository<User, String> {
+    }
+
+    interface IProjectRepository extends IRepository<Project, String> {
+        + findAllFlatInfoIds() : Set<String>
+        + deleteById(id : String) : void <<throws DataAccessException>>
+    }
+
+    interface IApplicationRepository extends IRepository<Application, String> {
+        + findByApplicantNric(nric: String) : Application <<nullable>>
+        + findByProjectId(projectId: String) : List<Application>
+        + findByStatus(status : ApplicationStatus) : List<Application>
+    }
+
+    interface IBookingRepository extends IRepository<Booking, String> {
+        + findByApplicantNric(nric: String) : Booking <<nullable>>
+        + findByApplicationId(applicationId: String) : Booking <<nullable>>
+        + findByProjectId(projectId : String) : List<Booking>
+    }
+
+    interface IEnquiryRepository extends IRepository<Enquiry, String> {
+        + findByUserNric(nric: String) : List<Enquiry>
+        + findByProjectId(projectId: String) : List<Enquiry>
+        + deleteById(id : String) : void <<throws DataAccessException>>
+    }
+
+    interface IOfficerRegistrationRepository extends IRepository<OfficerRegistration, String> {
+        + findByOfficerNric(nric: String) : List<OfficerRegistration>
+        + findByProjectId(projectId: String) : List<OfficerRegistration>
+    }
+
+    class UserRepository implements IUserRepository {
+        - USER_FILE_PATH : String <<static>> final
+        - USER_CSV_HEADER : String[] <<static>> final
+        - users : Map<String, User>
+        - csvHelper : CsvRepositoryHelper<String, User> <<final>>
+        - deserializeUsers(csvData : List<String[]>) : Map<String, User>
+        - serializeUsers(usersToSerialize : Map<String, User>) : List<String[]>
+        + UserRepository()
+        + loadAll() : Map<String, User> <<throws DataAccessException>>
+        + saveAll(entities : Map<String, User>) : void
+        + save(entity : User) : void
+        + findById(id: String) : User <<nullable>>
+        + findAll() : Map<String, User>
+    }
+
+    class ProjectRepository implements IProjectRepository {
+        - PROJECT_FILE_PATH : String <<static>> final
+        - PROJECT_CSV_HEADER : String[] <<static>> final
+        - FLAT_INFO_FILE_PATH : String <<static>> final
+        - FLAT_INFO_CSV_HEADER : String[] <<static>> final
+        - projects : Map<String, Project>
+        - csvHelper : CsvRepositoryHelper<String, Project> <<final>>
+        - loadedFlatInfoIds : Set<String>
+        - deserializeProjectsAndFlatInfo(projectData : List<String[]>) : Map<String, Project> <<throws DataAccessException>>
+        - serializeProjectsAndFlatInfo(projectsToSerialize : Map<String, Project>) : List<String[]> <<throws DataAccessException>>
+        + ProjectRepository()
+        + loadAll() : Map<String, Project> <<throws DataAccessException>>
+        + saveAll(projects: Map<String, Project>) : void
+        + save(project: Project) : void
+        + findById(projectId: String) : Project <<nullable>>
+        + findAll() : Map<String, Project>
+        + findAllFlatInfoIds() : Set<String>
+        + deleteById(id : String) : void <<throws DataAccessException>>
+    }
+
+    class ApplicationRepository implements IApplicationRepository {
+        - APPLICATION_FILE_PATH : String <<static>> final
+        - APPLICATION_CSV_HEADER : String[] <<static>> final
+        - applications : Map<String, Application>
+        - csvHelper : CsvRepositoryHelper<String, Application> <<final>>
+        - deserializeApplications(applicationData : List<String[]>) : Map<String, Application>
+        - serializeApplications(appsToSerialize : Map<String, Application>) : List<String[]>
+        + ApplicationRepository()
+        + loadAll() : Map<String, Application> <<throws DataAccessException>>
+        + saveAll(entities : Map<String, Application>) : void
+        + save(application: Application) : void
+        + findById(applicationId: String) : Application <<nullable>>
+        + findAll() : Map<String, Application>
+        + findByApplicantNric(nric: String) : Application <<nullable>>
+        + findByProjectId(projectId: String) : List<Application>
+        + findByStatus(status : ApplicationStatus) : List<Application>
+    }
+
+    class BookingRepository implements IBookingRepository {
+        - BOOKING_FILE_PATH : String <<static>> final
+        - BOOKING_CSV_HEADER : String[] <<static>> final
+        - bookings : Map<String, Booking>
+        - csvHelper : CsvRepositoryHelper<String, Booking> <<final>>
+        - deserializeBookings(bookingData : List<String[]>) : Map<String, Booking>
+        - serializeBookings(booksToSerialize : Map<String, Booking>) : List<String[]>
+        + BookingRepository()
+        + loadAll() : Map<String, Booking> <<throws DataAccessException>>
+        + saveAll(entities : Map<String, Booking>) : void
+        + save(booking: Booking) : void
+        + findById(bookingId: String) : Booking <<nullable>>
+        + findAll() : Map<String, Booking>
+        + findByApplicantNric(nric: String) : Booking <<nullable>>
+        + findByApplicationId(applicationId: String) : Booking <<nullable>>
+        + findByProjectId(projectId : String) : List<Booking>
+    }
+
+    class EnquiryRepository implements IEnquiryRepository {
+        - ENQUIRY_FILE_PATH : String <<static>> final
+        - ENQUIRY_CSV_HEADER : String[] <<static>> final
+        - enquiries : Map<String, Enquiry>
+        - csvHelper : CsvRepositoryHelper<String, Enquiry> <<final>>
+        - deserializeEnquiries(enquiryData : List<String[]>) : Map<String, Enquiry>
+        - serializeEnquiries(enqsToSerialize : Map<String, Enquiry>) : List<String[]>
+        + EnquiryRepository()
+        + loadAll() : Map<String, Enquiry> <<throws DataAccessException>>
+        + saveAll(entities : Map<String, Enquiry>) : void
+        + save(enquiry: Enquiry) : void
+        + findById(enquiryId: String) : Enquiry <<nullable>>
+        + findAll() : Map<String, Enquiry>
+        + findByUserNric(nric: String) : List<Enquiry>
+        + findByProjectId(projectId: String) : List<Enquiry>
+        + deleteById(enquiryId : String) : void <<throws DataAccessException>>
+    }
+
+    class OfficerRegistrationRepository implements IOfficerRegistrationRepository {
+        - OFFICER_REGISTRATION_FILE_PATH : String <<static>> final
+        - REGISTRATION_CSV_HEADER : String[] <<static>> final
+        - registrations : Map<String, OfficerRegistration>
+        - csvHelper : CsvRepositoryHelper<String, OfficerRegistration> <<final>>
+        - deserializeRegistrations(registrationData : List<String[]>) : Map<String, OfficerRegistration> 
+        - serializeRegistrations(regsToSerialize : Map<String, OfficerRegistration>) : List<String[]>
+        + OfficerRegistrationRepository()
+        + loadAll() : Map<String, OfficerRegistration> <<throws DataAccessException>>
+        + saveAll(entities : Map<String, OfficerRegistration>) : void
+        + save(registration: OfficerRegistration) : void
+        + findById(registrationId: String) : OfficerRegistration <<nullable>>
+        + findAll() : Map<String, OfficerRegistration>
+        + findByOfficerNric(nric: String) : List<OfficerRegistration>
+        + findByProjectId(projectId: String) : List<OfficerRegistration>
+    }
+
+    ' --- Utility / Exception Placeholders ---
+    class FileUtil <<Utility>>
+    class DataAccessException <<Exception>>
+
+    ' --- Relationships ---
+
+    ' Inheritance / Realization
+    IRepository <|.. IUserRepository
+    IRepository <|.. IProjectRepository
+    IRepository <|.. IApplicationRepository
+    IRepository <|.. IBookingRepository
+    IRepository <|.. IEnquiryRepository
+    IRepository <|.. IOfficerRegistrationRepository
+
+    IUserRepository <|.. UserRepository
+    IProjectRepository <|.. ProjectRepository
+    IApplicationRepository <|.. ApplicationRepository
+    IBookingRepository <|.. BookingRepository
+    IEnquiryRepository <|.. EnquiryRepository
+    IOfficerRegistrationRepository <|.. OfficerRegistrationRepository
+
+    ' Association (Repository uses Helper)
+    UserRepository                "1" --> "1" CsvRepositoryHelper : delegates to >
+    ProjectRepository             "1" --> "1" CsvRepositoryHelper : delegates to >
+    ApplicationRepository         "1" --> "1" CsvRepositoryHelper : delegates to >
+    BookingRepository             "1" --> "1" CsvRepositoryHelper : delegates to >
+    EnquiryRepository             "1" --> "1" CsvRepositoryHelper : delegates to >
+    OfficerRegistrationRepository "1" --> "1" CsvRepositoryHelper : delegates to >
+
+    ' Dependencies
+    CsvRepositoryHelper ..> FileUtil : uses >
+    CsvRepositoryHelper ..> DataAccessException : throws >
+}
+
+@enduml

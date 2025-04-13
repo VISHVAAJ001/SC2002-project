@@ -17,8 +17,7 @@ import com.ntu.fdae.group1.bto.repository.project.IProjectRepository;
 import com.ntu.fdae.group1.bto.repository.user.IUserRepository;
 
 public class ReportService implements IReportService {
-    // Keep applicationRepo if needed for future reports, otherwise remove
-    // private final IApplicationRepository applicationRepo;
+    private final IApplicationRepository applicationRepo;
     private final IBookingRepository bookingRepo;
     private final IProjectRepository projectRepo;
     private final IUserRepository userRepo;
@@ -29,6 +28,7 @@ public class ReportService implements IReportService {
         this.bookingRepo = Objects.requireNonNull(bookRepo, "Booking Repository cannot be null");
         this.projectRepo = Objects.requireNonNull(projRepo, "Project Repository cannot be null");
         this.userRepo = Objects.requireNonNull(userRepo, "User Repository cannot be null");
+        this.applicationRepo = appRepo;
     }
 
     @Override

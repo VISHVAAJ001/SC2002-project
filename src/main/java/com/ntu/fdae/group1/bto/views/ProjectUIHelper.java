@@ -239,4 +239,35 @@ public class ProjectUIHelper {
         return filters;
     }
 
+    /**
+ * Displays the availability of different flat types for a given project.
+ * @param project The project whose flat availability should be displayed.
+ */
+    public void displayFlatAvailability(Project project) {
+        if (project == null) {
+            baseUI.displayError("Cannot display flat availability for a null project.");
+            return;
+        }
+        baseUI.displayMessage("\n--- Available Flats for Project " + project.getProjectId() + " (" + project.getProjectName() + ")" + " ---");
+        Map<FlatType, ProjectFlatInfo> flatInfoMap = project.getFlatTypes();
+        boolean flatsAvailable = false;
+
+        if (flatInfoMap == null || flatInfoMap.isEmpty()) {
+            baseUI.displayMessage("  (No flat type information available for this project)");
+        } else {
+            for (Map.Entry<FlatType, ProjectFlatInfo> entry : flatInfoMap.entrySet()) {
+                // Display all types, showing remaining units
+                baseUI.displayMessage(String.format("  Type: %-12s | Remaining: %d",
+                    entry.getKey().name() + ":",
+                    entry.getValue().getRemainingUnits()));
+                if (entry.getValue().getRemainingUnits() > 0) {
+                    flatsAvailable = true;
+                }
+            }
+            if (!flatsAvailable) {
+            baseUI.displayMessage("\nWarning: No flats seem available according to current data!");
+            }
+        }
+        baseUI.displayMessage("----------------------------------");
+    }
 }

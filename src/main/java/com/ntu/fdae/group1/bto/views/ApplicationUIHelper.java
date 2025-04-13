@@ -298,7 +298,7 @@ public class ApplicationUIHelper {
                     app.getStatus(), // Enum name is usually fine
                     withdrawalStatus,
                     preference,
-                    formatDateSafe(app.getSubmissionDate()) // Use local/BaseUI formatDate
+                    baseUI.formatDateSafe(app.getSubmissionDate()) 
             );
             baseUI.displayMessage(formattedString); // Use injected BaseUI
             appMap.put(index, app);
@@ -306,9 +306,5 @@ public class ApplicationUIHelper {
         }
         baseUI.displayMessage("[0] Back / Cancel"); // Use injected BaseUI
         return appMap;
-    }
-
-    private String formatDateSafe(LocalDate date) {
-        return (date == null) ? "N/A" : BaseUI.DATE_FORMATTER.format(date);
     }
 }

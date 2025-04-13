@@ -140,6 +140,30 @@ public final class FileUtil { // Make final, prevent instantiation if all method
         }
     }
 
+/**
+ * Safely parses an enum value from a string (case-insensitive).
+ * Returns the specified default value if parsing fails or input is null/empty. Logs a warning on failure.
+ *
+ * @param enumClass    The class of the enum.
+ * @param value        The string value to parse.
+ * @param defaultValue The value to return if parsing fails or input is null/empty.
+ * @param <E>          The enum type.
+ * @return The enum constant or the defaultValue.
+ */
+    public static <E extends Enum<E>> E parseEnum(Class<E> enumClass, String value, E defaultValue) {
+        if (value == null || value.trim().isEmpty()) {
+            // If the input string is invalid, return the provided default
+            return defaultValue;
+        }
+        try {
+            return Enum.valueOf(enumClass, value.trim().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            System.err.println("Warning: Could not parse enum " + enumClass.getSimpleName()
+                + " from value '" + value + "'. Using default: " + defaultValue);
+            return defaultValue;
+        }
+    }
+
     /**
      * Joins a list of strings with a specified delimiter. Handles null list
      * gracefully.

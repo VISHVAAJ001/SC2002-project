@@ -5,8 +5,8 @@ import com.ntu.fdae.group1.bto.enums.ApplicationStatus;
 import com.ntu.fdae.group1.bto.enums.FlatType;
 import com.ntu.fdae.group1.bto.exceptions.DataAccessException;
 import com.ntu.fdae.group1.bto.utils.FileUtil;
+import com.ntu.fdae.group1.bto.repository.util.CsvRepositoryHelper;
 
-import java.io.IOException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -17,10 +17,27 @@ import java.util.stream.Collectors;
 public class ApplicationRepository implements IApplicationRepository {
     private static final String APPLICATION_FILE_PATH = "resources/applications.csv";
 
+    private static final String[] APPLICATION_CSV_HEADER = new String[] {
+        "applicationId", "applicantNric", "projectId", "submissionDate",
+        "status", "requestedWithdrawalDate", "preferredFlatType"
+    };
+
     private Map<String, Application> applications;
+    private final CsvRepositoryHelper<String, Application> csvHelper;
 
     public ApplicationRepository() {
-        this.applications = new HashMap<>();
+        this.csvHelper = new CsvRepositoryHelper<>(
+                APPLICATION_FILE_PATH,
+                APPLICATION_CSV_HEADER,
+                this::deserializeApplications,
+                this::serializeApplications
+        );
+        try {
+            this.applications = this.csvHelper.loadData();
+         } catch (DataAccessException e) {
+            System.err.println("Initial load failed: " + e.getMessage());
+            this.applications = new HashMap<>();
+         }
     }
 
     @Override
@@ -35,29 +52,38 @@ public class ApplicationRepository implements IApplicationRepository {
 
     @Override
     public void save(Application application) {
+        if (application == null || application.getApplicationId() == null) {
+             System.err.println("Attempted to save null application or application with null ID");
+             return;
+        }
+        // Modify in-memory map first
         applications.put(application.getApplicationId(), application);
-        saveAll(applications);
+        // Delegate saving the entire map to the helper
+        try {
+             csvHelper.saveData(applications);
+        } catch (DataAccessException e) {
+             System.err.println("Failed to save application " + application.getApplicationId() + ": " + e.getMessage());
+             throw e;
+        }
     }
 
     @Override
     public void saveAll(Map<String, Application> entities) {
-        this.applications = entities;
-        try {
-            FileUtil.writeCsvLines(APPLICATION_FILE_PATH, serializeApplications(), getApplicationCsvHeader());
-        } catch (IOException e) {
-            throw new DataAccessException("Error saving applications to file: " + e.getMessage(), e);
+        // Replace in-memory map
+        this.applications = new HashMap<>(entities);
+        // Delegate saving to the helper
+         try {
+             csvHelper.saveData(applications);
+        } catch (DataAccessException e) {
+             System.err.println("Failed to save all applications: " + e.getMessage());
+             throw e;
         }
     }
 
     @Override
     public Map<String, Application> loadAll() throws DataAccessException {
-        try {
-            List<String[]> applicationData = FileUtil.readCsvLines(APPLICATION_FILE_PATH);
-            applications = deserializeApplications(applicationData);
-        } catch (IOException e) {
-            throw new DataAccessException("Error loading applications from file: " + e.getMessage(), e);
-        }
-        return applications;
+        this.applications = csvHelper.loadData();
+        return new HashMap<>(applications); // Return a copy
     }
 
     @Override
@@ -84,86 +110,67 @@ public class ApplicationRepository implements IApplicationRepository {
                 .collect(Collectors.toList());
     }
 
-    // Helper methods for serialization/deserialization
-    private String[] getApplicationCsvHeader() {
-        return new String[] {
-                "applicationId", "applicantNric", "projectId", "submissionDate",
-                "status", "requestedWithdrawalDate", "preferredFlatType"
-        };
-    }
+    // --- Serialization/Deserialization Logic (Specific to Application) ---
+    // These methods are now private and used by the helper via method references.
 
     private Map<String, Application> deserializeApplications(List<String[]> applicationData) {
         Map<String, Application> applicationMap = new HashMap<>();
+        if (applicationData == null) return applicationMap; // Handle null data
 
-        if (applicationData == null || applicationData.isEmpty()) {
-            return applicationMap;
-        }
-
+        // Skip header row if present (FileUtil.readCsvLines usually handles this depending on implementation)
+        // Assuming FileUtil doesn't return the header
         for (String[] row : applicationData) {
-            if (row.length < 5)
-                continue; // Skip invalid rows
+            if (row.length < 5) {
+                System.err.println("Skipping invalid application row: " + String.join(",", row));
+                continue;
+            }
 
             try {
                 String applicationId = row[0];
                 String applicantNric = row[1];
                 String projectId = row[2];
                 LocalDate submissionDate = FileUtil.parseLocalDate(row[3]);
-                ApplicationStatus status = FileUtil.parseEnum(ApplicationStatus.class, row[4]);
+                 if (submissionDate == null) { // Handle parsing failure
+                     System.err.println("Skipping application row due to invalid submission date: " + row[3]);
+                     continue;
+                 }
+                ApplicationStatus status = FileUtil.parseEnum(ApplicationStatus.class, row[4], ApplicationStatus.PENDING); 
 
-                // Create the application
                 Application application = new Application(applicationId, applicantNric, projectId, submissionDate);
                 application.setStatus(status);
 
-                // Set withdrawal date if exists
-                if (row[5] != null && !row[5].trim().isEmpty()) {
-                    LocalDate withdrawalDate = FileUtil.parseLocalDate(row[5]);
-                    if (withdrawalDate != null) {
-                        application.setRequestedWithdrawalDate(withdrawalDate);
-                    }
+                // Optional fields
+                if (row.length > 5 && row[5] != null && !row[5].trim().isEmpty()) {
+                    application.setRequestedWithdrawalDate(FileUtil.parseLocalDate(row[5]));
                 }
 
-                // Set preferred flat type if exists
                 if (row.length > 6 && row[6] != null && !row[6].trim().isEmpty()) {
-                    FlatType preferredFlatType = FileUtil.parseEnum(FlatType.class, row[6]);
-                    if (preferredFlatType != null) {
-                        application.setPreferredFlatType(preferredFlatType);
-                    }
+                    application.setPreferredFlatType(FileUtil.parseEnum(FlatType.class, row[6], null));
                 }
 
                 applicationMap.put(applicationId, application);
-            } catch (IllegalArgumentException e) {
-                System.err.println("Error parsing application data: " + e.getMessage());
+            } catch (Exception e) { // Catch broader exceptions during parsing/creation
+                System.err.println("Error parsing application row: " + String.join(",", row) + " - " + e.getMessage());
             }
         }
-
         return applicationMap;
     }
 
-    private List<String[]> serializeApplications() {
+    private List<String[]> serializeApplications(Map<String, Application> appsToSerialize) {
         List<String[]> serializedData = new ArrayList<>();
+        if (appsToSerialize == null) return serializedData;
 
-        for (Application application : applications.values()) {
-            String withdrawalDate = "";
-            if (application.getRequestedWithdrawalDate() != null) {
-                withdrawalDate = FileUtil.formatLocalDate(application.getRequestedWithdrawalDate());
-            }
-
-            String flatType = "";
-            if (application.getPreferredFlatType() != null) {
-                flatType = application.getPreferredFlatType().toString();
-            }
-
+        for (Application application : appsToSerialize.values()) {
             serializedData.add(new String[] {
                     application.getApplicationId(),
                     application.getApplicantNric(),
                     application.getProjectId(),
                     FileUtil.formatLocalDate(application.getSubmissionDate()),
                     application.getStatus().toString(),
-                    withdrawalDate,
-                    flatType
+                    FileUtil.formatLocalDate(application.getRequestedWithdrawalDate()), // Util handles null
+                    application.getPreferredFlatType() != null ? application.getPreferredFlatType().toString() : "" // Handle null enum
             });
         }
-
         return serializedData;
     }
 }

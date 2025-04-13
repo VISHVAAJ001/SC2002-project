@@ -1,0 +1,289 @@
+@startuml views
+
+' --- Settings ---
+skinparam classAttributeIconSize 0
+hide empty members
+skinparam packageStyle rect
+skinparam linetype ortho
+
+' --- Views Layer ---
+package Views <<Folder>> {
+    class MainApp {
+        - controllerContainer : ControllerContainer ' Dependency
+        - currentUser : User <<nullable>>
+        + MainApp(controllers: ControllerContainer)
+        + {static} main(args : String[]) : void
+        + run() : void
+        - showLoginMenu() : void
+        - routeToRoleUI(user: User) : void
+    }
+
+    abstract class BaseUI {
+        # scanner : Scanner
+        + BaseUI(scanner: Scanner)
+        + displayMessage(message: String) : void
+        + promptForInput(prompt: String) : String
+        + promptForInt(prompt: String) : int
+        + promptForDouble(prompt: String) : double
+        + promptForDate(prompt: String) : LocalDate
+        + promptForEnum(prompt: String, enumClass: Class<E>) : E
+        + promptForConfirmation(prompt: String) : boolean
+        # displayError(message: String) : void
+        # clearConsole() : void
+        # displayHeader(title: String) : void
+        # displayList(items: List<T>, formatter: Function<T, String>) : void
+        # pause() : void
+        # formatDateSafe(date : LocalDate) : String
+        # formatEnumName(enumConstant : Enum<?>) : String
+    }
+
+    class LoginUI extends BaseUI {
+        - authController : AuthenticationController ' Dependency
+        + LoginUI(authController: AuthenticationController, scanner: Scanner)
+        + displayLogin() : User <<nullable>>
+    }
+
+    class ApplicantUI extends BaseUI {
+        - user : Applicant
+        - userController : UserController ' Dependency
+        - projectController : ProjectController ' Dependency
+        - appController : ApplicationController ' Dependency
+        - enquiryController : EnquiryController ' Dependency
+        - authController : AuthenticationController ' Dependency
+        - projectUIHelper : ProjectUIHelper ' Dependency
+        - accountUIHelper : AccountUIHelper ' Dependency
+        - enquiryUIHelper : EnquiryUIHelper ' Dependency
+        - applicationUIHelper : ApplicationUIHelper ' Dependency
+        - handleViewAndApplyProjects() : void
+        - handleSubmitEnquiry() : void
+        - handleManageMyEnquiries() : void
+        - handleEditEnquiryAction() : void
+        - handleDeleteEnquiryAction() : void
+        - handleChangePassword() : boolean
+        + ApplicantUI(user: Applicant, projCtrl: ProjectController, appCtrl: ApplicationController, enqCtrl: EnquiryController, authCtrl: AuthenticationController, scanner: Scanner)
+        + displayMainMenu() : void
+    }
+
+    class HDBOfficerUI extends BaseUI {
+        - user : HDBOfficer
+        - userController : UserController ' Dependency
+        - projectController : ProjectController ' Dependency
+        - appController : ApplicationController ' Dependency
+        - officerRegController : OfficerRegistrationController ' Dependency
+        - bookingController : BookingController ' Dependency
+        - receiptController : ReceiptController ' Dependency
+        - enquiryController : EnquiryController ' Dependency
+        - authController : AuthenticationController ' Dependency
+        - projectUIHelper : ProjectUIHelper ' Dependency
+        - accountUIHelper : AccountUIHelper ' Dependency
+        - enquiryUIHelper : EnquiryUIHelper ' Dependency
+        - applicationUIHelper : ApplicationUIHelper ' Dependency
+        - currentProjectFilters : Map<String, Object>
+        - handleViewAndApplyProjects() : void
+        - handleViewAndWithdrawApplication() : void
+        - handleSubmitEnquiry() : void
+        - handleManageMyEnquiries() : void
+        - handleEditEnquiryAction() : void
+        - handleDeleteEnquiryAction() : void
+        - handleRequestRegistration() : void
+        - handleViewRegistrationStatus() : void
+        - handleManageHandlingProject() : void
+        - handlePerformBookingAction() : void
+        - handleGenerateReceiptAction() : void
+        - handleViewAndReplyProjectEnquiriesAction() : void
+        - handleChangePassword() : void
+        + HDBOfficerUI(user: HDBOfficer, projCtrl: ProjectController, appCtrl: ApplicationController, offRegCtrl: OfficerRegistrationController, bookCtrl: BookingController, receiptCtrl: ReceiptController, enqCtrl: EnquiryController, authCtrl: AuthenticationController, scanner: Scanner)
+        + displayMainMenu() : void
+     }
+
+    class HDBManagerUI extends BaseUI {
+        - user : HDBManager
+        - userController : UserController ' Dependency
+        - projectController : ProjectController ' Dependency
+        - appController : ApplicationController ' Dependency
+        - officerRegController : OfficerRegistrationController ' Dependency
+        - enquiryController : EnquiryController ' Dependency
+        - reportController : ReportController ' Dependency
+        - authController : AuthenticationController ' Dependency
+        - projectUIHelper : ProjectUIHelper ' Dependency
+        - accountUIHelper : AccountUIHelper ' Dependency
+        - applicationUIHelper : ApplicationUIHelper ' Dependency
+        - enquiryUIHelper : EnquiryUIHelper ' Dependency
+        - officerRegUIHelper : OfficerRegUIHelper
+        - currentProjectFilters : Map<String, Object>
+        - handleManageProjects() : void <<throws RegistrationException, InvalidInputException>>
+        - handleCreateProject() : void <<throws RegistrationException, InvalidInputException>>
+        - handleEditProject() : void <<throws InvalidInputException>>
+        - handleDeleteProject() : void
+        - handleToggleVisibility() : void
+        - handleViewAllProjects() : void <<throws AuthorizationException>>
+        - handleViewMyProjects() : void <<throws AuthorizationException>>
+        - handleReviewOfficerRegistrations() : void <<throws RegistrationException>>
+        - handleReviewApplications() : void <<throws ApplicationException>>
+        - handleReviewWithdrawal() : void <<throws ApplicationException>>
+        - handleViewReplyEnquiries() : void <<throws InvalidInputException>>
+        - handleGenerateReport() : void
+        - handleChangePassword() : void
+        - promptForDateOrKeep(prompt : String, currentValue : LocalDate) : LocalDate
+        - promptForIntOrKeep(prompt : String, currentValue : int) : int
+        - promptForOptionalInput(prompt : String, originalValue : String) : String
+        + HDBManagerUI(user: HDBManager, projCtrl: ProjectController, appCtrl: ApplicationController, offRegCtrl: OfficerRegistrationController, enqCtrl: EnquiryController, reportCtrl: ReportController, authCtrl: AuthenticationController, scanner: Scanner)
+        + displayMainMenu() : void
+     }
+
+    class AccountUIHelper {
+        - baseUI : BaseUI ' Dependency
+        - authController : AuthenticationController ' Dependency
+        + AccountUIHelper(baseUI: BaseUI, authController: AuthenticationController)
+        + handlePasswordChange(user: User) : boolean 
+    }
+
+    class ProjectUIHelper {
+        - baseUI : BaseUI ' Dependency
+        - projectController : ProjectController ' Dependency
+        - userController : UserController ' Dependency
+        + ProjectUIHelper(baseUI: BaseUI, userCtrl : UserController, projCtrl : ProjectController)
+        + selectProjectFromList(projects: List<Project>, title: String) : Project
+        + displayApplicantProjectDetails(project: Project) : void
+        + displayStaffProjectDetails(project: Project, pendingCount : int) : void
+        + displayFlatInfoSection(project: Project) : void
+        + promptForProjectFilters(allowStaffFilters : boolean) : Map<String, Object>
+        + displayFlatAvailability(project : Project) : void
+    }
+
+    class ApplicationUIHelper {
+        - baseUI : BaseUI ' Dependency
+        - applicationController : ApplicationController ' Dependency
+        - projectController : ProjectController ' Dependency
+        - performWithdrawalAction(user : User) : void
+        - isApplicantEligibleForFlatType(user: User, flatType: FlatType) : boolean 
+        + ApplicationUIHelper(baseUI : BaseUI, appCtrl : ApplicationController, projCtrl : ProjectController)
+        + performApplicationSubmission(user : User, projectId : String) : void
+        + performViewAndWithdraw(user : User) : void
+        + displayApplicationList(apps: List<Application>, title: String) : Map<Integer, Application>
+    }
+
+    class OfficerRegUIHelper {
+        - baseUI : BaseUI ' Dependency
+        - projectController : ProjectController ' Dependency
+        + OfficerRegUIHelper(baseUI : BaseUI, projectController : ProjectController)
+        + displayOfficerRegList(regs: List<OfficerRegistration>, title: String) : Map<Integer, OfficerRegistration>
+        + displayOfficerRegistrationDetails(reg : OfficerRegistration) : void
+        + displayOfficerRegListForViewing(regs : List<OfficerRegistration>, title : String) : void
+    }
+
+    class EnquiryUIHelper {
+        - baseUI : BaseUI ' Dependency
+        - projectController : ProjectController ' Dependency
+        - userController : UserController ' Dependency
+        - SNIPPET_LENGTH : int <<static>> final ' Changed type
+        + EnquiryUIHelper(baseUI: BaseUI, userController : UserController, projectController : ProjectController)
+        + selectEnquiryFromList(enquiries: List<Enquiry>, listTitle: String) : Enquiry
+        + displayEnquiryDetails(enquiry : Enquiry)
+        + displayEnquiryList(enquiries: List<Enquiry>, title: String) : Map<Integer, Enquiry>
+    }
+
+    class BookingUIHelper {
+        - baseUI : BaseUI ' Dependency
+        - userController : UserController ' Dependency
+        + BookingUIHelper(baseUI : BaseUI, userController : UserController)
+        + selectBookingFromList(bookings : List<Booking>, title : String) : Booking
+        + displayBookingReceipt(receiptInfo : BookingReceiptInfo) : void
+    }
+
+    class MainApp
+    class LoginUI
+    class ApplicantUI
+    class HDBOfficerUI
+    class HDBManagerUI
+
+    class AccountUIHelper
+    class ProjectUIHelper
+    class ApplicationUIHelper
+    class OfficerRegUIHelper
+    class EnquiryUIHelper
+    class BookingUIHelper
+
+    class BaseUI
+
+    ' --- Relationships ---
+
+    ' Inheritance (Generalization)
+    BaseUI <|-- LoginUI
+    BaseUI <|-- ApplicantUI
+    BaseUI <|-- HDBOfficerUI
+    BaseUI <|-- HDBManagerUI
+
+    ' Composition
+    MainApp "1" *--> "1" ControllerContainer
+
+    ' MainApp Dependencies (Creation/Usage)
+    MainApp ..> LoginUI : <<creates>>
+    MainApp ..> ApplicantUI : <<creates>>
+    MainApp ..> HDBOfficerUI : <<creates>>
+    MainApp ..> HDBManagerUI : <<creates>>
+
+    ' LoginUI Dependencies
+    LoginUI ..> AuthenticationController
+
+    ' ApplicantUI Associations and Dependencies
+    ApplicantUI "1" --> "1" AccountUIHelper
+    ApplicantUI "1" --> "1" ProjectUIHelper
+    ApplicantUI "1" --> "1" ApplicationUIHelper
+    ApplicantUI "1" --> "1" EnquiryUIHelper
+    ApplicantUI ..> UserController
+    ApplicantUI ..> ProjectController
+    ApplicantUI ..> ApplicationController
+    ApplicantUI ..> EnquiryController
+    ApplicantUI ..> AuthenticationController
+
+    ' HDBOfficerUI Associations and Dependencies
+    HDBOfficerUI "1" --> "1" AccountUIHelper
+    HDBOfficerUI "1" --> "1" ProjectUIHelper
+    HDBOfficerUI "1" --> "1" ApplicationUIHelper
+    HDBOfficerUI "1" --> "1" EnquiryUIHelper
+    HDBOfficerUI "1" --> "1" OfficerRegUIHelper
+    HDBOfficerUI "1" --> "1" BookingUIHelper
+    HDBOfficerUI ..> UserController
+    HDBOfficerUI ..> ProjectController
+    HDBOfficerUI ..> ApplicationController
+    HDBOfficerUI ..> OfficerRegistrationController
+    HDBOfficerUI ..> BookingController
+    HDBOfficerUI ..> ReceiptController
+    HDBOfficerUI ..> EnquiryController
+    HDBOfficerUI ..> AuthenticationController
+
+    ' HDBManagerUI Associations and Dependencies
+    HDBManagerUI "1" --> "1" AccountUIHelper
+    HDBManagerUI "1" --> "1" ProjectUIHelper
+    HDBManagerUI "1" --> "1" ApplicationUIHelper
+    HDBManagerUI "1" --> "1" EnquiryUIHelper
+    HDBManagerUI "1" --> "1" OfficerRegUIHelper
+    HDBManagerUI ..> UserController
+    HDBManagerUI ..> ProjectController
+    HDBManagerUI ..> ApplicationController
+    HDBManagerUI ..> OfficerRegistrationController
+    HDBManagerUI ..> EnquiryController
+    HDBManagerUI ..> ReportController
+    HDBManagerUI ..> AuthenticationController
+
+    ' UI Helper Dependencies
+    AccountUIHelper ..> BaseUI
+    AccountUIHelper ..> AuthenticationController
+    ProjectUIHelper ..> BaseUI
+    ProjectUIHelper ..> ProjectController
+    ProjectUIHelper ..> UserController
+    ApplicationUIHelper ..> BaseUI
+    ApplicationUIHelper ..> ApplicationController
+    ApplicationUIHelper ..> ProjectController
+    ApplicationUIHelper ..> IEligibilityService
+    OfficerRegUIHelper ..> BaseUI
+    OfficerRegUIHelper ..> ProjectController
+    OfficerRegUIHelper ..> UserController
+    EnquiryUIHelper ..> BaseUI
+    EnquiryUIHelper ..> ProjectController
+    EnquiryUIHelper ..> UserController
+    BookingUIHelper ..> BaseUI
+    BookingUIHelper ..> UserController
+}
+@enduml

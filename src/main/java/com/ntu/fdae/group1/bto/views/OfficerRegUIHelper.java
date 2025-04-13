@@ -33,7 +33,7 @@ public class OfficerRegUIHelper {
      * @param regs List of registrations to display.
      * @param title Title for the list header.
      * @return Map where key is the displayed number, value is the OfficerRegistration. Empty map if list is null/empty.
-     */
+    */
     public Map<Integer, OfficerRegistration> displayOfficerRegList(List<OfficerRegistration> regs, String title) {
         this.baseUI.displayHeader(title);
         Map<Integer, OfficerRegistration> regMap = new HashMap<>();
@@ -67,22 +67,51 @@ public class OfficerRegUIHelper {
         return regMap;
     }
 
-     /**
-      * Displays details for a single OfficerRegistration.
-      * @param reg The registration object to display details for.
-      */
-     public void displayOfficerRegistrationDetails(OfficerRegistration reg) {
-         if (reg == null) {
-             this.baseUI.displayError("No registration details to display.");
-             return;
-         }
-         this.baseUI.displayHeader("Officer Registration Details (ID: " + reg.getRegistrationId() + ")");
-         Project project = projectController.findProjectById(reg.getProjectId());
-         this.baseUI.displayMessage("Officer NRIC:    " + reg.getOfficerNric());
-         this.baseUI.displayMessage("Project ID:      " + reg.getProjectId());
-         this.baseUI.displayMessage("Project Name:    " + (project != null ? project.getProjectName() : "N/A"));
-         this.baseUI.displayMessage("Request Date:    " + this.baseUI.formatDateSafe(reg.getRequestDate()));
-         this.baseUI.displayMessage("Current Status:  " + reg.getStatus());
-         this.baseUI.displayMessage("----------------------------------");
-     }
+    /**
+    * Displays details for a single OfficerRegistration.
+    * @param reg The registration object to display details for.
+    */
+    public void displayOfficerRegistrationDetails(OfficerRegistration reg) {
+        if (reg == null) {
+            this.baseUI.displayError("No registration details to display.");
+            return;
+        }
+        this.baseUI.displayHeader("Officer Registration Details (ID: " + reg.getRegistrationId() + ")");
+        Project project = projectController.findProjectById(reg.getProjectId());
+        this.baseUI.displayMessage("Officer NRIC:    " + reg.getOfficerNric());
+        this.baseUI.displayMessage("Project ID:      " + reg.getProjectId());
+        this.baseUI.displayMessage("Project Name:    " + (project != null ? project.getProjectName() : "N/A"));
+        this.baseUI.displayMessage("Request Date:    " + this.baseUI.formatDateSafe(reg.getRequestDate()));
+        this.baseUI.displayMessage("Current Status:  " + reg.getStatus());
+        this.baseUI.displayMessage("----------------------------------");
+    }
+
+    /**
+    * Displays a formatted list of officer registrations for viewing purposes.
+    * @param regs List of registrations to display.
+    * @param title Title for the list header.
+    */
+    public void displayOfficerRegListForViewing(List<OfficerRegistration> regs, String title) {
+        this.baseUI.displayHeader(title);
+        if (regs == null || regs.isEmpty()) {
+            this.baseUI.displayMessage("No registrations found in this list.");
+            return;
+        }
+
+        this.baseUI.displayMessage(String.format("%-10s | %-15s | %-20s | %-12s | %s",
+            "Reg ID", "Project ID", "Project Name", "Request Date", "Status"));
+        this.baseUI.displayMessage("-------------------------------------------------------------------------"); // Adjust separator length
+
+        regs.forEach(reg -> {
+            Project proj = projectController.findProjectById(reg.getProjectId());
+            String projName = (proj != null) ? proj.getProjectName() : "Unknown/Deleted";
+            this.baseUI.displayMessage(String.format("%-10s | %-15s | %-20s | %-12s | %s",
+                reg.getRegistrationId(),
+                reg.getProjectId(),
+                projName,
+                this.baseUI.formatDateSafe(reg.getRequestDate()),
+                reg.getStatus().name()));
+        });
+        this.baseUI.displayMessage("-------------------------------------------------------------------------");
+    }
 }
