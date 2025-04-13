@@ -103,43 +103,24 @@ public abstract class BaseUI {
         DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE;
 
         while (date == null) { // Loop until a valid date is parsed
-        System.out.print(prompt + " (YYYY-MM-DD): "); // Show prompt inside loop
-        String dateStr = scanner.nextLine().trim(); 
+            System.out.print(prompt + " (YYYY-MM-DD): "); // Show prompt inside loop
+            String dateStr = scanner.nextLine().trim();
 
-        if (dateStr.isEmpty()) { // Handle empty input specifically
-            displayError("Date input cannot be empty. Please try again.");
-            continue; // Go to next loop iteration
-        }
+            if (dateStr.isEmpty()) { // Handle empty input specifically
+                displayError("Date input cannot be empty. Please try again.");
+                continue; // Go to next loop iteration
+            }
 
-        try {
-            date = LocalDate.parse(dateStr, formatter); // Assign to 'date' ONLY if parsing succeeds
-        } catch (DateTimeParseException e) {
-            displayError("Invalid date format. Please use YYYY-MM-DD.");
-            // Loop will continue as 'date' is still null
+            try {
+                date = LocalDate.parse(dateStr, formatter); // Assign to 'date' ONLY if parsing succeeds
+            } catch (DateTimeParseException e) {
+                displayError("Invalid date format. Please use YYYY-MM-DD.");
+                // Loop will continue as 'date' is still null
+            }
         }
-    }
         return date; // Return the valid date
     }
 
-    /**
-     * Prompts the user to select an enum constant from a provided list of allowed
-     * values.
-     * Optionally allows selecting a "null" or "no preference" option.
-     * Handles invalid input and loops until a valid selection is made or cancelled.
-     *
-     * @param <E>             The type of the enum.
-     * @param prompt          The message to display to the user.
-     * @param enumClass       The class of the enum (used for clarity, not strictly
-     *                        necessary here).
-     * @param allowedValues   A List containing ONLY the enum constants to be
-     *                        presented as choices.
-     * @param allowNullChoice If true, an option representing 'null' or 'no choice'
-     *                        is added.
-     * @param nullChoiceText  The text to display for the null choice option (e.g.,
-     *                        "No Preference").
-     * @return The selected enum constant, or null if the user chooses the null
-     *         option or cancels (selects 0).
-     */
     public <E extends Enum<E>> E promptForEnum(String prompt, Class<E> enumClass, List<E> allowedValues) {
         // Validate input list
         if (allowedValues == null || allowedValues.isEmpty()) {
@@ -186,15 +167,6 @@ public abstract class BaseUI {
         }
     }
 
-    /**
-     * Helper method to potentially format enum names for display.
-     * (e.g., TWO_ROOM -> "Two Room", PENDING -> "Pending")
-     * Override or replace with simple .name() if basic display is fine.
-     *
-     * @param <E>          The enum type
-     * @param enumConstant The enum constant to format
-     * @return A user-friendly string representation.
-     */
     protected String formatEnumName(Enum<?> enumConstant) {
         if (enumConstant == null)
             return "";
