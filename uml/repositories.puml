@@ -1,0 +1,161 @@
+@startuml repositories
+
+' --- Settings ---
+skinparam classAttributeIconSize 0
+hide empty members
+skinparam packageStyle rect
+skinparam linetype ortho
+
+' --- Repository Package ---
+package Repository <<Folder>> {
+    interface IRepository<T, ID> <<DIP>> {
+        + findById(id : ID) : T <<nullable>>
+        + findAll() : Map<ID, T>
+        + save(entity : T) : void
+        + saveAll(entities: Map<ID, T>) : void
+        + loadAll() : Map<ID, T> <<throws DataAccessException>>
+    }
+
+    interface IUserRepository extends IRepository<User, String> {
+        ' Add any user-specific query methods here (if needed later)
+    }
+
+    interface IProjectRepository extends IRepository<Project, String> {
+        + findAllFlatInfoIds() : Set<String>
+        + deleteById(id : String) : void <<throws DataAccessException>>
+    }
+
+    interface IApplicationRepository extends IRepository<Application, String> {
+        + findByApplicantNric(nric: String) : Application <<nullable>>
+        + findByProjectId(projectId: String) : List<Application>
+        + findByStatus(status : ApplicationStatus) : List<Application>
+    }
+
+    interface IBookingRepository extends IRepository<Booking, String> {
+        + findByApplicantNric(nric: String) : Booking <<nullable>>
+        + findByApplicationId(applicationId: String) : Booking <<nullable>>
+        + findByProjectId(projectId : String) : List<Booking>
+    }
+
+    interface IEnquiryRepository extends IRepository<Enquiry, String> {
+        + findByUserNric(nric: String) : List<Enquiry>
+        + findByProjectId(projectId: String) : List<Enquiry>
+        + deleteById(id : String) : void <<throws DataAccessException>>
+    }
+
+    interface IOfficerRegistrationRepository extends IRepository<OfficerRegistration, String> {
+        + findByOfficerNric(nric: String) : List<OfficerRegistration>
+        + findByProjectId(projectId: String) : List<OfficerRegistration>
+    }
+
+    class UserRepository implements IUserRepository {
+        - USER_FILE_PATH : String <<static>> final
+        - users : Map<String, User>
+        - getUserCsvHeader() : String[]
+        - deserializeUsers(csvData : List<String[]>) : Map<String, User>
+        - serializeUsers() : List<String[]>
+        + UserRepository()
+        + loadAll() : Map<String, User> <<throws DataAccessException>>
+        + saveAll(users: Map<String, User>) : void
+        + save(user: User) : void
+        + findById(id: String) : User <<nullable>>
+        + findAll() : Map<String, User>
+    }
+
+    class ProjectRepository implements IProjectRepository {
+        - PROJECT_FILE_PATH : String <<static>> final
+        - FLAT_INFO_FILE_PATH : String <<static>> final
+        - projects : Map<String, Project>
+        - loadedFlatInfoIds : Set<String>
+        - getProjectCsvHeader() : String[]
+        - getFlatInfoCsvHeader() : String[]
+        - deserializeProjects(projectData : List<String[]>, flatInfoData : List<String[]>, foundFlatInfos : Set<String>) : Map<String, Project>
+        - serializeProjects() : List<String[]>
+        - serializeFlatInfos() : List<String[]>
+        + ProjectRepository()
+        + loadAll() : Map<String, Project> <<throws DataAccessException>>
+        + saveAll(projects: Map<String, Project>) : void
+        + save(project: Project) : void
+        + findById(projectId: String) : Project <<nullable>>
+        + findAll() : Map<String, Project>
+        + findAllFlatInfoIds() : Set<String>
+        + deleteById(projectId : String) : void <<throws DataAccessException>>
+    }
+
+    class ApplicationRepository implements IApplicationRepository {
+        - APPLICATION_FILE_PATH : String <<static>> final
+        - applications : Map<String, Application>
+        - getApplicationCsvHeader() : String[]
+        - deserializeApplications(applicationData : List<String[]>) : Map<String, Application>
+        - serializeApplications() : List<String[]>
+        + ApplicationRepository()
+        + loadAll() : Map<String, Application> <<throws DataAccessException>>
+        + saveAll(applications: Map<String, Application>) : void
+        + save(application: Application) : void
+        + findById(applicationId: String) : Application <<nullable>>
+        + findAll() : Map<String, Application>
+        + findByApplicantNric(nric: String) : Application <<nullable>>
+        + findByProjectId(projectId: String) : List<Application>
+        + findByStatus(status : ApplicationStatus) : List<Application>
+    }
+
+    class BookingRepository implements IBookingRepository {
+        - BOOKING_FILE_PATH : String <<static>> final
+        - bookings : Map<String, Booking>
+        - getBookingCsvHeader() : String[]
+        - deserializeBookings(bookingData : List<String[]>) : Map<String, Booking>
+        - serializeBookings() : List<String[]>
+        + BookingRepository()
+        + loadAll() : Map<String, Booking> <<throws DataAccessException>>
+        + saveAll(bookings: Map<String, Booking>) : void
+        + save(booking: Booking) : void
+        + findById(bookingId: String) : Booking <<nullable>>
+        + findAll() : Map<String, Booking>
+        + findByApplicantNric(nric: String) : Booking <<nullable>>
+        + findByApplicationId(applicationId: String) : Booking <<nullable>>
+        + findByProjectId(projectId : String) : List<Booking>
+    }
+
+    class EnquiryRepository implements IEnquiryRepository {
+        - ENQUIRY_FILE_PATH : String <<static>> final
+        - enquiries : Map<String, Enquiry>
+        - getEnquiryCsvHeader() : String[]
+        - deserializeEnquiries(enquiryData : List<String[]>) : Map<String, Enquiry>
+        - serializeEnquiries() : List<String[]>
+        + EnquiryRepository()
+        + loadAll() : Map<String, Enquiry> <<throws DataAccessException>>
+        + saveAll(enquiries: Map<String, Enquiry>) : void
+        + save(enquiry: Enquiry) : void
+        + findById(enquiryId: String) : Enquiry <<nullable>>
+        + findAll() : Map<String, Enquiry>
+        + findByUserNric(nric: String) : List<Enquiry>
+        + findByProjectId(projectId: String) : List<Enquiry>
+        + deleteById(enquiryId : String) : void <<throws DataAccessException>>
+    }
+
+    class OfficerRegistrationRepository implements IOfficerRegistrationRepository {
+        - OFFICER_REGISTRATION_FILE_PATH : String <<static>> final
+        - registrations : Map<String, OfficerRegistration>
+        - getRegistrationCsvHeader() : String[]
+        - deserializeRegistrations(registrationData : List<String[]>) : Map<String, OfficerRegistration> 
+        - serializeRegistrations() : List<String[]>
+        + OfficerRegistrationRepository()
+        + loadAll() : Map<String, OfficerRegistration> <<throws DataAccessException>>
+        + saveAll(registrations: Map<String, OfficerRegistration>) : void
+        + save(registration: OfficerRegistration) : void
+        + findById(registrationId: String) : OfficerRegistration <<nullable>>
+        + findAll() : Map<String, OfficerRegistration>
+        + findByOfficerNric(nric: String) : List<OfficerRegistration>
+        + findByProjectId(projectId: String) : List<OfficerRegistration>
+    }
+
+    ' Interface Implementation within Repository package
+    IUserRepository <|.. UserRepository
+    IProjectRepository <|.. ProjectRepository
+    IApplicationRepository <|.. ApplicationRepository
+    IBookingRepository <|.. BookingRepository
+    IEnquiryRepository <|.. EnquiryRepository
+    IOfficerRegistrationRepository <|.. OfficerRegistrationRepository
+}
+
+@enduml

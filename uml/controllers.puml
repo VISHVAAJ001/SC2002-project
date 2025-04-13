@@ -1,0 +1,112 @@
+@startuml controllers
+
+' --- Settings ---
+skinparam classAttributeIconSize 0
+hide empty members
+skinparam packageStyle rect
+skinparam linetype ortho
+
+' --- Controller Layer ---
+package Controller <<Folder>> {
+    class ControllerContainer {
+       + authController : AuthenticationController
+       + userController : UserController
+       + projectController : ProjectController
+       + appController : ApplicationController
+       + officerRegController : OfficerRegistrationController
+       + bookingController : BookingController
+       + receiptController : ReceiptController
+       + enquiryController : EnquiryController
+       + reportController : ReportController
+       + ControllerContainer(auth: AuthenticationController, user: UserController, proj: ProjectController, app: ApplicationController, reg: OfficerRegistrationController, book: BookingController, receipt: ReceiptController, enq: EnquiryController, report: ReportController) ' Added user controller param
+    }
+
+    class UserController {
+        - userService : IUserService ' Dependency on Service Interface
+        + UserController(userService: IUserService)
+        + getUserName(nric: String) : String
+        + getUserNamesForList(nrics: Collection<String>) : Map<String, String>
+    }
+
+    class AuthenticationController {
+        - authService : IAuthenticationService; ' Dependency
+        + AuthenticationController(authService: IAuthenticationService);
+        + login(nric: String, password: String) : User <<throws AuthenticationException>>
+        + changePassword(user: User, newPassword: String) : boolean
+    }
+
+    class ProjectController {
+        - projectService : IProjectService; ' Dependency
+        + ProjectController(projectService: IProjectService);
+        + createProject(manager: HDBManager, name: String, neighborhood: String, flatInfoMap: Map<FlatType, ProjectFlatInfo>, openDate: LocalDate, closeDate: LocalDate, officerSlots: int) : Project <<throws RegistrationException, InvalidInputException>>;
+        + editProject(manager: HDBManager, projectId: String, name: String, neighborhood: String, openDate: LocalDate, closeDate: LocalDate, officerSlots: int) : boolean <<throws InvalidInputException>>;
+        + deleteProject(manager: HDBManager, projectId: String) : boolean;
+        + toggleProjectVisibility(manager: HDBManager, projectId: String) : boolean;
+        + getVisibleProjects(user: User) : List<Project>;
+        + getVisibleProjects(user: User, filters : Map<String, Object>) : List<Project>;
+        + getAllProjects(user: HDBStaff, filters: Map<String, Object>) : List<Project>;
+        + getProjectsManagedBy(manager: HDBManager) : List<Project>;
+        + getProjectsManagedBy(manager: HDBManager, filters: Map<String, Object>) : List<Project>;
+        + findProjectById(projectId: String) : Project <<nullable>>;
+        + getProjectsAvailableForRegistration(officer: HDBOfficer): List<Project>;
+    }
+
+    class ApplicationController {
+        - applicationService : IApplicationService; ' Dependency
+        + ApplicationController(applicationService: IApplicationService);
+        + submitApplication(user: User, projectId: String, preferredFlatType: FlatType <<nullable>>) : Application <<throws ApplicationException>>
+        + requestWithdrawal(user: User) : boolean <<throws ApplicationException>>;
+        + reviewApplication(manager: HDBManager, applicationId: String, approve: boolean) : boolean <<throws ApplicationException>>;
+        + reviewWithdrawal(manager: HDBManager, applicationId: String, approve: boolean) : boolean <<throws ApplicationException>>;
+        + getMyApplication(user: User) : Application <<nullable>>;
+        + getProjectApplications(staff: HDBStaff, projectId: String) : List<Application>;
+        + getApplicationsByStatus(staff: HDBStaff, status: ApplicationStatus) : List<Application>;
+    }
+
+    class OfficerRegistrationController {
+        - registrationService : IOfficerRegistrationService; ' Dependency
+        - projectService : IProjectService; ' Dependency
+        + OfficerRegistrationController(regService: IOfficerRegistrationService, projService: IProjectService);
+        + requestRegistration(officer: HDBOfficer, projectId: String) : OfficerRegistration <<throws RegistrationException>>;
+        + reviewRegistration(manager: HDBManager, registrationId: String, approve: boolean) : boolean <<throws RegistrationException>>;
+        + getMyRegistrationStatus(officer: HDBOfficer, projectId: String) : OfficerRegStatus <<nullable>>;
+        + getPendingRegistrations(manager: HDBManager) : List<OfficerRegistration>;
+        + getPendingRegistrationCountForProject(staff : HDBStaff, projectId : String) : int <<throws AuthorizationException>>
+        + getProjectRegistrations(staff: HDBStaff, projectId: String) : List<OfficerRegistration>;
+        + getApprovedHandlingProject(officer: HDBOfficer) : Project;
+        + getMyRegistrations(officer: HDBOfficer): List<OfficerRegistration>;
+    }
+
+    class BookingController {
+         - bookingService : IBookingService; ' Dependency
+         + BookingController(bookingService: IBookingService);
+         + createBooking(officer: HDBOfficer, applicantNric: String, flatType: FlatType) : Booking <<throws BookingException, InvalidInputException>>;
+         + getBookingsForProject(projectId : String) : List<Booking> <<throws BookingException>>
+    }
+
+    class ReceiptController {
+        - receiptService : IReceiptService; ' Dependency
+        + ReceiptController(receiptService: IReceiptService);
+        + getBookingReceiptInfo(officer: HDBOfficer, booking: Booking) : BookingReceiptInfo <<throws DataAccessException>>;
+    }
+
+     class EnquiryController {
+        - enquiryService : IEnquiryService; ' Dependency
+        + EnquiryController(enquiryService: IEnquiryService);
+        + createEnquiry(user: User, projectId: String <<nullable>>, content: String) : Enquiry <<throws InvalidInputException>>;
+        + editMyEnquiry(user: User, enquiryId: String, newContent: String) : boolean <<throws InvalidInputException>>;
+        + deleteMyEnquiry(user: User, enquiryId: String) : boolean;
+        + replyToEnquiry(staff: HDBStaff, enquiryId: String, replyContent: String) : boolean <<throws InvalidInputException>>;
+        + viewMyEnquiries(user: User) : List<Enquiry>;
+        + viewAllEnquiries(staff: HDBStaff) : List<Enquiry>;
+        + viewProjectEnquiries(staff: HDBStaff, projectId: String) : List<Enquiry>;
+     }
+
+     class ReportController {
+         - reportService : IReportService; ' Dependency
+         + ReportController(reportService: IReportService);
+         + generateBookingReport(manager: HDBManager, filters: Map<String, String>) : String;
+     }
+}
+
+@enduml

@@ -1,0 +1,229 @@
+@startuml entities
+
+' --- Settings ---
+skinparam classAttributeIconSize 0
+hide empty members
+skinparam packageStyle rect
+skinparam linetype ortho
+
+' --- Enums ---
+enum ApplicationStatus {
+    PENDING
+    SUCCESSFUL
+    UNSUCCESSFUL
+    BOOKED
+}
+enum MaritalStatus {
+    SINGLE
+    MARRIED
+}
+enum OfficerRegStatus {
+    PENDING
+    APPROVED
+    REJECTED
+}
+enum UserRole {
+    APPLICANT
+    HDB_OFFICER
+    HDB_MANAGER
+}
+enum FlatType {
+    TWO_ROOM
+    THREE_ROOM
+}
+
+' --- Entity Layer ---
+package Entity <<Folder>> {
+    abstract class User {
+        # nric : String
+        # passwordHash : String
+        # name: String
+        # age : int
+        # maritalStatus : MaritalStatus
+        # role : UserRole <<get>>
+        + {abstract} getRole() : UserRole
+        + getNric() : String
+        + getName() : String
+        + getAge() : int
+        + getMaritalStatus() : MaritalStatus
+        + getPasswordHash() : String
+        + updatePasswordHash(newHash: String) : void
+    }
+
+    class Applicant extends User {
+        + Applicant(nric: String, hash: String, name: String, age: int, status: MaritalStatus)
+        + getRole() : UserRole <<override>>
+    }
+
+    abstract class HDBStaff extends User {
+         + HDBStaff(nric: String, hash: String, name: String, age: int, status: MaritalStatus)
+    }
+
+    class HDBOfficer extends HDBStaff {
+        + HDBOfficer(nric: String, hash: String, name: String, age: int, status: MaritalStatus)
+        + getRole() : UserRole <<override>>
+    }
+
+    class HDBManager extends HDBStaff {
+        + HDBManager(nric: String, hash: String, name: String, age: int, status: MaritalStatus)
+        + getRole() : UserRole <<override>>
+    }
+
+    class ProjectFlatInfo {
+        - flatType : FlatType
+        - totalUnits : int
+        - remainingUnits : int
+        - price : double
+        + ProjectFlatInfo(flatType: FlatType, totalUnits: int, remainingUnits: int, price: double)
+        + decreaseRemainingUnits() : boolean
+        + increaseRemainingUnits() : void
+        + getTypeName() : String
+        + getTotalUnits() : int
+        + getRemainingUnits() : int
+        + getPrice() : double
+        + getFlatType() : FlatType
+    }
+
+    class Project {
+        - projectId : String
+        - projectName : String
+        - neighborhood : String
+        - flatTypes : Map<FlatType, ProjectFlatInfo> <<get>>
+        - openingDate : LocalDate
+        - closingDate : LocalDate
+        - managerNric : String
+        - maxOfficerSlots : int
+        - remainingOfficerSlots: int
+        - isVisible : boolean
+        - approvedOfficerNrics : List<String> <<get>>
+        + Project(id: String, name: String, neighborhood: String, flatTypes: Map<FlatType, ProjectFlatInfo>, openDate: LocalDate, closeDate: LocalDate, managerNric: String, maxOfficerSlots: int)
+        + getFlatInfo(flatType: FlatType) : ProjectFlatInfo <<nullable>>
+        + getProjectId() : String
+        + getProjectName() : String
+        + getNeighborhood() : String
+        + getOpeningDate() : LocalDate
+        + getClosingDate() : LocalDate
+        + getManagerNric() : String
+        + getMaxOfficerSlots() : int
+        + getRemainingOfficerSlots() : int
+        + isVisible() : boolean
+        + getApprovedOfficerNrics() : List<String>
+        + setProjectName(projectName : String) : void
+        + setNeighborhood(neighborhood : String) : void
+        + setOpeningDate(openingDate : LocalDate) : void
+        + setClosingDate(closingDate : LocalDate) : void
+        + setMaxOfficerSlots(maxOfficerSlots : int) : void
+        + setFlatTypes(flatTypes : Map<FlatType, ProjectFlatInfo>) : void
+        + setApprovedOfficerNrics(approvedOfficerNrics : List<String>) : void
+        + setVisibility(visible: boolean) : void
+        + addApprovedOfficer(officerNric: String) : boolean
+        + removeApprovedOfficer(officerNric: String) : boolean
+        + equals(o : Object) : boolean
+        + hashCode() : int
+        + toString() : String
+    }
+
+    class Application {
+        - applicationId : String
+        - applicantNric : String <<get>>
+        - projectId : String <<get>>
+        - submissionDate : LocalDate <<get>>
+        - status : ApplicationStatus
+        - requestedWithdrawalDate : LocalDate <<nullable>> ' Set by ApplicationService
+        - preferredFlatType : FlatType <<nullable>> <<get>> <<set>>
+        + Application(appId: String, applicantNric: String, projId: String, submissionDate: LocalDate)
+        + getApplicationId() : String
+        + getApplicationNric() : String
+        + getProjectId() : String
+        + getSubmissionDate() : LocalDate
+        + getStatus() : ApplicationStatus
+        + getPreferredFlatType() : FlatType
+        + getRequestedWithdrawalDate() : LocalDate
+        + setStatus(newStatus : ApplicationStatus) : void
+        + setRequestedWithdrawalDate(requestedWithdrawalDate : LocalDate) : void
+        + setPreferredFlatType(preferredFlatType : FlatType) : void
+    }
+
+    class Booking {
+        - bookingId : String
+        - applicationId : String <<get>> <<Unique>>
+        - applicantNric : String <<get>>
+        - projectId : String <<get>>
+        - bookedFlatType : FlatType <<get>>
+        - bookingDate : LocalDate <<get>>
+        + Booking(bookId: String, appId: String, applicantNric: String, projId: String, flatType: FlatType, bookingDate: LocalDate)
+        + getBookingId() : String
+        + getApplicationId() : String
+        + getApplicantNric() : String
+        + getProjectId() : String
+        + getBookedFlatType() : FlatType
+        + getBookingDate() : LocalDate
+    }
+
+    class BookingReceiptInfo {
+        - applicantName : String
+        - applicantNric : String
+        - applicantAge : int
+        - applicantMaritalStatus : MaritalStatus
+        - bookedFlatType : FlatType
+        - projectName : String
+        - projectNeighborhood : String
+        - bookingId : String
+        - bookingDate : LocalDate
+        + BookingReceiptInfo(applicantName : String, applicantNric : String, applicantAge : int, applicantMaritalStatus : MaritalStatus, bookedFlatType : String, projectName : String, projectNeighborhood : String, bookingId : String, bookingDate : LocalDate)
+        + getApplicantName() : String
+        + getApplicantNric() : String
+        + getApplicantAge() : int
+        + getApplicantMaritalStatus() : MaritalStatus
+        + getBookedFlatType() : String
+        + getProjectName() : String
+        + getProjectNeighborhood() : String
+        + getBookingId() : String
+        + getBookingDate() : LocalDate
+    }
+
+    class Enquiry {
+        - enquiryId : String
+        - userNric : String <<get>>
+        - projectId : String <<nullable>>
+        - content : String
+        - reply : String <<nullable>>
+        - isReplied : boolean = false
+        - submissionDate : LocalDate <<get>>
+        - replyDate : LocalDate <<nullable>>
+        + Enquiry(enqId: String, userNric: String, projId: String, content: String, submissionDate: LocalDate)
+        + addReply(replyContent: String, replyDate: LocalDate) : void
+        + editContent(newContent: String) : void
+        + getEnquiryId() : String
+        + getUserNric() : String
+        + getProjectId() : String <<nullable>>
+        + getContent() : String
+        + getReply() : String <<nullable>>
+        + getSubmissionDate() : LocalDate
+        + getReplyDate() : LocalDate <<nullable>>
+        + setContent(content : String) : void
+        + isReplied() : boolean
+        + editContent(newContent : String) : void
+    }
+
+     class OfficerRegistration {
+        - registrationId : String
+        - officerNric : String <<get>>
+        - projectId : String <<get>>
+        - requestDate : LocalDate <<get>>
+        - status : OfficerRegStatus = PENDING
+        + OfficerRegistration(regId: String, officerNric: String, projId: String, requestDate: LocalDate)
+        + getRegistrationId() : String
+        + getOfficerNric() : String
+        + getProjectId() : String
+        + getRequestDate() : LocalDate
+        + getStatus() : OfficerRegStatus
+        + setStatus(newStatus: OfficerRegStatus) : void ' Called by OfficerRegistrationService
+    }
+
+    ' Relationships WITHIN the Entity package
+    Project "1" *-- "1..*" ProjectFlatInfo : contains >
+
+}
+
+@enduml

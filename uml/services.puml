@@ -1,0 +1,205 @@
+@startuml services
+
+' --- Settings ---
+skinparam classAttributeIconSize 0
+hide empty members
+skinparam packageStyle rect
+skinparam linetype ortho
+
+' --- Service Layer ---
+package Service <<Folder>> {
+    interface IUserService <<ISP>> {
+        + findUserById(nric: String) : User <<nullable>>
+        + findUserNames(nrics: Collection<String>) : Map<String, String>
+    }
+
+    class UserService implements IUserService {
+        - userRepository : IUserRepository ' Dependency on Repository Interface
+        + UserService(userRepository: IUserRepository)
+        + findUserById(nric: String) : User <<nullable>>
+        + findUserNames(nrics: Collection<String>) : Map<String, String>
+    }
+
+    interface IAuthenticationService <<ISP>> {
+        + login(nric: String, password: String) : User <<throws AuthenticationException>>
+        + changePassword(user: User, newPassword: String) : boolean
+    }
+    class AuthenticationService implements IAuthenticationService {
+        - userRepository : IUserRepository ' Dependency on Repository Interface
+        + AuthenticationService(userRepository: IUserRepository)
+        + login(nric: String, password: String) : User <<throws AuthenticationException>>
+        + changePassword(user: User, newPassword: String) : boolean
+    }
+
+    interface IBookingService <<ISP>> {
+         + performBooking(officer: HDBOfficer, applicantNric: String, flatType: FlatType) : Booking <<throws BookingException>>
+         + getBookingsByProject(projectId : String) : List<Booking> <<throws BookingException>>
+    }
+    class BookingService implements IBookingService {
+        - applicationRepo : IApplicationRepository ' Dependency
+        - projectRepo : IProjectRepository ' Dependency
+        - bookingRepo : IBookingRepository ' Dependency
+        - userRepo : IUserRepository ' Dependency
+        + BookingService(appRepo: IApplicationRepository, projRepo: IProjectRepository, bookingRepo: IBookingRepository, userRepo: IUserRepository)
+        + performBooking(officer: HDBOfficer, applicantNric: String, flatType: FlatType) : Booking <<throws BookingException>>
+        + getBookingsByProject(projectId : String) : List<Booking> <<throws BookingException>>
+    }
+
+    interface IReceiptService <<ISP>> {
+        + generateBookingReceipt(booking: Booking) : BookingReceiptInfo <<throws DataAccessException>>
+    }
+    class ReceiptService implements IReceiptService {
+         - bookingRepo : IBookingRepository ' Dependency
+         - userRepo : IUserRepository ' Dependency
+         - projectRepo : IProjectRepository ' Dependency
+        + ReceiptService(bookRepo: IBookingRepository, userRepo: IUserRepository, projRepo: IProjectRepository)
+        + generateBookingReceipt(booking: Booking) : BookingReceiptInfo <<throws DataAccessException>>
+    }
+
+    interface IEligibilityService <<ISP>> {
+         + canApplicantApply(user: User, project: Project) : boolean
+         + isApplicantEligibleForFlatType(user : User, flatType : FlatType) : boolean
+         + canOfficerRegister(officer: HDBOfficer, project: Project, allRegistrations: Collection<OfficerRegistration>, allApplications: Collection<Application>) : boolean
+         + checkManagerProjectHandlingEligibility(manager : HDBManager, newProjectOpenDate : LocalDate, newProjectCloseDate : LocalDate, allExistingProjects : Collection<Project>)
+     }
+     class EligibilityService implements IEligibilityService {
+         # projectRepository : IProjectRepository ' Dependency
+         + EligibilityService(projectRepository : IProjectRepository)
+         + canApplicantApply(user: User, project: Project) : boolean
+         + isApplicantEligibleForFlatType(user : User, flatType : FlatType) : boolean
+         + canOfficerRegister(officer: HDBOfficer, project: Project, allRegistrations: Collection<OfficerRegistration>, allApplications: Collection<Application>) : boolean
+         + checkManagerProjectHandlingEligibility(manager : HDBManager, newProjectOpenDate : LocalDate, newProjectCloseDate : LocalDate, allExistingProjects : Collection<Project>)
+     }
+
+      interface IProjectService <<ISP>> {
+        + createProject(manager: HDBManager, name: String, neighborhood: String, flatInfoMap: Map<FlatType, ProjectFlatInfo>, openDate: LocalDate, closeDate: LocalDate, officerSlots: int) : Project <<throws RegistrationException>>;
+        + editCoreProjectDetails(manager: HDBManager, projectId: String, name: String, neighborhood: String, openDate: LocalDate, closeDate: LocalDate, officerSlots: int) : boolean;
+        + deleteProject(manager: HDBManager, projectId: String) : boolean;
+        + toggleVisibility(manager: HDBManager, projectId: String) : boolean;
+        + getVisibleProjectsForUser(user: User, filters: Map<String, Object>) : List<Project>;
+        + getVisibleProjectsForUser(user: User) : List<Project>;
+        + getAllProjects(user: User, filters: Map<String, Object>) : List<Project>;
+        + getProjectsManagedBy(managerNric: String) : List<Project>;
+        + getProjectsManagedBy(managerNric: String, filters : Map<String, Object>) : List<Project>;
+        + findProjectById(projectId: String) : Project <<nullable>>;
+        + getProjectsAvailableForOfficerRegistration(officer: HDBOfficer): List<Project>;
+    }
+
+    class ProjectService implements IProjectService {
+        - projectRepo : IProjectRepository; ' Dependency
+        - userRepo : IUserRepository; ' Dependency
+        - eligibilityService : IEligibilityService; ' Dependency
+        + ProjectService(projectRepo: IProjectRepository, userRepo: IUserRepository, eligSvc: IEligibilityService);
+        + createProject(manager: HDBManager, name: String, neighborhood: String, flatInfoMap: Map<FlatType, ProjectFlatInfo>, openDate: LocalDate, closeDate: LocalDate, officerSlots: int) : Project <<throws RegistrationException>>;
+        + editCoreProjectDetails(manager: HDBManager, projectId: String, name: String, neighborhood: String, openDate: LocalDate, closeDate: LocalDate, officerSlots: int) : boolean;
+        + deleteProject(manager: HDBManager, projectId: String) : boolean;
+        + toggleVisibility(manager: HDBManager, projectId: String) : boolean;
+        + getVisibleProjectsForUser(user: User, filters: Map<String, Object>) : List<Project>;
+        + getVisibleProjectsForUser(user: User) : List<Project>;
+        + getAllProjects(user: User, filters: Map<String, Object>) : List<Project>;
+        + getProjectsManagedBy(managerNric: String) : List<Project>;
+        + getProjectsManagedBy(managerNric: String, filters : Map<String, Object>) : List<Project>;
+        + findProjectById(projectId: String) : Project <<nullable>>;
+        + getProjectsAvailableForOfficerRegistration(officer: HDBOfficer): List<Project>;
+    }
+
+    interface IApplicationService <<ISP>> {
+        + submitApplication(user: User, projectId: String, preferredFlatType: FlatType <<nullable>>) : Application <<throws ApplicationException>>
+        + requestWithdrawal(user: User) : boolean <<throws ApplicationException>>;
+        + reviewApplication(manager: HDBManager, applicationId: String, approve: boolean) : boolean <<throws ApplicationException>>;
+        + reviewWithdrawal(manager: HDBManager, applicationId: String, approve: boolean) : boolean <<throws ApplicationException>>;
+        + getApplicationForUser(applicantNric: String) : Application <<nullable>>;
+        + getApplicationsByProject(projectId: String) : List<Application>;
+        + getApplicationsByStatus(status: ApplicationStatus) : List<Application>;
+    }
+    class ApplicationService implements IApplicationService {
+        - applicationRepo : IApplicationRepository; ' Dependency
+        - projectRepo : IProjectRepository; ' Dependency
+        - eligibilityService : IEligibilityService; ' Dependency
+        - userRepo : IUserRepository; ' Dependency
+        - bookingRepo : IBookingRepository; ' Dependency
+        - officerRegRepo : IOfficerRegistrationRepository; ' Dependency
+        + ApplicationService(appRepo: IApplicationRepository, projRepo: IProjectRepository, eligSvc: IEligibilityService, userRepo: IUserRepository, bookingRepo: IBookingRepository, officerRegRepo : IOfficerRegistrationRepository);
+        + submitApplication(user: User, projectId: String, preferredFlatType: FlatType <<nullable>>) : Application <<throws ApplicationException>>
+        + requestWithdrawal(user: User) : boolean <<throws ApplicationException>>;
+        + reviewApplication(manager: HDBManager, applicationId: String, approve: boolean) : boolean <<throws ApplicationException>>;
+        + reviewWithdrawal(manager: HDBManager, applicationId: String, approve: boolean) : boolean <<throws ApplicationException>>;
+        + getApplicationForUser(applicantNric: String) : Application <<nullable>>;
+        + getApplicationsByProject(projectId: String) : List<Application>;
+        + getApplicationsByStatus(status: ApplicationStatus) : List<Application>;
+    }
+
+    interface IOfficerRegistrationService <<ISP>> {
+        + requestProjectRegistration(officer: HDBOfficer, projectId: String) : OfficerRegistration <<throws RegistrationException>>;
+        + reviewRegistration(manager: HDBManager, registrationId: String, approve: boolean) : boolean <<throws RegistrationException>>;
+        + getRegistrationStatus(officer: HDBOfficer, projectId: String) : OfficerRegStatus <<nullable>>;
+        + getPendingRegistrations() : List<OfficerRegistration>;
+        + getPendingRegistrationsForProject(projectId : String) : List<OfficerRegistration>;
+        + getPendingRegistrationsCountForProject(projectId : String) : int;
+        + getRegistrationsByProject(projectId: String) : List<OfficerRegistration>;
+        + getRegistrationsByOfficer(officerNric: String) : List<OfficerRegistration>;
+    }
+    class OfficerRegistrationService implements IOfficerRegistrationService {
+        - registrationRepo : IOfficerRegistrationRepository; ' Dependency
+        - projectRepo : IProjectRepository; ' Dependency
+        - applicationRepo : IApplicationRepository; ' Dependency
+        - eligibilityService : IEligibilityService; ' Dependency
+        + OfficerRegistrationService(regRepo: IOfficerRegistrationRepository, projRepo: IProjectRepository, appRepo: IApplicationRepository, eligSvc: IEligibilityService);
+        + requestProjectRegistration(officer: HDBOfficer, projectId: String) : OfficerRegistration <<throws RegistrationException>>;
+        + reviewRegistration(manager: HDBManager, registrationId: String, approve: boolean) : boolean <<throws RegistrationException>>;
+        + getRegistrationStatus(officer: HDBOfficer, projectId: String) : OfficerRegStatus <<nullable>>;
+        + getPendingRegistrations() : List<OfficerRegistration>;
+        + getPendingRegistrationsForProject(projectId : String) : List<OfficerRegistration>;
+        + getPendingRegistrationsCountForProject(projectId : String) : int;
+        + getRegistrationsByProject(projectId: String) : List<OfficerRegistration>;
+        + getRegistrationsByOfficer(officerNric: String) : List<OfficerRegistration> {}
+    }
+
+    interface IEnquiryService <<ISP>> {
+        + createEnquiry(user: User, projectId: String <<nullable>>, content: String) : Enquiry;
+        + editEnquiry(enquiryId: String, newContent: String, user: User) : boolean;
+        + deleteEnquiry(enquiryId: String, user: User) : boolean;
+        + replyToEnquiry(enquiryId: String, replyContent: String, staff: HDBStaff) : boolean;
+        + viewMyEnquiries(user: User) : List<Enquiry>;
+        + viewAllEnquiries() : List<Enquiry>;
+        + viewProjectEnquiries(projectId: String) : List<Enquiry>;
+        + findEnquiryById(enquiryId: String) : Enquiry <<nullable>>;
+    }
+    class EnquiryService implements IEnquiryService {
+        - enquiryRepo : IEnquiryRepository; ' Dependency
+        + EnquiryService(enquiryRepo: IEnquiryRepository);
+        + createEnquiry(user: User, projectId: String <<nullable>>, content: String) : Enquiry;
+        + editEnquiry(enquiryId: String, newContent: String, user: User) : boolean;
+        + deleteEnquiry(enquiryId: String, user: User) : boolean;
+        + replyToEnquiry(enquiryId: String, replyContent: String, staff: HDBStaff) : boolean;
+        + viewMyEnquiries(user: User) : List<Enquiry>;
+        + viewAllEnquiries() : List<Enquiry>;
+        + viewProjectEnquiries(projectId: String) : List<Enquiry>;
+        + findEnquiryById(enquiryId: String) : Enquiry <<nullable>>;
+    }
+
+     interface IReportService <<ISP>> {
+        + generateBookingReport(filters: Map<String, String>) : String;
+     }
+     class ReportService implements IReportService {
+         - bookingRepo : IBookingRepository; ' Dependency
+         - projectRepo : IProjectRepository; ' Dependency
+         - userRepo : IUserRepository; ' Dependency
+         + ReportService(bookRepo: IBookingRepository, projRepo: IProjectRepository, userRepo: IUserRepository);
+         + generateBookingReport(filters: Map<String, String>) : String;
+     }
+
+    ' Interface Implementation within Service package
+    IUserService <|.. UserService
+    IAuthenticationService <|.. AuthenticationService
+    IBookingService <|.. BookingService
+    IReceiptService <|.. ReceiptService
+    IEligibilityService <|.. EligibilityService
+    IProjectService <|.. ProjectService
+    IApplicationService <|.. ApplicationService
+    IOfficerRegistrationService <|.. OfficerRegistrationService
+    IEnquiryService <|.. EnquiryService
+    IReportService <|.. ReportService
+
+}
+@enduml
