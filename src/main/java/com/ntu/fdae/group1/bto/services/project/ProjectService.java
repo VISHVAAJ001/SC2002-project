@@ -72,7 +72,6 @@ public class ProjectService implements IProjectService {
      * Constructs a new ProjectService with the required dependencies.
      *
      * @param projectRepo        Repository for project data
-     * @param userRepo           Repository for user data
      * @param eligibilityService Service for eligibility checks
      * @param applicationRepo    Repository for application data
      * @param officerRegRepo     Repository for officer registration data

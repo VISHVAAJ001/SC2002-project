@@ -53,7 +53,6 @@ public class ReportService implements IReportService {
      * Constructs a new ReportService with the repositories needed for report
      * generation.
      *
-     * @param appRepo  Repository for application data
      * @param bookRepo Repository for booking data
      * @param projRepo Repository for project data
      * @param userRepo Repository for user data

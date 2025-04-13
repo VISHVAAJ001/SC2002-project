@@ -209,7 +209,7 @@ public class EligibilityService implements IEligibilityService {
      * overlapping application period.
      * </p>
      * <p>
-     * Application periods overlap when: (StartA <= EndB) AND (EndA >= StartB)
+     * Application periods overlap when: (StartA &lt; EndB) AND (EndA &gt; StartB)
      * </p>
      *
      * @param manager             The HDB Manager to check eligibility for
