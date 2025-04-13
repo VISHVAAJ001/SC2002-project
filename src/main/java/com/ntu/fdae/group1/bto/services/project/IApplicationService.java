@@ -9,12 +9,38 @@ import com.ntu.fdae.group1.bto.enums.FlatType;
 import com.ntu.fdae.group1.bto.models.user.HDBManager;
 import com.ntu.fdae.group1.bto.models.user.User;
 
+/**
+ * Service interface defining operations for managing BTO project applications.
+ * <p>
+ * This interface provides a comprehensive API for handling the application
+ * lifecycle
+ * in the BTO Management System, including submission, approval/rejection,
+ * withdrawal
+ * requests, and application queries. It serves as the business layer between
+ * controllers and the data access layer.
+ * </p>
+ * 
+ * Key responsibilities include:
+ * <ul>
+ * <li>Processing new application submissions</li>
+ * <li>Managing application withdrawals</li>
+ * <li>Supporting the review process for applications and withdrawals</li>
+ * <li>Retrieving applications based on various criteria</li>
+ * <li>Enforcing business rules for the application process</li>
+ * </ul>
+ * 
+ * <p>
+ * All operations enforce appropriate validation and security checks to ensure
+ * data integrity and proper authorization throughout the application lifecycle.
+ * </p>
+ */
 public interface IApplicationService {
     /**
      * Submits a new application for a project
      * 
-     * @param user      The applicant submitting the application
-     * @param projectId ID of the project to apply for
+     * @param user              The applicant submitting the application
+     * @param projectId         ID of the project to apply for
+     * @param preferredFlatType The type of flat the applicant prefers
      * @return The created application
      * @throws ApplicationException if application submission fails
      */
@@ -37,6 +63,7 @@ public interface IApplicationService {
      * @param applicationId ID of the application to review
      * @param approve       true to approve, false to reject
      * @return true if review was successful, false otherwise
+     * @throws ApplicationException if the review process fails
      */
     boolean reviewApplication(HDBManager manager, String applicationId, boolean approve) throws ApplicationException;
 
@@ -47,6 +74,7 @@ public interface IApplicationService {
      * @param applicationId ID of the application to withdraw
      * @param approve       true to approve, false to reject withdrawal
      * @return true if review was successful, false otherwise
+     * @throws ApplicationException if the withdrawal review process fails
      */
     boolean reviewWithdrawal(HDBManager manager, String applicationId, boolean approve) throws ApplicationException;
 

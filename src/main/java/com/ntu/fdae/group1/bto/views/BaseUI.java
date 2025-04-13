@@ -10,12 +10,41 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 
 /**
- * Abstract base class for common UI functionalities.
+ * Abstract base class for common UI functionalities in the BTO Management
+ * System.
+ * <p>
+ * This class provides a set of reusable UI components and input handling
+ * methods
+ * that are used across different user interfaces in the system. It centralizes
+ * common operations like prompting for input, displaying messages, and
+ * formatting
+ * data for display.
+ * </p>
+ * <p>
+ * All specific UI classes should extend this class to inherit its functionality
+ * and maintain a consistent user experience throughout the application.
+ * </p>
  */
 public abstract class BaseUI {
+    /**
+     * Scanner object for reading user input from the console.
+     * This is initialized in the constructor and used by all input prompting
+     * methods.
+     */
     protected Scanner scanner;
+
+    /**
+     * Standard date formatter used consistently across the UI for displaying
+     * and parsing dates in ISO format (YYYY-MM-DD).
+     */
     protected static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE;
 
+    /**
+     * Constructs a BaseUI with the specified Scanner for input operations.
+     *
+     * @param scanner The Scanner object to use for reading user input
+     * @throws IllegalArgumentException if scanner is null
+     */
     public BaseUI(Scanner scanner) {
         if (scanner == null) {
             throw new IllegalArgumentException("Scanner cannot be null");
@@ -121,6 +150,19 @@ public abstract class BaseUI {
         return date; // Return the valid date
     }
 
+    /**
+     * Prompts the user to select an item from a list of enum values.
+     * <p>
+     * Displays a numbered menu of enum options and processes the user's selection.
+     * The user can cancel the selection by choosing option 0.
+     * </p>
+     *
+     * @param <E>           The enum type
+     * @param prompt        The message to display before showing options
+     * @param enumClass     The class of the enum
+     * @param allowedValues The list of enum values to display as options
+     * @return The selected enum value, or null if the selection was cancelled
+     */
     public <E extends Enum<E>> E promptForEnum(String prompt, Class<E> enumClass, List<E> allowedValues) {
         // Validate input list
         if (allowedValues == null || allowedValues.isEmpty()) {
@@ -167,6 +209,16 @@ public abstract class BaseUI {
         }
     }
 
+    /**
+     * Formats an enum constant for user-friendly display.
+     * <p>
+     * Converts the enum name from uppercase with underscores to a title case
+     * format with spaces. For example, "TWO_ROOM" becomes "Two room".
+     * </p>
+     *
+     * @param enumConstant The enum constant to format
+     * @return A user-friendly string representation of the enum constant
+     */
     protected String formatEnumName(Enum<?> enumConstant) {
         if (enumConstant == null)
             return "";
@@ -246,6 +298,16 @@ public abstract class BaseUI {
         }
     }
 
+    /**
+     * Formats a LocalDate safely for display, handling null values.
+     * <p>
+     * Uses the standard DATE_FORMATTER to format the date, or returns "N/A"
+     * if the date is null.
+     * </p>
+     *
+     * @param date The LocalDate to format
+     * @return The formatted date string, or "N/A" if date is null
+     */
     protected String formatDateSafe(LocalDate date) {
         return (date == null) ? "N/A" : DATE_FORMATTER.format(date);
     }

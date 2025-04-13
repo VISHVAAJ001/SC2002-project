@@ -8,9 +8,38 @@ import com.ntu.fdae.group1.bto.models.booking.BookingReceiptInfo;
 import com.ntu.fdae.group1.bto.models.user.HDBOfficer;
 import com.ntu.fdae.group1.bto.services.booking.IReceiptService;
 
+/**
+ * Controller responsible for managing receipt generation operations in the BTO
+ * Management System.
+ * <p>
+ * This controller acts as an intermediary between the UI layer and the receipt
+ * service,
+ * handling operations related to generating booking receipts. It performs basic
+ * validation
+ * on inputs before delegating the business logic to the receipt service.
+ * </p>
+ * <p>
+ * The ReceiptController follows the MVC architecture pattern by:
+ * 1. Receiving receipt generation requests from the UI
+ * 2. Validating inputs before processing
+ * 3. Delegating business logic to the receipt service
+ * 4. Handling exceptions appropriately
+ * 5. Returning the generated receipt information to the UI
+ * </p>
+ */
 public class ReceiptController {
+    /**
+     * The receipt service used to generate booking receipts.
+     * This service contains the business logic for creating receipt information.
+     */
     private final IReceiptService receiptService;
 
+    /**
+     * Constructs a new ReceiptController with the specified receipt service.
+     * 
+     * @param receiptService The receipt service to use for receipt generation
+     *                       operations
+     */
     public ReceiptController(IReceiptService receiptService) {
         this.receiptService = receiptService;
     }
@@ -18,6 +47,11 @@ public class ReceiptController {
     /**
      * Retrieves the consolidated information needed to generate a booking receipt.
      * Performs basic validation and delegates the main logic to the ReceiptService.
+     * <p>
+     * This method validates that both the officer and booking objects are valid and
+     * complete before requesting receipt generation from the service layer. It also
+     * handles any exceptions that may occur during the process.
+     * </p>
      *
      * @param officer The HDB Officer performing the action (used for
      *                authorization/context if needed by service).

@@ -16,12 +16,55 @@ import com.ntu.fdae.group1.bto.repository.project.IApplicationRepository; // Kee
 import com.ntu.fdae.group1.bto.repository.project.IProjectRepository;
 import com.ntu.fdae.group1.bto.repository.user.IUserRepository;
 
+/**
+ * Implementation of the IReportService interface that provides report
+ * generation
+ * functionality for the BTO Management System.
+ * <p>
+ * This service is responsible for generating various reports about bookings,
+ * applications, and projects. It pulls data from multiple repositories to
+ * create
+ * comprehensive reports that can be filtered based on different criteria such
+ * as
+ * flat type, project name, age, and marital status.
+ * </p>
+ * <p>
+ * The service aggregates data from different sources and formats it into
+ * readable
+ * reports suitable for administrative analysis and decision making.
+ * </p>
+ */
 public class ReportService implements IReportService {
+    /**
+     * Repository for accessing application data in reports.
+     */
     private final IApplicationRepository applicationRepo;
+
+    /**
+     * Repository for accessing booking data in reports.
+     */
     private final IBookingRepository bookingRepo;
+
+    /**
+     * Repository for accessing project data in reports.
+     */
     private final IProjectRepository projectRepo;
+
+    /**
+     * Repository for accessing user data in reports.
+     */
     private final IUserRepository userRepo;
 
+    /**
+     * Constructs a new ReportService with the repositories needed for report
+     * generation.
+     *
+     * @param appRepo  Repository for application data
+     * @param bookRepo Repository for booking data
+     * @param projRepo Repository for project data
+     * @param userRepo Repository for user data
+     * @throws NullPointerException if any repository except appRepo is null
+     */
     public ReportService(IApplicationRepository appRepo, IBookingRepository bookRepo, IProjectRepository projRepo,
             IUserRepository userRepo) {
         // this.applicationRepo = appRepo;
@@ -31,6 +74,22 @@ public class ReportService implements IReportService {
         this.applicationRepo = appRepo;
     }
 
+    /**
+     * Generates a detailed booking report that can be filtered by various criteria.
+     * <p>
+     * This method creates a formatted text report of bookings, including applicant
+     * details, project information, and booking specifics. The report can be
+     * filtered
+     * by flat type, project name, applicant age, and marital status.
+     * </p>
+     *
+     * @param filters A map of filter criteria where keys are filter names
+     *                (FLAT_TYPE,
+     *                PROJECT_NAME, AGE, MARITAL_STATUS) and values are filter
+     *                values
+     * @return A formatted string containing the booking report
+     * @throws NullPointerException if the filters map is null
+     */
     @Override
     public String generateBookingReport(Map<String, String> filters) {
         Objects.requireNonNull(filters, "Filters map cannot be null"); // Accept empty map

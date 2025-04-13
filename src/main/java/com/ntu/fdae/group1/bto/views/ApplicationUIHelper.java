@@ -1,7 +1,5 @@
 package com.ntu.fdae.group1.bto.views;
 
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -19,16 +17,49 @@ import com.ntu.fdae.group1.bto.models.project.Project;
 import com.ntu.fdae.group1.bto.models.user.User;
 
 /**
- * Helper class to manage common UI tasks related to BTO Application viewing,
- * submission (including preference selection), and withdrawal requests.
- * Used via composition by ApplicantUI and HDBOfficerUI (for applicant actions).
+ * Helper class for application-related UI operations in the BTO Management
+ * System.
+ * <p>
+ * This class provides reusable UI components for handling BTO application
+ * workflows,
+ * including application submission, status viewing, withdrawal requests, and
+ * listing
+ * applications for administrative review.
+ * </p>
+ * <p>
+ * The helper follows a composition pattern, working with a BaseUI instance for
+ * common UI operations and controllers for application and project data access.
+ * It is designed to be used by both applicant-focused UIs (ApplicantUI) and
+ * administrative UIs (HDBOfficerUI, HDBManagerUI) to maintain consistent user
+ * experience and reduce code duplication.
+ * </p>
  */
 public class ApplicationUIHelper {
 
+    /**
+     * The base UI component for common UI operations.
+     */
     private final BaseUI baseUI;
-    private final ApplicationController applicationController;
-    private final ProjectController projectController; // Needed for preference check
 
+    /**
+     * The controller for application-related operations.
+     */
+    private final ApplicationController applicationController;
+
+    /**
+     * The controller for project-related operations, needed for fetching project
+     * details during application processes.
+     */
+    private final ProjectController projectController;
+
+    /**
+     * Constructs a new ApplicationUIHelper with the specified dependencies.
+     *
+     * @param baseUI   An instance of BaseUI for console I/O operations
+     * @param appCtrl  Controller for application-related operations
+     * @param projCtrl Controller for project-related operations
+     * @throws NullPointerException if any parameter is null
+     */
     public ApplicationUIHelper(BaseUI baseUI, ApplicationController appCtrl, ProjectController projCtrl) {
         this.baseUI = Objects.requireNonNull(baseUI, "BaseUI cannot be null");
         this.applicationController = Objects.requireNonNull(appCtrl, "ApplicationController cannot be null");
@@ -38,10 +69,18 @@ public class ApplicationUIHelper {
     /**
      * Guides the user through submitting an application for a specific project,
      * including handling flat type preferences based on eligibility.
-     * Assumes this is called after the user has selected a project.
+     * <p>
+     * This method:
+     * - Retrieves the project details
+     * - Determines eligible flat types for the user
+     * - Prompts for preference selection if multiple eligible types exist
+     * - Confirms submission with the user
+     * - Submits the application via the ApplicationController
+     * - Displays success confirmation or error messages
+     * </p>
      *
-     * @param user      The applicant user submitting the application.
-     * @param projectId The ID of the project they are applying for.
+     * @param user      The applicant user submitting the application
+     * @param projectId The ID of the project they are applying for
      */
     public void performApplicationSubmission(User user, String projectId) {
         baseUI.displayMessage("\nPreparing application for Project ID: " + projectId + "...");
@@ -151,9 +190,17 @@ public class ApplicationUIHelper {
 
     /**
      * Displays the details of the applicant's current or most recent application
-     * and provides an option to request withdrawal if applicable based on status.
+     * and provides an option to request withdrawal if applicable.
+     * <p>
+     * This method:
+     * - Retrieves the user's application via the ApplicationController
+     * - Displays comprehensive application details (ID, project, status, etc.)
+     * - Determines if withdrawal is allowed based on the application status
+     * - Presents withdrawal option when applicable
+     * - Delegates to performWithdrawalAction if withdrawal is chosen
+     * </p>
      *
-     * @param user The applicant user whose application is being viewed.
+     * @param user The applicant user whose application is being viewed
      */
     public void performViewAndWithdraw(User user) {
         baseUI.displayHeader("View My BTO Application Status");
@@ -210,10 +257,20 @@ public class ApplicationUIHelper {
     }
 
     /**
-     * Handles the confirmation and controller call for withdrawal request.
-     * Assumes called only when withdrawal is deemed possible.
+     * Handles the confirmation and controller call for application withdrawal
+     * request.
+     * <p>
+     * This method:
+     * - Prompts for final withdrawal confirmation
+     * - Submits the request via the ApplicationController if confirmed
+     * - Displays appropriate success or error messages to the user
+     * </p>
+     * <p>
+     * This method is intended to be called only when withdrawal is deemed possible
+     * based on the application's current status.
+     * </p>
      *
-     * @param applicant The applicant requesting withdrawal.
+     * @param user The applicant requesting application withdrawal
      */
     private void performWithdrawalAction(User user) {
         if (baseUI.promptForConfirmation(
@@ -242,12 +299,19 @@ public class ApplicationUIHelper {
     }
 
     /**
-     * Helper method to check if an applicant is eligible for a specific flat type.
-     * Note: This logic might ideally live in an EligibilityService.
+     * Determines if an applicant is eligible for a specific flat type based on
+     * BTO application rules.
+     * <p>
+     * The eligibility rules applied are:
+     * - Single applicants aged 35 or older: eligible only for 2-Room flats
+     * - Married applicants aged 21 or older: eligible for both 2-Room and 3-Room
+     * flats
+     * - All other applicants: not eligible
+     * </p>
      *
-     * @param user     The applicant.
-     * @param flatType The flat type to check.
-     * @return true if eligible, false otherwise.
+     * @param user     The applicant user to check eligibility for
+     * @param flatType The flat type to check eligibility against
+     * @return true if the applicant is eligible for the flat type, false otherwise
      */
     private boolean isApplicantEligibleForFlatType(User user, FlatType flatType) {
         if (user == null || flatType == null)
@@ -263,14 +327,28 @@ public class ApplicationUIHelper {
         }
     }
 
-    // Helper to display a list of Applications and return a map for selection
     /**
      * Displays a formatted list of applications and returns a map for selection.
+     * <p>
+     * This method presents a comprehensive list of applications with key details:
+     * - Application ID
+     * - Applicant NRIC
+     * - Project name and ID
+     * - Application status (including withdrawal requests)
+     * - Flat type preference
+     * - Submission date
+     * </p>
+     * <p>
+     * The method returns a map that associates displayed index numbers with their
+     * corresponding Application objects, facilitating easy selection in calling
+     * methods.
+     * </p>
      * 
-     * @param apps  List of applications to display.
-     * @param title Title for the list header.
-     * @return Map where key is the displayed number, value is the Application.
-     *         Empty map if list is null/empty.
+     * @param apps  List of applications to display
+     * @param title Title for the list header
+     * @return A map where keys are display indices and values are Application
+     *         objects
+     *         Returns an empty map if the input list is null or empty
      */
     public Map<Integer, Application> displayApplicationList(List<Application> apps, String title) {
         baseUI.displayHeader(title); // Use injected BaseUI
@@ -298,8 +376,7 @@ public class ApplicationUIHelper {
                     app.getStatus(), // Enum name is usually fine
                     withdrawalStatus,
                     preference,
-                    baseUI.formatDateSafe(app.getSubmissionDate()) 
-            );
+                    baseUI.formatDateSafe(app.getSubmissionDate()));
             baseUI.displayMessage(formattedString); // Use injected BaseUI
             appMap.put(index, app);
             index++;

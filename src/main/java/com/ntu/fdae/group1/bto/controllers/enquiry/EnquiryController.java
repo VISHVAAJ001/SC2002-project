@@ -17,13 +17,43 @@ import com.ntu.fdae.group1.bto.services.enquiry.IEnquiryService;
 import com.ntu.fdae.group1.bto.services.project.IOfficerRegistrationService;
 
 /**
- * Controller for enquiry-related operations
+ * Controller responsible for managing enquiry-related operations in the BTO
+ * Management System.
+ * <p>
+ * This controller serves as an intermediary between the UI layer and the
+ * enquiry service,
+ * handling operations such as creating, editing, and deleting enquiries, as
+ * well as
+ * managing replies to enquiries. It also enforces business rules regarding who
+ * can
+ * perform certain operations on enquiries.
+ * </p>
+ * <p>
+ * The controller implements role-based authorization checks to ensure that:
+ * - Only the creator of an enquiry can edit or delete it
+ * - Enquiries that have been replied to cannot be edited or deleted
+ * - HDB Officers can only reply to enquiries for projects they are approved for
+ * - HDB Managers can access and reply to all enquiries
+ * </p>
  */
 public class EnquiryController {
     private final IEnquiryService enquiryService;
     private final IOfficerRegistrationService registrationService;
 
     // Constructor for dependency injection
+    /**
+     * Constructs a new EnquiryController with the specified services.
+     * <p>
+     * Uses dependency injection to receive the required services and performs
+     * null checks to ensure valid dependencies.
+     * </p>
+     * 
+     * @param enquiryService      The service handling enquiry-related business
+     *                            logic
+     * @param registrationService The service handling officer registration status
+     *                            checks
+     * @throws NullPointerException if either service is null
+     */
     public EnquiryController(IEnquiryService enquiryService, IOfficerRegistrationService registrationService) {
         this.enquiryService = Objects.requireNonNull(enquiryService, "EnquiryService cannot be null");
         this.registrationService = Objects.requireNonNull(registrationService,
@@ -31,19 +61,30 @@ public class EnquiryController {
     }
 
     /**
-     * Creates a new enquiry
+     * Creates a new enquiry in the system.
+     * <p>
+     * Allows users to submit enquiries either related to a specific project or
+     * as general enquiries when projectId is null. The enquiry is associated with
+     * the user who created it.
+     * </p>
      * 
      * @param user      The user creating the enquiry
      * @param projectId ID of the related project, or null for general enquiries
      * @param content   The enquiry content
-     * @return The created enquiry
+     * @return The created enquiry with its assigned ID and metadata
      */
     public Enquiry createEnquiry(User user, String projectId, String content) {
         return enquiryService.createEnquiry(user, projectId, content);
     }
 
     /**
-     * Edits an existing enquiry
+     * Edits an existing enquiry's content.
+     * <p>
+     * This operation is restricted by the following business rules:
+     * 1. Only the original creator of the enquiry can edit it
+     * 2. Enquiries that have already received a reply cannot be edited
+     * 3. The new content must not be empty or null
+     * </p>
      * 
      * @param enquiryId  ID of the enquiry to edit
      * @param newContent New content for the enquiry
@@ -77,7 +118,12 @@ public class EnquiryController {
     }
 
     /**
-     * Deletes an enquiry
+     * Deletes an existing enquiry from the system.
+     * <p>
+     * This operation is restricted by the following business rules:
+     * 1. Only the original creator of the enquiry can delete it
+     * 2. Enquiries that have already received a reply cannot be deleted
+     * </p>
      * 
      * @param enquiryId ID of the enquiry to delete
      * @param user      The user deleting the enquiry
@@ -105,12 +151,22 @@ public class EnquiryController {
     }
 
     /**
-     * Adds a reply to an enquiry
+     * Adds an official reply to an existing enquiry.
+     * <p>
+     * This operation is restricted by role-based authorization:
+     * - HDB Managers can reply to any enquiry
+     * - HDB Officers can only reply to enquiries for projects they are approved for
+     * </p>
+     * <p>
+     * Once an enquiry has been replied to, it can no longer be edited or deleted by
+     * the original submitter.
+     * </p>
      * 
+     * @param staff        The HDB staff member (Officer or Manager) providing the
+     *                     reply
      * @param enquiryId    ID of the enquiry to reply to
-     * @param replyContent The reply content
-     * @param staff        The staff member replying
-     * @return true if reply was successful, false otherwise
+     * @param replyContent The content of the reply
+     * @return true if reply was successfully added, false otherwise
      */
     public boolean replyToEnquiry(HDBStaff staff, String enquiryId, String replyContent) {
         // Check if the staff member is allowed to reply to the enquiry
@@ -139,19 +195,29 @@ public class EnquiryController {
     }
 
     /**
-     * Gets all enquiries by a specific user
+     * Retrieves all enquiries submitted by a specific user.
+     * <p>
+     * This method allows users to view their own enquiry history, including
+     * both replied and non-replied enquiries.
+     * </p>
      * 
-     * @param user The user
-     * @return List of enquiries by the user
+     * @param user The user whose enquiries to retrieve
+     * @return List of enquiries submitted by the user, or an empty list if none
+     *         exist
      */
     public List<Enquiry> viewMyEnquiries(User user) {
         return enquiryService.viewMyEnquiries(user);
     }
 
     /**
-     * Gets all enquiries in the system
+     * Retrieves all enquiries in the system.
+     * <p>
+     * This method provides access to all enquiries regardless of their status or
+     * the project they are associated with. It is typically used by administrators
+     * or for reporting purposes.
+     * </p>
      * 
-     * @return All enquiries
+     * @return List of all enquiries in the system
      */
     public List<Enquiry> viewAllEnquiries() {
         return enquiryService.viewAllEnquiries();
@@ -160,17 +226,24 @@ public class EnquiryController {
     /**
      * Retrieves enquiries associated with a specific project, performing
      * authorization checks.
-     * Managers can view enquiries for any project.
-     * Officers can only view enquiries for projects they are approved to handle.
+     * <p>
+     * This method implements role-based access control:
+     * - Managers can view enquiries for any project
+     * - Officers can only view enquiries for projects they are approved to handle
+     * </p>
+     * <p>
+     * The method performs thorough validation and exception handling to provide
+     * clear feedback about authorization issues or data access problems.
+     * </p>
      *
-     * @param staff     The HDBStaff member (Officer or Manager) making the request.
-     * @param projectId The ID of the project whose enquiries are requested.
-     * @return A List of Enquiry objects for the specified project.
-     * @throws InvalidInputException   if projectId is null or empty.
+     * @param staff     The HDB staff member (Officer or Manager) making the request
+     * @param projectId The ID of the project whose enquiries are requested
+     * @return A List of Enquiry objects for the specified project
+     * @throws InvalidInputException   if projectId is null or empty
      * @throws AuthenticationException if the staff member is not authorized to view
-     *                                 these enquiries.
+     *                                 these enquiries
      * @throws DataAccessException     if an error occurs during data retrieval or
-     *                                 auth check.
+     *                                 authorization check
      */
     public List<Enquiry> viewProjectEnquiries(HDBStaff staff, String projectId)
             throws InvalidInputException, AuthenticationException, DataAccessException {
@@ -227,10 +300,16 @@ public class EnquiryController {
     }
 
     /**
-     * Finds an enquiry by its ID
+     * Finds an enquiry by its unique identifier.
+     * <p>
+     * This method retrieves a specific enquiry based on its ID. It is commonly used
+     * before performing operations like editing, deleting, or replying to an
+     * enquiry
+     * to verify the enquiry exists and check its current state.
+     * </p>
      * 
      * @param enquiryId ID of the enquiry to find
-     * @return The enquiry, or null if not found
+     * @return The enquiry if found, or null if no enquiry exists with the given ID
      */
     public Enquiry findEnquiryById(String enquiryId) {
         return enquiryService.findEnquiryById(enquiryId);

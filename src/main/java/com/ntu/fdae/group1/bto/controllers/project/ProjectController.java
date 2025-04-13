@@ -92,20 +92,27 @@ public class ProjectController {
     // ****** Overload without filters ******
     /**
      * Gets projects visible to a user (without additional filters).
+     * 
      * @param user The user to get visible projects for
      * @return List of visible projects
      */
     public List<Project> getVisibleProjectsForUser(User user) {
-        if (user == null) { System.err.println("Error: User context required."); return Collections.emptyList(); }
+        if (user == null) {
+            System.err.println("Error: User context required.");
+            return Collections.emptyList();
+        }
         // Call the service overload without filters
-       return projectService.getVisibleProjectsForUser(user);
-   }
+        return projectService.getVisibleProjectsForUser(user);
+    }
 
     /**
-     * Gets projects visible to a user
-     * 
-     * @param user The user to get visible projects for
-     * @return List of visible projects
+     * Retrieves projects that are visible to a specific user, with optional
+     * filtering.
+     *
+     * @param user    The user for whom to retrieve visible projects
+     * @param filters Optional filters to apply to the results (e.g., neighborhood,
+     *                flat types)
+     * @return A list of projects visible to the user, filtered as specified
      */
     public List<Project> getVisibleProjectsForUser(User user, Map<String, Object> filters) {
         // No specific authorization needed here usually, as the service filters based
@@ -120,10 +127,18 @@ public class ProjectController {
     }
 
     /**
-     * Gets all projects in the system
-     * 
-     * @return All projects
-     * @throws AuthorizationException
+     * Retrieves all projects in the system, with optional filtering.
+     * <p>
+     * This method is restricted to HDB staff members and will throw an exception
+     * if accessed by regular applicants.
+     * </p>
+     *
+     * @param user   The user requesting the projects (must be HDB staff)
+     * @param filter Optional filters to apply to the results (e.g., neighborhood,
+     *               flat types)
+     * @return A list of all projects, filtered as specified
+     * @throws AuthorizationException If the user is not authorized to view all
+     *                                projects
      */
     public List<Project> getAllProjects(User user, Map<String, Object> filter) throws AuthorizationException {
         if (user.getRole() != UserRole.HDB_MANAGER) {
@@ -135,6 +150,7 @@ public class ProjectController {
 
     /**
      * Gets projects managed by a specific HDB Manager object.
+     * 
      * @param manager The HDBManager object.
      * @return List of projects managed by the manager.
      */
@@ -146,8 +162,18 @@ public class ProjectController {
         return projectService.getProjectsManagedBy(manager.getNric());
     }
 
-    // Overload accepting HDBManager and filters
-    public List<Project> getProjectsManagedBy(HDBManager manager, Map<String, Object> filters) { // Renamed slightly for clarity
+    /**
+     * Retrieves projects managed by a specific HDB manager, with optional
+     * filtering.
+     *
+     * @param manager The HDB manager whose projects to retrieve
+     * @param filters Optional filters to apply to the results (e.g., neighborhood,
+     *                flat types)
+     * @return A list of projects managed by the specified manager, filtered as
+     *         specified
+     */
+    public List<Project> getProjectsManagedBy(HDBManager manager, Map<String, Object> filters) { // Renamed slightly for
+                                                                                                 // clarity
         if (manager == null) {
             System.err.println("Controller Warning: Manager object required for getManagedProjects.");
             return Collections.emptyList();

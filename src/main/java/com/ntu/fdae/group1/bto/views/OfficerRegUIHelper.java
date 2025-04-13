@@ -10,30 +10,63 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- * Helper class for displaying Officer Registration related lists and details.
- * Uses composition with BaseUI for console interactions.
+ * Helper class for officer registration related UI operations in the BTO
+ * Management System.
+ * <p>
+ * This class provides reusable UI components for displaying and managing
+ * officer
+ * registration data, including:
+ * - Displaying lists of officer registrations
+ * - Showing detailed information about specific registrations
+ * - Formatting registration data for user-friendly display
+ * </p>
+ * <p>
+ * The helper follows a composition pattern, working with a BaseUI instance for
+ * common UI operations and a ProjectController for retrieving project
+ * information
+ * related to registrations.
+ * </p>
  */
 public class OfficerRegUIHelper {
 
-    private final BaseUI baseUI; // Instance for console I/O
-    private final ProjectController projectController; // To get project names
+    /**
+     * The base UI component for common UI operations.
+     */
+    private final BaseUI baseUI;
 
     /**
-     * Constructor for OfficerRegUIHelper.
-     * @param baseUI An instance of BaseUI (or subclass) for console I/O.
-     * @param projectController Controller to fetch project details.
+     * The controller for retrieving project information related to registrations.
+     */
+    private final ProjectController projectController;
+
+    /**
+     * Constructs a new OfficerRegUIHelper with the specified dependencies.
+     *
+     * @param baseUI            An instance of BaseUI for console I/O operations
+     * @param projectController Controller to fetch project details
+     * @throws NullPointerException if either parameter is null
      */
     public OfficerRegUIHelper(BaseUI baseUI, ProjectController projectController) {
         this.baseUI = Objects.requireNonNull(baseUI, "BaseUI cannot be null for OfficerRegUIHelper");
-        this.projectController = Objects.requireNonNull(projectController, "ProjectController cannot be null for OfficerRegUIHelper");
+        this.projectController = Objects.requireNonNull(projectController,
+                "ProjectController cannot be null for OfficerRegUIHelper");
     }
 
     /**
-     * Displays a formatted list of officer registrations and returns a map for selection.
-     * @param regs List of registrations to display.
-     * @param title Title for the list header.
-     * @return Map where key is the displayed number, value is the OfficerRegistration. Empty map if list is null/empty.
-    */
+     * Displays a formatted list of officer registrations and provides a mapping for
+     * selection.
+     * <p>
+     * This method displays each registration with its key details including ID,
+     * officer,
+     * project name, status, and date, and returns a map that associates the display
+     * index with the corresponding registration object for easy selection.
+     * </p>
+     *
+     * @param regs  List of registrations to display
+     * @param title Title for the list header
+     * @return Map where key is the displayed number, value is the
+     *         OfficerRegistration; empty map if list is null/empty
+     */
     public Map<Integer, OfficerRegistration> displayOfficerRegList(List<OfficerRegistration> regs, String title) {
         this.baseUI.displayHeader(title);
         Map<Integer, OfficerRegistration> regMap = new HashMap<>();
@@ -57,8 +90,7 @@ public class OfficerRegUIHelper {
                     projName, // Display name
                     reg.getProjectId(), // Display ID
                     reg.getStatus(),
-                    this.baseUI.formatDateSafe(reg.getRequestDate())
-            );
+                    this.baseUI.formatDateSafe(reg.getRequestDate()));
             this.baseUI.displayMessage(formattedString);
             regMap.put(index, reg);
             index++;
@@ -68,9 +100,15 @@ public class OfficerRegUIHelper {
     }
 
     /**
-    * Displays details for a single OfficerRegistration.
-    * @param reg The registration object to display details for.
-    */
+     * Displays detailed information about a specific officer registration.
+     * <p>
+     * Shows comprehensive information about a single registration, including
+     * its ID, associated officer, project details, request date, and current
+     * status.
+     * </p>
+     *
+     * @param reg The registration object to display details for
+     */
     public void displayOfficerRegistrationDetails(OfficerRegistration reg) {
         if (reg == null) {
             this.baseUI.displayError("No registration details to display.");
@@ -87,10 +125,16 @@ public class OfficerRegUIHelper {
     }
 
     /**
-    * Displays a formatted list of officer registrations for viewing purposes.
-    * @param regs List of registrations to display.
-    * @param title Title for the list header.
-    */
+     * Displays a formatted list of officer registrations for viewing purposes only.
+     * <p>
+     * Unlike displayOfficerRegList, this method is designed for view-only scenarios
+     * where user selection is not required. It displays registrations in a tabular
+     * format with columns for key details.
+     * </p>
+     *
+     * @param regs  List of registrations to display
+     * @param title Title for the list header
+     */
     public void displayOfficerRegListForViewing(List<OfficerRegistration> regs, String title) {
         this.baseUI.displayHeader(title);
         if (regs == null || regs.isEmpty()) {
@@ -99,18 +143,20 @@ public class OfficerRegUIHelper {
         }
 
         this.baseUI.displayMessage(String.format("%-10s | %-15s | %-20s | %-12s | %s",
-            "Reg ID", "Project ID", "Project Name", "Request Date", "Status"));
-        this.baseUI.displayMessage("-------------------------------------------------------------------------"); // Adjust separator length
+                "Reg ID", "Project ID", "Project Name", "Request Date", "Status"));
+        this.baseUI.displayMessage("-------------------------------------------------------------------------"); // Adjust
+                                                                                                                 // separator
+                                                                                                                 // length
 
         regs.forEach(reg -> {
             Project proj = projectController.findProjectById(reg.getProjectId());
             String projName = (proj != null) ? proj.getProjectName() : "Unknown/Deleted";
             this.baseUI.displayMessage(String.format("%-10s | %-15s | %-20s | %-12s | %s",
-                reg.getRegistrationId(),
-                reg.getProjectId(),
-                projName,
-                this.baseUI.formatDateSafe(reg.getRequestDate()),
-                reg.getStatus().name()));
+                    reg.getRegistrationId(),
+                    reg.getProjectId(),
+                    projName,
+                    this.baseUI.formatDateSafe(reg.getRequestDate()),
+                    reg.getStatus().name()));
         });
         this.baseUI.displayMessage("-------------------------------------------------------------------------");
     }

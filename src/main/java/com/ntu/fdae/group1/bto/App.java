@@ -41,14 +41,47 @@ import com.ntu.fdae.group1.bto.exceptions.DataAccessException;
 /**
  * Main entry point for the BTO Management System application.
  * Handles initialisation, the main application loop, and routing to user
- * interfaces.
+ * interfaces based on role.
+ * <p>
+ * This class implements the MVC architecture pattern by acting as the bootstrap
+ * component that connects controllers with views and manages the application
+ * lifecycle.
+ * </p>
+ * 
+ * @author Group 1
+ * @version 1.0
  */
 public class App {
+    /**
+     * Container holding all controllers used by the application.
+     * Provides centralized access to controller instances.
+     */
     private final ControllerContainer controllerContainer;
+
+    /**
+     * Scanner instance for handling user input throughout the application.
+     */
     private final Scanner scanner;
+
+    /**
+     * UI component responsible for handling user login.
+     */
     private final LoginUI loginUI;
+
+    /**
+     * Represents the currently authenticated user.
+     * Null when no user is logged in.
+     */
     private User currentUser = null;
 
+    /**
+     * Constructs a new App instance with the specified controller container and
+     * scanner.
+     * Initializes the login UI component.
+     *
+     * @param controllerContainer Container with all the application controllers
+     * @param scanner             Scanner instance for handling user input
+     */
     public App(ControllerContainer controllerContainer, Scanner scanner) {
         this.controllerContainer = controllerContainer;
         this.scanner = scanner;
@@ -56,10 +89,18 @@ public class App {
     }
 
     /**
-     * initialises all application components (Repositories, Services, Controllers).
+     * Initialises all application components (Repositories, Services, Controllers).
      * Handles potential critical errors during initialisation.
+     * <p>
+     * This method follows a specific initialization order:
+     * 1. Repositories are created first
+     * 2. Data is loaded from persistent storage
+     * 3. Services are created with their repository dependencies
+     * 4. Controllers are created with their service dependencies
+     * 5. A controller container is created to manage all controllers
+     * </p>
      *
-     * @return A configured ControllerContainer or null if initialisation fails.
+     * @return A configured ControllerContainer or null if initialisation fails
      */
     private static ControllerContainer initialiseComponents() {
         try {
@@ -145,6 +186,14 @@ public class App {
 
     /**
      * Starts and runs the main application loop.
+     * <p>
+     * This method controls the application's main lifecycle:
+     * 1. Displays a welcome message
+     * 2. Shows the login UI if no user is logged in
+     * 3. Routes logged-in users to their role-specific UI
+     * 4. Handles logout by resetting the current user
+     * 5. Performs cleanup when the application terminates
+     * </p>
      */
     public void run() {
         // TODO: Could consider printing a logo or welcome message here
@@ -179,6 +228,18 @@ public class App {
         // However, saving on modification within services is generally safer.
     }
 
+    /**
+     * Routes the user to the appropriate UI based on their role.
+     * <p>
+     * This method implements role-based access control by:
+     * 1. Determining the user's role
+     * 2. Instantiating the appropriate UI for that role
+     * 3. Displaying the main menu for that UI
+     * 4. Handling any errors that occur during UI routing
+     * </p>
+     *
+     * @param user The authenticated user to route to the appropriate UI
+     */
     private void routeToRoleUI(User user) {
         System.out.printf("\nWelcome, %s (%s)! Routing to your dashboard...\n", user.getName(), user.getRole());
 
@@ -238,6 +299,19 @@ public class App {
         }
     }
 
+    /**
+     * Main method that serves as the entry point for the BTO Management System.
+     * <p>
+     * This method:
+     * 1. Initializes all application components
+     * 2. Creates a Scanner for user input
+     * 3. Instantiates the App class
+     * 4. Starts the application by calling run()
+     * 5. Handles any critical initialization failures
+     * </p>
+     *
+     * @param args Command line arguments (not used)
+     */
     public static void main(String[] args) {
         ControllerContainer controllers = initialiseComponents();
         if (controllers == null) {

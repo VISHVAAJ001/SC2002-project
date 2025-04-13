@@ -30,24 +30,89 @@ import com.ntu.fdae.group1.bto.repository.user.IUserRepository;
 import com.ntu.fdae.group1.bto.services.booking.IEligibilityService;
 import com.ntu.fdae.group1.bto.utils.IdGenerator;
 
+/**
+ * Service class for managing project-related operations in the BTO Management
+ * System.
+ * <p>
+ * This class provides business logic for creating, editing, deleting, and
+ * retrieving
+ * project information. It interacts with repositories and other services to
+ * enforce
+ * application rules and ensure data consistency.
+ * </p>
+ * <p>
+ * Key responsibilities include:
+ * - Managing project lifecycle (creation, editing, deletion)
+ * - Enforcing eligibility rules for managers and applicants
+ * - Filtering and retrieving projects based on user roles and criteria
+ * - Handling visibility toggles and officer registration constraints
+ * </p>
+ */
 public class ProjectService implements IProjectService {
+
+    /**
+     * Repository for accessing and managing project data.
+     */
     private final IProjectRepository projectRepo;
+
+    /**
+     * Repository for accessing and managing user data.
+     */
     private final IUserRepository userRepo;
+
+    /**
+     * Service for checking eligibility rules for managers and applicants.
+     */
     private final IEligibilityService eligibilityService;
+
+    /**
+     * Repository for accessing and managing application data.
+     */
     private final IApplicationRepository applicationRepo;
+
+    /**
+     * Repository for accessing and managing officer registration data.
+     */
     private final IOfficerRegistrationRepository officerRegRepo;
 
+    /**
+     * Constructs a new ProjectService with the required dependencies.
+     *
+     * @param projectRepo        Repository for project data
+     * @param userRepo           Repository for user data
+     * @param eligibilityService Service for eligibility checks
+     * @param applicationRepo    Repository for application data
+     * @param officerRegRepo     Repository for officer registration data
+     * @throws NullPointerException if any of the required dependencies are null
+     */
     public ProjectService(IProjectRepository projectRepo,
             IUserRepository userRepo,
             IEligibilityService eligibilityService,
-            IApplicationRepository applicationRepo, IOfficerRegistrationRepository officerRegRepo) {
+            IApplicationRepository applicationRepo,
+            IOfficerRegistrationRepository officerRegRepo) {
         this.projectRepo = Objects.requireNonNull(projectRepo, "Project Repository cannot be null");
-        this.userRepo = userRepo; // Assign if kept
+        this.userRepo = userRepo; // Optional dependency
         this.eligibilityService = Objects.requireNonNull(eligibilityService, "Eligibility Service cannot be null");
         this.applicationRepo = Objects.requireNonNull(applicationRepo, "Application Repository cannot be null");
         this.officerRegRepo = Objects.requireNonNull(officerRegRepo, "Officer Registration Repository cannot be null");
     }
 
+    /**
+     * Creates a new project with the specified details.
+     * <p>
+     * Validates the input parameters, checks manager eligibility, and ensures
+     * the project meets all business rules before saving it to the repository.
+     * </p>
+     *
+     * @param manager      The HDB manager creating the project
+     * @param name         The name of the project
+     * @param neighborhood The neighborhood where the project is located
+     * @param flatInfoMap  A map of flat types and their details
+     * @param openDate     The opening date for applications
+     * @param closeDate    The closing date for applications
+     * @param officerSlots The maximum number of officer slots for the project
+     * @return The created Project object, or null if creation fails
+     */
     @Override
     public Project createProject(HDBManager manager, String name, String neighborhood,
             Map<String, ProjectFlatInfo> flatInfoMap,
@@ -60,8 +125,9 @@ public class ProjectService implements IProjectService {
         }
         // 1. Check if closing date is before or equal to opening date
         if (closeDate.isBefore(openDate) || closeDate.equals(openDate)) {
-            System.err.println("Service Error: Closing date (" + closeDate + ") cannot be before or the same as opening date ("
-                    + openDate + "). Project creation failed.");
+            System.err.println(
+                    "Service Error: Closing date (" + closeDate + ") cannot be before or the same as opening date ("
+                            + openDate + "). Project creation failed.");
             return null;
         }
         // 2. Check HDB officer slots (1-10)
@@ -99,9 +165,10 @@ public class ProjectService implements IProjectService {
         }
 
         if (typedFlatInfoMap.isEmpty()) {
-            System.err.println("Service Error: Project must offer at least one flat type (TWO_ROOM or THREE_ROOM) with units > 0.");
+            System.err.println(
+                    "Service Error: Project must offer at least one flat type (TWO_ROOM or THREE_ROOM) with units > 0.");
             return null;
-       }
+        }
 
         Project newProject = new Project(projectId, name, neighborhood, typedFlatInfoMap, openDate, closeDate,
                 manager.getNric(), officerSlots);
@@ -110,6 +177,22 @@ public class ProjectService implements IProjectService {
         return newProject;
     }
 
+    /**
+     * Edits the core details of an existing project.
+     * <p>
+     * Validates the input parameters, checks manager permissions, and ensures
+     * the updated project meets all business rules before saving the changes.
+     * </p>
+     *
+     * @param manager      The HDB manager editing the project
+     * @param projectId    The ID of the project to edit
+     * @param name         The new name of the project
+     * @param neighborhood The new neighborhood of the project
+     * @param openDate     The new opening date for applications
+     * @param closeDate    The new closing date for applications
+     * @param officerSlots The new maximum number of officer slots
+     * @return true if the project was successfully updated, false otherwise
+     */
     @Override
     public boolean editCoreProjectDetails(HDBManager manager, String projectId, String name, String neighborhood,
             LocalDate openDate, LocalDate closeDate, int officerSlots) {
@@ -122,8 +205,9 @@ public class ProjectService implements IProjectService {
         }
         // 1. Check if closing date is before opening date
         if (closeDate.isBefore(openDate) || closeDate.equals(openDate)) {
-            System.err.println("Service Error: Closing date (" + closeDate + ") cannot be before or the same as opening date ("
-                    + openDate + "). Project edit failed.");
+            System.err.println(
+                    "Service Error: Closing date (" + closeDate + ") cannot be before or the same as opening date ("
+                            + openDate + "). Project edit failed.");
             return false;
         }
         // 2. Check HDB officer slots (1-10)
@@ -182,6 +266,17 @@ public class ProjectService implements IProjectService {
         return true;
     }
 
+    /**
+     * Deletes a project if it meets the deletion criteria.
+     * <p>
+     * Ensures the project has no active applications and that the manager has
+     * the necessary permissions to delete it.
+     * </p>
+     *
+     * @param manager   The HDB manager requesting the deletion
+     * @param projectId The ID of the project to delete
+     * @return true if the project was successfully deleted, false otherwise
+     */
     @Override
     public boolean deleteProject(HDBManager manager, String projectId) {
         Project project = projectRepo.findById(projectId);
@@ -222,6 +317,17 @@ public class ProjectService implements IProjectService {
         }
     }
 
+    /**
+     * Toggles the visibility of a project.
+     * <p>
+     * Allows the manager to make a project visible or hidden, depending on its
+     * current state.
+     * </p>
+     *
+     * @param manager   The HDB manager requesting the visibility change
+     * @param projectId The ID of the project to toggle visibility for
+     * @return true if the visibility was successfully toggled, false otherwise
+     */
     @Override
     public boolean toggleVisibility(HDBManager manager, String projectId) {
         Project project = projectRepo.findById(projectId);
@@ -242,6 +348,16 @@ public class ProjectService implements IProjectService {
         return true;
     }
 
+    /**
+     * Retrieves all projects visible to a specific user, with optional filters.
+     * <p>
+     * Filters can include criteria such as neighborhood, flat type, and visibility.
+     * </p>
+     *
+     * @param user    The user requesting the projects
+     * @param filters A map of optional filters to apply
+     * @return A list of projects matching the criteria
+     */
     @Override
     public List<Project> getAllProjects(User user, Map<String, Object> filters) {
         // Authorization should be in Controller
@@ -262,6 +378,12 @@ public class ProjectService implements IProjectService {
         return stream.collect(Collectors.toList());
     }
 
+    /**
+     * Retrieves all projects managed by a specific manager.
+     *
+     * @param managerNRIC The NRIC of the manager
+     * @return A list of projects managed by the specified manager
+     */
     @Override
     public List<Project> getProjectsManagedBy(String managerNRIC) {
         if (managerNRIC == null || managerNRIC.trim().isEmpty()) {
@@ -298,6 +420,12 @@ public class ProjectService implements IProjectService {
         return stream.collect(Collectors.toList());
     }
 
+    /**
+     * Retrieves a project by its unique identifier.
+     *
+     * @param projectId The ID of the project to retrieve
+     * @return The Project object, or null if not found
+     */
     @Override
     public Project findProjectById(String projectId) {
         if (projectId == null || projectId.trim().isEmpty()) {
@@ -428,10 +556,10 @@ public class ProjectService implements IProjectService {
 
     /**
      * Checks if the application periods of two projects overlap.
+     * 
      * Overlap occurs if one project's start date is before or on the other's end
      * date,
      * AND that first project's end date is after or on the other's start date.
-     * Assumes dates are inclusive as per PDF pg 4.
      *
      * @param p1 Project 1
      * @param p2 Project 2
@@ -503,6 +631,18 @@ public class ProjectService implements IProjectService {
         return false;
     }
 
+    /**
+     * Applies optional filters to a stream of projects.
+     * <p>
+     * Filters can include neighborhood, flat type, and visibility, depending on
+     * the user's role and the provided criteria.
+     * </p>
+     *
+     * @param stream      The stream of projects to filter
+     * @param filters     A map of filter criteria
+     * @param isStaffView true if the user is a staff member, false otherwise
+     * @return The filtered stream of projects
+     */
     private Stream<Project> applyOptionalFilters(Stream<Project> stream, Map<String, Object> filters,
             boolean isStaffView) {
         if (filters == null || filters.isEmpty()) {
@@ -520,11 +660,12 @@ public class ProjectService implements IProjectService {
         // Flat Type (Checks if project *offers* this type AND has units > 0)
         if (filters.containsKey("flatType")) {
             try {
-                FlatType flatType = (FlatType) filters.get("flatType"); 
+                FlatType flatType = (FlatType) filters.get("flatType");
                 if (flatType != null) {
                     stream = stream.filter(project -> {
                         // Check 1: Does the project have flat info
-                        if (project.getFlatTypes() == null) return false;
+                        if (project.getFlatTypes() == null)
+                            return false;
                         // Check 2: Does the project offer this specific flat type?
                         ProjectFlatInfo info = project.getFlatTypes().get(flatType);
                         // Check 3: Does this flat type actually have units defined?

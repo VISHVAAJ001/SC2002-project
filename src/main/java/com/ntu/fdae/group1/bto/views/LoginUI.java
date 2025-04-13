@@ -7,10 +7,35 @@ import com.ntu.fdae.group1.bto.exceptions.AuthenticationException;
 
 import java.util.Scanner;
 
+/**
+ * User interface class for handling the login process in the BTO Management
+ * System.
+ * <p>
+ * This class is responsible for displaying the login prompt, collecting user
+ * credentials, and delegating authentication to the AuthenticationController.
+ * It serves as the entry point to the system for all users, handling initial
+ * authentication before directing users to their role-specific UI.
+ * </p>
+ * <p>
+ * The class extends BaseUI to leverage common UI components and input handling
+ * methods, providing a consistent user experience.
+ * </p>
+ */
 public class LoginUI extends BaseUI {
 
+    /**
+     * Controller for handling authentication operations.
+     */
     private AuthenticationController authController;
 
+    /**
+     * Constructs a new LoginUI with the specified authentication controller and
+     * scanner.
+     *
+     * @param authController The controller for handling authentication operations
+     * @param scanner        The scanner for reading user input
+     * @throws IllegalArgumentException if authController is null
+     */
     public LoginUI(AuthenticationController authController, Scanner scanner) {
         super(scanner);
         if (authController == null) {

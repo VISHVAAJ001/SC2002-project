@@ -100,11 +100,20 @@ public class ApplicationController {
     }
 
     /**
-     * Gets all applications for a specific project
-     * 
-     * @param staff     HDB staff member requesting the information
-     * @param projectId ID of the project
-     * @return List of applications for the project
+     * Retrieves all applications for a specific project.
+     * <p>
+     * This method allows HDB staff to view all applications submitted for a
+     * particular project, which is useful for project management and status
+     * tracking.
+     * </p>
+     *
+     * @param staff     The HDB staff member making the request
+     * @param projectId The ID of the project to retrieve applications for
+     * @return A list of applications for the specified project
+     * @throws ApplicationException If the staff member doesn't have appropriate
+     *                              access rights
+     *                              or if there's an error retrieving the
+     *                              applications
      */
     public List<Application> getProjectApplications(HDBStaff staff, String projectId) throws ApplicationException {
         if (staff == null)
@@ -116,11 +125,19 @@ public class ApplicationController {
     }
 
     /**
-     * Gets all applications with a specific status
-     * 
-     * @param staff  HDB staff member requesting the information
-     * @param status Status to filter by
-     * @return List of applications with the specified status
+     * Retrieves applications with a specific status.
+     * <p>
+     * This method allows HDB staff to filter applications by status, which is
+     * useful for processing applications at various stages of the approval process.
+     * </p>
+     *
+     * @param staff  The HDB staff member making the request
+     * @param status The status to filter applications by
+     * @return A list of applications with the specified status
+     * @throws ApplicationException If the staff member doesn't have appropriate
+     *                              access rights
+     *                              or if there's an error retrieving the
+     *                              applications
      */
     public List<Application> getApplicationsByStatus(HDBStaff staff, ApplicationStatus status)
             throws ApplicationException {

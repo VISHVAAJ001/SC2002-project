@@ -21,12 +21,48 @@ import com.ntu.fdae.group1.bto.repository.project.IProjectRepository;
 import com.ntu.fdae.group1.bto.repository.user.IUserRepository;
 import com.ntu.fdae.group1.bto.utils.IdGenerator;
 
+/**
+ * Implementation of the IBookingService interface that provides booking
+ * functionality
+ * for the BTO Management System.
+ * <p>
+ * This service is responsible for managing the booking process, including
+ * creating
+ * new bookings, retrieving booking information, and handling booking
+ * cancellations.
+ * It implements all the business logic related to the booking process.
+ * </p>
+ */
 public class BookingService implements IBookingService {
-    private IApplicationRepository applicationRepo;
-    private IProjectRepository projectRepo;
-    private IBookingRepository bookingRepo;
-    private IUserRepository userRepo;
 
+    /**
+     * Repository for accessing and manipulating Application entities.
+     */
+    private final IApplicationRepository applicationRepo;
+
+    /**
+     * Repository for accessing and manipulating Project entities.
+     */
+    private final IProjectRepository projectRepo;
+
+    /**
+     * Repository for accessing and manipulating Booking entities.
+     */
+    private final IBookingRepository bookingRepo;
+
+    /**
+     * Repository for accessing and manipulating User entities.
+     */
+    private final IUserRepository userRepo;
+
+    /**
+     * Constructs a new BookingService with the specified repositories.
+     *
+     * @param appRepo     Repository for Application entities
+     * @param projRepo    Repository for Project entities
+     * @param bookingRepo Repository for Booking entities
+     * @param userRepo    Repository for User entities
+     */
     public BookingService(IApplicationRepository appRepo, IProjectRepository projRepo,
             IBookingRepository bookingRepo, IUserRepository userRepo) {
         this.applicationRepo = appRepo;
@@ -35,6 +71,16 @@ public class BookingService implements IBookingService {
         this.userRepo = userRepo;
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Implementation details:
+     * - Validates that the officer has permission to create bookings
+     * - Validates the applicant exists and has an application for the project
+     * - Checks if the flat type requested is available
+     * - Creates and saves a booking record
+     * </p>
+     */
     @Override
     public Booking performBooking(HDBOfficer officer, String applicantNRIC, FlatType flatType) throws BookingException {
 
@@ -140,6 +186,9 @@ public class BookingService implements IBookingService {
         return newBooking;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public List<Booking> getBookingsByProject(String projectId) throws BookingException {
         if (projectId == null || projectId.trim().isEmpty()) {

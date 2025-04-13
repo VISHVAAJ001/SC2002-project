@@ -1,44 +1,60 @@
 package com.ntu.fdae.group1.bto.repository.util;
 
-import com.ntu.fdae.group1.bto.exceptions.DataAccessException;
-import com.ntu.fdae.group1.bto.utils.FileUtil;
-
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
-public class CsvRepositoryHelper<ID, T> {
+import com.ntu.fdae.group1.bto.exceptions.DataAccessException;
+import com.ntu.fdae.group1.bto.utils.FileUtil;
 
+/**
+ * Helper class that provides common CSV file operations for repositories.
+ * <p>
+ * This class encapsulates the logic for reading from and writing to CSV files,
+ * providing a reusable component for repository implementations. It handles
+ * serialization and deserialization between entity objects and CSV format.
+ * </p>
+ * 
+ * @param <ID> The type of identifier used for entities
+ * @param <T>  The entity type this helper manages
+ */
+public class CsvRepositoryHelper<ID, T> {
     private final String filePath;
-    private final String[] header;
-    // Function to convert raw CSV data (List<String[]>) into the entity map
+    private final String[] csvHeader;
     private final Function<List<String[]>, Map<ID, T>> deserializer;
-    // Function to convert the entity map into raw CSV data (List<String[]>)
     private final Function<Map<ID, T>, List<String[]>> serializer;
 
     /**
-     * Constructor for the helper.
-     * @param filePath Path to the primary CSV file.
-     * @param header The CSV header row.
-     * @param deserializer Function that takes List<String[]> read from CSV and returns Map<ID, T>.
-     * @param serializer Function that takes the current Map<ID, T> and returns List<String[]> to be written.
+     * Constructs a new CsvRepositoryHelper with the specified parameters.
+     *
+     * @param filePath     The path to the CSV file
+     * @param csvHeader    The header row for the CSV file
+     * @param deserializer Function that takes List&lt;String[]&gt; read from CSV
+     *                     and returns Map&lt;ID, T&gt;
+     * @param serializer   Function that takes the current Map&lt;ID, T&gt; and
+     *                     returns List&lt;String[]&gt; to be written
      */
-    public CsvRepositoryHelper(String filePath,
-                               String[] header,
-                               Function<List<String[]>, Map<ID, T>> deserializer,
-                               Function<Map<ID, T>, List<String[]>> serializer) {
+    public CsvRepositoryHelper(String filePath, String[] csvHeader,
+            Function<List<String[]>, Map<ID, T>> deserializer,
+            Function<Map<ID, T>, List<String[]>> serializer) {
         this.filePath = filePath;
-        this.header = header;
+        this.csvHeader = csvHeader;
         this.deserializer = deserializer;
         this.serializer = serializer;
     }
 
     /**
-     * Loads data from the CSV file using the provided deserializer.
-     * Handles file reading and exception wrapping.
-     * @return The deserialized map of entities.
-     * @throws DataAccessException if there's an error reading the file.
+     * Loads data from the CSV file and converts it to a map of entities.
+     * <p>
+     * This method reads the CSV file at the configured path, skips the header row,
+     * and uses the provided deserializer function to convert the CSV data into
+     * entity objects.
+     * </p>
+     *
+     * @return A map of entities, keyed by their identifiers
+     * @throws DataAccessException If an error occurs while reading or parsing the
+     *                             CSV file
      */
     public Map<ID, T> loadData() throws DataAccessException {
         try {
@@ -47,23 +63,29 @@ public class CsvRepositoryHelper<ID, T> {
         } catch (IOException e) {
             throw new DataAccessException("Error loading data from file: " + filePath + " - " + e.getMessage(), e);
         } catch (Exception e) { // Catch potential deserialization errors too
-             throw new DataAccessException("Error deserializing data from file: " + filePath + " - " + e.getMessage(), e);
+            throw new DataAccessException("Error deserializing data from file: " + filePath + " - " + e.getMessage(),
+                    e);
         }
     }
 
     /**
-     * Saves the provided entity map to the CSV file using the provided serializer.
-     * Handles file writing and exception wrapping.
-     * @param entities The map of entities to save.
-     * @throws DataAccessException if there's an error writing the file.
+     * Saves a map of entities to the CSV file.
+     * <p>
+     * This method uses the provided serializer function to convert entity objects
+     * into CSV data, then writes that data to the configured file path with the
+     * specified header.
+     * </p>
+     *
+     * @param entities The map of entities to save
+     * @throws DataAccessException If an error occurs while writing to the CSV file
      */
     public void saveData(Map<ID, T> entities) throws DataAccessException {
         try {
             List<String[]> serializedData = serializer.apply(entities);
-            FileUtil.writeCsvLines(filePath, serializedData, header);
+            FileUtil.writeCsvLines(filePath, serializedData, csvHeader);
         } catch (IOException e) {
             throw new DataAccessException("Error saving data to file: " + filePath + " - " + e.getMessage(), e);
-        } catch (Exception e) { // Catch potential serialization errors 
+        } catch (Exception e) { // Catch potential serialization errors
             throw new DataAccessException("Error serializing data for file: " + filePath + " - " + e.getMessage(), e);
         }
     }

@@ -29,11 +29,10 @@ public class OfficerRegistrationController {
     private final IProjectService projectService;
 
     /**
-     * Constructs a new OfficerRegistrationController.
-     * Dependencies (like the service) are typically injected.
+     * Constructs a new OfficerRegistrationController with necessary services.
      *
-     * @param regService The registration service implementation to use. Must not be
-     *                   null.
+     * @param regService  Service for officer registration operations
+     * @param projService Service for project-related operations
      */
     public OfficerRegistrationController(IOfficerRegistrationService regService, IProjectService projService) {
         this.registrationService = regService;
@@ -157,22 +156,29 @@ public class OfficerRegistrationController {
     }
 
     /**
-     * Gets the count of PENDING officer registrations specifically for a given project.
-     * Accessible by the project's managing HDB Manager or an HDB Officer approved for the project.
+     * Gets the count of PENDING officer registrations specifically for a given
+     * project.
+     * Accessible by the project's managing HDB Manager or an HDB Officer approved
+     * for the project.
      * Includes authorization checks based on the staff member's role.
      *
-     * @param staff     The HDBStaff (Manager or Officer) requesting the count. Must not be null.
+     * @param staff     The HDBStaff (Manager or Officer) requesting the count. Must
+     *                  not be null.
      * @param projectId The ID of the project. Must not be null or blank.
      * @return The number of pending registrations for the specified project.
      * @throws IllegalArgumentException if staff or projectId is null/blank.
-     * @throws AuthorizationException if the staff member is not authorized for this project based on their role.
-     * @throws RuntimeException if the project is not found or an unexpected error occurs during retrieval.
+     * @throws AuthorizationException   if the staff member is not authorized for
+     *                                  this project based on their role.
+     * @throws RuntimeException         if the project is not found or an unexpected
+     *                                  error occurs during retrieval.
      */
     public int getPendingRegistrationCountForProject(HDBStaff staff, String projectId) throws AuthorizationException {
         // Validate inputs
-        Objects.requireNonNull(staff, "HDBStaff context cannot be null when calling getPendingRegistrationCountForProject.");
+        Objects.requireNonNull(staff,
+                "HDBStaff context cannot be null when calling getPendingRegistrationCountForProject.");
         if (projectId == null || projectId.trim().isEmpty()) {
-            throw new IllegalArgumentException("Project ID cannot be null or blank for getPendingRegistrationCountForProject.");
+            throw new IllegalArgumentException(
+                    "Project ID cannot be null or blank for getPendingRegistrationCountForProject.");
         }
 
         try {
@@ -194,10 +200,13 @@ public class OfficerRegistrationController {
                 List<String> approvedNrics = project.getApprovedOfficerNrics();
                 isAuthorized = (approvedNrics != null && approvedNrics.contains(staff.getNric()));
             }
-            // If 'staff' is neither (shouldn't happen with proper hierarchy), isAuthorized remains false.
+            // If 'staff' is neither (shouldn't happen with proper hierarchy), isAuthorized
+            // remains false.
 
             if (!isAuthorized) {
-                throw new AuthorizationException("Staff member " + staff.getNric() + " (Role: " + staff.getClass().getSimpleName() + ") is not authorized to view details for project " + projectId);
+                throw new AuthorizationException(
+                        "Staff member " + staff.getNric() + " (Role: " + staff.getClass().getSimpleName()
+                                + ") is not authorized to view details for project " + projectId);
             }
             // --- End Authorization Check ---
 
@@ -209,7 +218,8 @@ public class OfficerRegistrationController {
             throw ae;
         } catch (Exception e) {
             // Catch runtime errors from service/repo layer or project fetch
-            System.err.println("Controller ERROR: Failed to retrieve pending registration count for project " + projectId + ": " + e.getMessage());
+            System.err.println("Controller ERROR: Failed to retrieve pending registration count for project "
+                    + projectId + ": " + e.getMessage());
             // Re-throw as a runtime exception to signal a system problem
             throw new RuntimeException("Failed to retrieve pending registration count due to an internal error.", e);
         }

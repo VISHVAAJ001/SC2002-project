@@ -25,14 +25,79 @@ import com.ntu.fdae.group1.bto.repository.user.IUserRepository;
 import com.ntu.fdae.group1.bto.services.booking.IEligibilityService;
 import com.ntu.fdae.group1.bto.utils.IdGenerator;
 
+/**
+ * Implementation of the IApplicationService interface that manages the
+ * application
+ * lifecycle in the BTO Management System.
+ * 
+ * This service handles all aspects of BTO project applications, including:
+ * <ul>
+ * <li>Processing new application submissions with eligibility checks</li>
+ * <li>Managing application withdrawals</li>
+ * <li>Supporting the review process for applications and withdrawals by
+ * managers</li>
+ * <li>Retrieving applications based on various criteria</li>
+ * <li>Enforcing business rules for the application process</li>
+ * </ul>
+ * 
+ * 
+ * The service enforces complex business rules such as:
+ * <ul>
+ * <li>Ensuring applicants meet eligibility criteria for projects and flat
+ * types</li>
+ * <li>Preventing HDB officers from applying to projects they are registered to
+ * manage</li>
+ * <li>Maintaining correct flat unit inventory during application approval</li>
+ * <li>Enforcing proper authorization for application reviews</li>
+ * <li>Managing the application state transitions</li>
+ * </ul>
+ * 
+ */
 public class ApplicationService implements IApplicationService {
+    /**
+     * Repository for accessing and manipulating application data.
+     */
     private final IApplicationRepository applicationRepo;
+
+    /**
+     * Repository for accessing and manipulating project data.
+     */
     private final IProjectRepository projectRepo;
+
+    /**
+     * Service for checking eligibility of applicants for projects and flat types.
+     */
     private final IEligibilityService eligibilityService;
+
+    /**
+     * Repository for accessing and manipulating user data.
+     */
     private final IUserRepository userRepo;
+
+    /**
+     * Repository for accessing and manipulating booking data.
+     */
     private final IBookingRepository bookingRepo;
+
+    /**
+     * Repository for accessing and manipulating officer registration data.
+     */
     private final IOfficerRegistrationRepository officerRegRepo;
 
+    /**
+     * Constructs a new ApplicationService with the specified repositories and
+     * services.
+     * <p>
+     * Uses dependency injection to receive the required repositories and services.
+     * </p>
+     * 
+     * @param appRepo        Repository for application data
+     * @param projRepo       Repository for project data
+     * @param eligSvc        Service for checking eligibility
+     * @param userRepo       Repository for user data
+     * @param bookingRepo    Repository for booking data
+     * @param officerRegRepo Repository for officer registration data
+     */
     public ApplicationService(IApplicationRepository appRepo, IProjectRepository projRepo,
             IEligibilityService eligSvc, IUserRepository userRepo, IBookingRepository bookingRepo,
             IOfficerRegistrationRepository officerRegRepo) {
@@ -44,6 +109,23 @@ public class ApplicationService implements IApplicationService {
         this.officerRegRepo = officerRegRepo;
     }
 
+    /**
+     * {@inheritDoc}
+     * 
+     * This implementation performs extensive validation before submission:
+     * <ul>
+     * <li>Validates that inputs are not null</li>
+     * <li>Checks that the project exists and is currently open for
+     * applications</li>
+     * <li>Verifies the applicant doesn't already have an active application</li>
+     * <li>Validates that the applicant meets eligibility requirements</li>
+     * <li>Ensures the preferred flat type is available and the applicant is
+     * eligible for it</li>
+     * <li>Prevents HDB officers from applying to projects they're registered
+     * for</li>
+     * </ul>
+     * 
+     */
     @Override
     public Application submitApplication(User user, String projectId, FlatType preferredFlatType)
             throws ApplicationException {
@@ -134,6 +216,21 @@ public class ApplicationService implements IApplicationService {
         return newApplication;
     }
 
+    /**
+     * {@inheritDoc}
+     * 
+     * This implementation validates that:
+     * <ul>
+     * <li>The applicant has an active application to withdraw</li>
+     * <li>The application hasn't already been withdrawn</li>
+     * <li>The application is in a valid state for withdrawal</li>
+     * </ul>
+     * 
+     * <p>
+     * Note that this method only requests the withdrawal, which must be reviewed
+     * by a manager before becoming finalized.
+     * </p>
+     */
     @Override
     public boolean requestWithdrawal(User user) throws ApplicationException {
         Objects.requireNonNull(user, "Applicant cannot be null");
@@ -168,6 +265,27 @@ public class ApplicationService implements IApplicationService {
         return true;
     }
 
+    /**
+     * {@inheritDoc}
+     * 
+     * This implementation validates that:
+     * <ul>
+     * <li>The application exists and is associated with a valid project</li>
+     * <li>The manager is authorized to review the application (manages the
+     * project)</li>
+     * <li>The application is in a valid state for review (PENDING, no withdrawal
+     * request)</li>
+     * </ul>
+     * 
+     * 
+     * When approving an application, this method also:
+     * <ul>
+     * <li>Checks if the requested flat type is still available</li>
+     * <li>Decrements the available unit count for that flat type</li>
+     * <li>Updates the application status to SUCCESSFUL</li>
+     * </ul>
+     * 
+     */
     @Override
     public boolean reviewApplication(HDBManager manager, String applicationId, boolean approve)
             throws ApplicationException { // <<< ADD throws ApplicationException >>>
@@ -221,23 +339,28 @@ public class ApplicationService implements IApplicationService {
             }
 
             // Decrease unit count upon HDBManager's approval
-            boolean unitsDecremented = flatInfo.decreaseRemainingUnits(); 
+            boolean unitsDecremented = flatInfo.decreaseRemainingUnits();
 
             if (!unitsDecremented) {
-                // This might happen in a concurrent scenario if units hit 0 between check and decrease.
-                // Or if decreaseRemainingUnits has internal logic preventing decrease below 0 (which it should).
+                // This might happen in a concurrent scenario if units hit 0 between check and
+                // decrease.
+                // Or if decreaseRemainingUnits has internal logic preventing decrease below 0
+                // (which it should).
                 application.setStatus(ApplicationStatus.UNSUCCESSFUL);
                 applicationRepo.save(application);
-                 System.err.println("Service Error: Failed to decrease remaining units for " + requestedType + " for application " + applicationId + ". Application rejected.");
-                throw new ApplicationException("Failed to reserve unit due to availability change. Application rejected.");
+                System.err.println("Service Error: Failed to decrease remaining units for " + requestedType
+                        + " for application " + applicationId + ". Application rejected.");
+                throw new ApplicationException(
+                        "Failed to reserve unit due to availability change. Application rejected.");
             }
 
             // If units were successfully decremented:
             application.setStatus(ApplicationStatus.SUCCESSFUL);
             applicationRepo.save(application); // Save updated application status FIRST
-            projectRepo.save(project);       // THEN save the project with updated unit count
+            projectRepo.save(project); // THEN save the project with updated unit count
             System.out.println("Service: Application " + applicationId + " approved by manager " + manager.getNric()
-                  + ". Remaining " + requestedType + " units for project " + project.getProjectId() + ": " + flatInfo.getRemainingUnits());
+                    + ". Remaining " + requestedType + " units for project " + project.getProjectId() + ": "
+                    + flatInfo.getRemainingUnits());
         }
 
         else { // Reject
@@ -249,6 +372,33 @@ public class ApplicationService implements IApplicationService {
         return true;
     }
 
+    /**
+     * {@inheritDoc}
+     * 
+     * This implementation validates that:
+     * <ul>
+     * <li>The application exists and is associated with a valid project</li>
+     * <li>The manager is authorized to review the withdrawal (manages the
+     * project)</li>
+     * <li>The application actually has a pending withdrawal request</li>
+     * </ul>
+     * 
+     * 
+     * When approving a withdrawal:
+     * <ul>
+     * <li>The application status is set to UNSUCCESSFUL</li>
+     * <li>The withdrawal request date is cleared</li>
+     * </ul>
+     * 
+     * 
+     * When rejecting a withdrawal:
+     * <ul>
+     * <li>The withdrawal request date is cleared, but the status remains
+     * unchanged</li>
+     * <li>The application continues in its original process</li>
+     * </ul>
+     * 
+     */
     @Override
     public boolean reviewWithdrawal(HDBManager manager, String applicationId, boolean approve)
             throws ApplicationException {
@@ -298,19 +448,15 @@ public class ApplicationService implements IApplicationService {
     }
 
     /**
-     * Retrieves the most relevant application associated with a given applicant
-     * NRIC.
-     * In this system, an applicant can only have one "active" (PENDING, SUCCESSFUL,
-     * BOOKED)
-     * application at a time. If they have previous UNSUCCESSFUL ones, this method
-     * should ideally return the latest relevant one, or potentially null if none
-     * are active.
-     * The repository method findByApplicantNric likely handles finding the correct
+     * {@inheritDoc}
+     * <p>
+     * This implementation validates the applicant NRIC and delegates to the
+     * repository layer
+     * to retrieve the appropriate application. In this system, an applicant can
+     * only have
+     * one "active" application at a time, so this method returns the most relevant
      * one.
-     *
-     * @param applicantNric The NRIC of the applicant.
-     * @return The Applicant's Application object, or null if none is found or
-     *         relevant.
+     * </p>
      */
     @Override
     public Application getApplicationForUser(String applicantNric) {
@@ -326,16 +472,13 @@ public class ApplicationService implements IApplicationService {
     }
 
     /**
-     * Retrieves all applications submitted for a specific project.
-     * Performs basic validation on the projectId.
-     *
-     * @param projectId The ID of the project whose applications are to be
-     *                  retrieved.
-     * @return A List of Application objects for the specified project. Returns an
-     *         empty list if
-     *         the projectId is invalid or no applications are found.
-     * @throws DataAccessException if an error occurs during data retrieval from the
-     *                             repository.
+     * {@inheritDoc}
+     * <p>
+     * This implementation validates the project ID and handles potential exceptions
+     * during data retrieval, ensuring that null results are converted to empty
+     * lists
+     * for consistent API behavior.
+     * </p>
      */
     @Override
     public List<Application> getApplicationsByProject(String projectId) throws DataAccessException {
@@ -367,26 +510,28 @@ public class ApplicationService implements IApplicationService {
         }
     }
 
-    // --- Implementation for getApplicationsByStatus (Example) ---
     /**
-     * Retrieves all applications matching a specific status.
-     * NOTE: This might return applications across multiple projects. Authorization
-     * based on who is calling (e.g., Manager vs Officer) might be needed in the
-     * Controller.
-     *
-     * @param status The ApplicationStatus to filter by.
-     * @return A List of Application objects with the specified status.
-     * @throws DataAccessException if data retrieval fails.
+     * {@inheritDoc}
+     * <p>
+     * This implementation validates the status parameter and handles potential
+     * exceptions
+     * during data retrieval, ensuring that null results are converted to empty
+     * lists
+     * for consistent API behavior.
+     * </p>
+     * <p>
+     * Note: This method returns applications across all projects, so additional
+     * authorization checks may be needed in the controller layer.
+     * </p>
      */
-    @Override // Assuming this method exists in IApplicationService
+    @Override
     public List<Application> getApplicationsByStatus(ApplicationStatus status) throws DataAccessException {
         if (status == null) {
             System.err.println("Warning: getApplicationsByStatus called with null status.");
             return Collections.emptyList();
         }
         try {
-            List<Application> applications = applicationRepo.findByStatus(status); // You need this method in
-                                                                                   // IApplicationRepository
+            List<Application> applications = applicationRepo.findByStatus(status);
             return applications != null ? applications : Collections.emptyList();
 
         } catch (DataAccessException e) {
@@ -397,5 +542,4 @@ public class ApplicationService implements IApplicationService {
             throw new RuntimeException("An unexpected error occurred while fetching applications.", e);
         }
     }
-
 }

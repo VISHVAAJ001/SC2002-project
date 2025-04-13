@@ -11,11 +11,37 @@ import com.ntu.fdae.group1.bto.models.user.User;
 import com.ntu.fdae.group1.bto.repository.project.IProjectRepository;
 import com.ntu.fdae.group1.bto.repository.user.IUserRepository;
 
+/**
+ * Service for generating booking receipts in the BTO Management System.
+ * <p>
+ * This service is responsible for assembling booking receipt information by:
+ * - Retrieving applicant details from the user repository
+ * - Retrieving project details from the project repository
+ * - Combining booking, applicant, and project information into a receipt
+ * </p>
+ * <p>
+ * The service follows the Service Layer pattern, encapsulating business logic
+ * related to receipt generation and providing a clean API for controllers.
+ * </p>
+ */
 public class ReceiptService implements IReceiptService {
+    /**
+     * Repository for accessing user data, particularly applicant information.
+     */
     private final IUserRepository userRepo;
+
+    /**
+     * Repository for accessing project data related to bookings.
+     */
     private final IProjectRepository projectRepo;
 
-    // Constructor matching UML
+    /**
+     * Constructs a ReceiptService with required repositories.
+     *
+     * @param userRepo Repository for accessing user data
+     * @param projRepo Repository for accessing project data
+     * @throws NullPointerException if either repository is null
+     */
     public ReceiptService(IUserRepository userRepo, IProjectRepository projRepo) {
         // this.bookingRepo = Objects.requireNonNull(bookRepo);
         this.userRepo = Objects.requireNonNull(userRepo, "UserRepository cannot be null");
