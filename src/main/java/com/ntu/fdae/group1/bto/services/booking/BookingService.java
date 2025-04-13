@@ -6,7 +6,6 @@ import java.util.List;
 
 import com.ntu.fdae.group1.bto.enums.ApplicationStatus;
 import com.ntu.fdae.group1.bto.enums.FlatType;
-import com.ntu.fdae.group1.bto.enums.UserRole;
 import com.ntu.fdae.group1.bto.exceptions.BookingException;
 import com.ntu.fdae.group1.bto.exceptions.DataAccessException;
 import com.ntu.fdae.group1.bto.models.booking.Booking;

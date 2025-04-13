@@ -6,13 +6,12 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import com.ntu.fdae.group1.bto.enums.FlatType; // Import Enums
+import com.ntu.fdae.group1.bto.enums.FlatType;
 import com.ntu.fdae.group1.bto.enums.MaritalStatus;
-import com.ntu.fdae.group1.bto.models.booking.Booking; // Import Models
+import com.ntu.fdae.group1.bto.models.booking.Booking;
 import com.ntu.fdae.group1.bto.models.project.Project;
 import com.ntu.fdae.group1.bto.models.user.User;
 import com.ntu.fdae.group1.bto.repository.booking.IBookingRepository;
-import com.ntu.fdae.group1.bto.repository.project.IApplicationRepository; // Keep if needed later
 import com.ntu.fdae.group1.bto.repository.project.IProjectRepository;
 import com.ntu.fdae.group1.bto.repository.user.IUserRepository;
 
@@ -35,11 +34,6 @@ import com.ntu.fdae.group1.bto.repository.user.IUserRepository;
  * </p>
  */
 public class ReportService implements IReportService {
-    /**
-     * Repository for accessing application data in reports.
-     */
-    private final IApplicationRepository applicationRepo;
-
     /**
      * Repository for accessing booking data in reports.
      */
@@ -65,13 +59,11 @@ public class ReportService implements IReportService {
      * @param userRepo Repository for user data
      * @throws NullPointerException if any repository except appRepo is null
      */
-    public ReportService(IApplicationRepository appRepo, IBookingRepository bookRepo, IProjectRepository projRepo,
+    public ReportService(IBookingRepository bookRepo, IProjectRepository projRepo,
             IUserRepository userRepo) {
-        // this.applicationRepo = appRepo;
         this.bookingRepo = Objects.requireNonNull(bookRepo, "Booking Repository cannot be null");
         this.projectRepo = Objects.requireNonNull(projRepo, "Project Repository cannot be null");
         this.userRepo = Objects.requireNonNull(userRepo, "User Repository cannot be null");
-        this.applicationRepo = appRepo;
     }
 
     /**

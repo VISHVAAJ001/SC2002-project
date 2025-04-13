@@ -1,22 +1,17 @@
 package com.ntu.fdae.group1.bto.views;
 
 import com.ntu.fdae.group1.bto.controllers.user.UserController;
-import com.ntu.fdae.group1.bto.controllers.project.OfficerRegistrationController;
 import com.ntu.fdae.group1.bto.controllers.project.ProjectController;
-import com.ntu.fdae.group1.bto.models.project.OfficerRegistration;
-import com.ntu.fdae.group1.bto.enums.OfficerRegStatus;
 import com.ntu.fdae.group1.bto.enums.FlatType;
 import com.ntu.fdae.group1.bto.models.project.Project;
 import com.ntu.fdae.group1.bto.models.project.ProjectFlatInfo;
 
-import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.atomic.AtomicInteger; // For numbered lists
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Helper class for project-related UI operations in the BTO Management System.
@@ -47,6 +42,7 @@ public class ProjectUIHelper {
     /**
      * The controller for project-related operations.
      */
+    @SuppressWarnings("unused")
     private final ProjectController projectController;
 
     /**

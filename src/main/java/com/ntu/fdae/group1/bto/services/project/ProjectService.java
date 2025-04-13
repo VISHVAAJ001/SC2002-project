@@ -9,7 +9,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -26,7 +25,6 @@ import com.ntu.fdae.group1.bto.models.user.*;
 import com.ntu.fdae.group1.bto.repository.project.IApplicationRepository;
 import com.ntu.fdae.group1.bto.repository.project.IOfficerRegistrationRepository;
 import com.ntu.fdae.group1.bto.repository.project.IProjectRepository;
-import com.ntu.fdae.group1.bto.repository.user.IUserRepository;
 import com.ntu.fdae.group1.bto.services.booking.IEligibilityService;
 import com.ntu.fdae.group1.bto.utils.IdGenerator;
 
@@ -56,11 +54,6 @@ public class ProjectService implements IProjectService {
     private final IProjectRepository projectRepo;
 
     /**
-     * Repository for accessing and managing user data.
-     */
-    private final IUserRepository userRepo;
-
-    /**
      * Service for checking eligibility rules for managers and applicants.
      */
     private final IEligibilityService eligibilityService;
@@ -86,12 +79,10 @@ public class ProjectService implements IProjectService {
      * @throws NullPointerException if any of the required dependencies are null
      */
     public ProjectService(IProjectRepository projectRepo,
-            IUserRepository userRepo,
             IEligibilityService eligibilityService,
             IApplicationRepository applicationRepo,
             IOfficerRegistrationRepository officerRegRepo) {
         this.projectRepo = Objects.requireNonNull(projectRepo, "Project Repository cannot be null");
-        this.userRepo = userRepo; // Optional dependency
         this.eligibilityService = Objects.requireNonNull(eligibilityService, "Eligibility Service cannot be null");
         this.applicationRepo = Objects.requireNonNull(applicationRepo, "Application Repository cannot be null");
         this.officerRegRepo = Objects.requireNonNull(officerRegRepo, "Officer Registration Repository cannot be null");

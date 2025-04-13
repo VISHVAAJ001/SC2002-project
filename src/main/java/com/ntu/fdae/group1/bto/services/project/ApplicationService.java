@@ -17,11 +17,9 @@ import com.ntu.fdae.group1.bto.models.project.ProjectFlatInfo;
 import com.ntu.fdae.group1.bto.models.project.OfficerRegistration;
 import com.ntu.fdae.group1.bto.models.user.HDBManager;
 import com.ntu.fdae.group1.bto.models.user.User;
-import com.ntu.fdae.group1.bto.repository.booking.IBookingRepository;
 import com.ntu.fdae.group1.bto.repository.project.IApplicationRepository;
 import com.ntu.fdae.group1.bto.repository.project.IOfficerRegistrationRepository;
 import com.ntu.fdae.group1.bto.repository.project.IProjectRepository;
-import com.ntu.fdae.group1.bto.repository.user.IUserRepository;
 import com.ntu.fdae.group1.bto.services.booking.IEligibilityService;
 import com.ntu.fdae.group1.bto.utils.IdGenerator;
 
@@ -70,16 +68,6 @@ public class ApplicationService implements IApplicationService {
     private final IEligibilityService eligibilityService;
 
     /**
-     * Repository for accessing and manipulating user data.
-     */
-    private final IUserRepository userRepo;
-
-    /**
-     * Repository for accessing and manipulating booking data.
-     */
-    private final IBookingRepository bookingRepo;
-
-    /**
      * Repository for accessing and manipulating officer registration data.
      */
     private final IOfficerRegistrationRepository officerRegRepo;
@@ -94,18 +82,13 @@ public class ApplicationService implements IApplicationService {
      * @param appRepo        Repository for application data
      * @param projRepo       Repository for project data
      * @param eligSvc        Service for checking eligibility
-     * @param userRepo       Repository for user data
-     * @param bookingRepo    Repository for booking data
      * @param officerRegRepo Repository for officer registration data
      */
     public ApplicationService(IApplicationRepository appRepo, IProjectRepository projRepo,
-            IEligibilityService eligSvc, IUserRepository userRepo, IBookingRepository bookingRepo,
-            IOfficerRegistrationRepository officerRegRepo) {
+            IEligibilityService eligSvc, IOfficerRegistrationRepository officerRegRepo) {
         this.applicationRepo = appRepo;
         this.projectRepo = projRepo;
         this.eligibilityService = eligSvc;
-        this.userRepo = userRepo;
-        this.bookingRepo = bookingRepo;
         this.officerRegRepo = officerRegRepo;
     }
 

@@ -1,34 +1,19 @@
 package com.ntu.fdae.group1.bto.views;
 
 import com.ntu.fdae.group1.bto.controllers.project.ApplicationController;
-import com.ntu.fdae.group1.bto.controllers.project.OfficerRegistrationController;
 import com.ntu.fdae.group1.bto.controllers.project.ProjectController;
 import com.ntu.fdae.group1.bto.controllers.enquiry.EnquiryController;
 import com.ntu.fdae.group1.bto.controllers.user.AuthenticationController; // Added
 import com.ntu.fdae.group1.bto.controllers.user.UserController;
-import com.ntu.fdae.group1.bto.enums.ApplicationStatus;
-import com.ntu.fdae.group1.bto.enums.FlatType;
-import com.ntu.fdae.group1.bto.enums.MaritalStatus;
 import com.ntu.fdae.group1.bto.models.enquiry.Enquiry;
-import com.ntu.fdae.group1.bto.models.project.Application;
 import com.ntu.fdae.group1.bto.models.project.Project;
-import com.ntu.fdae.group1.bto.models.project.ProjectFlatInfo;
 import com.ntu.fdae.group1.bto.models.user.Applicant;
-import com.ntu.fdae.group1.bto.exceptions.ApplicationException;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
-
 import java.util.Objects;
-// Import other necessary Entity/Enum/Exception types as needed
-
-import java.util.List;
-import java.util.Optional;
-import java.util.Scanner;
-import java.util.Objects;
-// Import other necessary types
 
 /**
  * User interface for Applicant users in the BTO Management System.
@@ -57,6 +42,7 @@ public class ApplicantUI extends BaseUI {
     /**
      * Controller for user-related operations.
      */
+    @SuppressWarnings("unused")
     private final UserController userController;
 
     /**
@@ -67,6 +53,7 @@ public class ApplicantUI extends BaseUI {
     /**
      * Controller for application-related operations.
      */
+    @SuppressWarnings("unused")
     private final ApplicationController applicationController;
 
     /**
@@ -77,6 +64,7 @@ public class ApplicantUI extends BaseUI {
     /**
      * Controller for authentication-related operations.
      */
+    @SuppressWarnings("unused")
     private final AuthenticationController authController;
 
     /**

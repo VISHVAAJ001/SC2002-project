@@ -141,20 +141,19 @@ public class App {
             // Standalone or simple dependencies
             AuthenticationService authService = new AuthenticationService(userRepository);
             UserService userService = new UserService(userRepository);
-            ProjectService projectService = new ProjectService(projectRepository,
-                    userRepository, eligibilityService, applicationRepository, officerRegRepository);
+            ProjectService projectService = new ProjectService(projectRepository, eligibilityService,
+                    applicationRepository, officerRegRepository);
             EnquiryService enquiryService = new EnquiryService(enquiryRepository);
             ApplicationService applicationService = new ApplicationService(
                     applicationRepository, projectRepository, eligibilityService,
-                    userRepository, bookingRepository, officerRegRepository);
+                    officerRegRepository);
             OfficerRegistrationService officerRegService = new OfficerRegistrationService(
                     officerRegRepository, projectRepository, applicationRepository,
                     eligibilityService);
             BookingService bookingService = new BookingService(
                     applicationRepository, projectRepository, bookingRepository, userRepository);
             ReceiptService receiptService = new ReceiptService(userRepository, projectRepository);
-            ReportService reportService = new ReportService(
-                    applicationRepository, bookingRepository, projectRepository, userRepository);
+            ReportService reportService = new ReportService(bookingRepository, projectRepository, userRepository);
             // System.out.println("Services initialised.");
 
             // 3. initialise Controllers (Inject Services)

@@ -65,6 +65,7 @@ public class HDBManagerUI extends BaseUI {
     /**
      * Controller for user-related operations.
      */
+    @SuppressWarnings("unused")
     private final UserController userController;
 
     /**
@@ -95,6 +96,7 @@ public class HDBManagerUI extends BaseUI {
     /**
      * Controller for authentication-related operations.
      */
+    @SuppressWarnings("unused")
     private final AuthenticationController authController;
 
     /**
