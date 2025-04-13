@@ -914,154 +914,140 @@ package Views <<Folder>> {
 
 ' --- Relationships ---
 
-' Inheritance
+' Inheritance / Realization
 User <|-- Applicant
 User <|-- HDBStaff
 HDBStaff <|-- HDBOfficer
 HDBStaff <|-- HDBManager
 Exception <|-- ApplicationException
-Exception <|-- AuthenticationException
-Exception <|-- BookingException
-RuntimeException <|-- DataAccessException
-Exception <|-- RegistrationException
-Exception <|-- InvalidInputException
 BaseUI <|-- LoginUI
-BaseUI <|-- ApplicantUI
-BaseUI <|-- HDBOfficerUI
-BaseUI <|-- HDBManagerUI
-
-' Interface Implementation
-IRepository <|.. IUserRepository
-IRepository <|.. IProjectRepository
-IRepository <|.. IApplicationRepository
-IRepository <|.. IBookingRepository
-IRepository <|.. IEnquiryRepository
-IRepository <|.. IOfficerRegistrationRepository
-
+IRepository <|.. IUserRepository 
 IUserRepository <|.. UserRepository
-IProjectRepository <|.. ProjectRepository
-IApplicationRepository <|.. ApplicationRepository
-IBookingRepository <|.. BookingRepository
-IEnquiryRepository <|.. EnquiryRepository
-IOfficerRegistrationRepository <|.. OfficerRegistrationRepository
-
 IUserService <|.. UserService
-IAuthenticationService <|.. AuthenticationService
-IBookingService <|.. BookingService
-IReceiptService <|.. ReceiptService
-IEligibilityService <|.. EligibilityService
-IProjectService <|.. ProjectService
-IApplicationService <|.. ApplicationService
-IOfficerRegistrationService <|.. OfficerRegistrationService
-IEnquiryService <|.. EnquiryService
-IReportService <|.. ReportService
 
-' Layer Dependencies (Conceptual)
-Views ..> Controller : uses >
-Controller ..> Service : uses >
-Service ..> Repository : uses > ' (Interface Dependency)
-Service ..> Entity : uses >
-Controller ..> Entity : uses >
-Views ..> Entity : uses >
-Repository ..> Entity : uses >
-
-' Composition / Aggregation (Entity Relationships)
+' == Entity Layer Relationships ==
 Project "1" *-- "1..*" ProjectFlatInfo : contains >
-Project "1" o-- "*" Application : has >
-Project "1" o-- "*" Booking : results in >
-Project "1" o-- "*" Enquiry : related to >
-Project "1" o-- "*" OfficerRegistration : requests for >
-Project "1" ..> User : managerNric
-Project "1" ..> User : approvedOfficerNrics
+Project "1" o-- "*" Application       : has >
+Project "1" o-- "*" Booking           : has >
+Project "0..1" o-- "*" Enquiry        : related to >
+Project "1" o-- "*" OfficerRegistration : has >
+' FK Dependencies (Not covered by Aggregation/Composition)
+Project ..> User : managerNric >
+Project ..> User : approvedOfficerNrics > ' 0..*
+Application ..> User : applicantNric >
+Booking ..> Application : applicationId >
+Booking ..> User : applicantNric >
+Enquiry ..> User : userNric >
+OfficerRegistration ..> User : officerNric >
 
-Application ..> User : applicantNric
-Application ..> Project : projectId
-Booking ..> Application : applicationId
-Booking ..> Project : projectId
-Booking ..> User : applicantNric
-Enquiry ..> User : userNric
-Enquiry ..> Project : projectId (nullable)
-OfficerRegistration ..> User : officerNric
-OfficerRegistration ..> Project : projectId
 
-' Service Dependencies
-UserService ..> IUserRepository
-AuthenticationService ..> IUserRepository
+' == Repository Layer Relationships ==
+' Association (Repository uses Helper)
+UserRepository                "1" --> "1" CsvRepositoryHelper : delegates to >
+ProjectRepository             "1" --> "1" CsvRepositoryHelper : delegates to >
+ApplicationRepository         "1" --> "1" CsvRepositoryHelper : delegates to >
+BookingRepository             "1" --> "1" CsvRepositoryHelper : delegates to >
+EnquiryRepository             "1" --> "1" CsvRepositoryHelper : delegates to >
+OfficerRegistrationRepository "1" --> "1" CsvRepositoryHelper : delegates to >
+' Dependencies
+CsvRepositoryHelper ..> FileUtil : uses >
+CsvRepositoryHelper ..> DataAccessException : throws >
+
+
+' == Service Layer Relationships ==
+' Associations (Service holds reference to Repo/Service Interface)
+UserService "1" --> "1" IUserRepository
+AuthenticationService "1" --> "1" IUserRepository
+ProjectService "1" --> "1" IProjectRepository
+ProjectService "1" --> "1" IUserRepository
+ProjectService "1" --> "1" IEligibilityService
+ApplicationService "1" --> "1" IApplicationRepository
+ApplicationService "1" --> "1" IProjectRepository
+ApplicationService "1" --> "1" IUserRepository
+ApplicationService "1" --> "1" IBookingRepository
+ApplicationService "1" --> "1" IOfficerRegistrationRepository
+ApplicationService "1" --> "1" IEligibilityService
+BookingService "1" --> "1" IApplicationRepository
+BookingService "1" --> "1" IProjectRepository
+BookingService "1" --> "1" IBookingRepository
+BookingService "1" --> "1" IUserRepository
+ReceiptService "1" --> "1" IBookingRepository
+ReceiptService "1" --> "1" IUserRepository
+ReceiptService "1" --> "1" IProjectRepository
+OfficerRegistrationService "1" --> "1" IOfficerRegistrationRepository
+OfficerRegistrationService "1" --> "1" IProjectRepository
+OfficerRegistrationService "1" --> "1" IApplicationRepository
+OfficerRegistrationService "1" --> "1" IEligibilityService
+EnquiryService "1" --> "1" IEnquiryRepository
+EligibilityService "1" --> "1" IProjectRepository
+ReportService "1" --> "1" IBookingRepository
+ReportService "1" --> "1" IProjectRepository
+ReportService "1" --> "1" IUserRepository
+ReportService "1" --> "1" IApplicationRepository
+' Dependencies (Utilities)
 AuthenticationService ..> PasswordUtil
-ProjectService ..> IProjectRepository
-ProjectService ..> IUserRepository
-ProjectService ..> IEligibilityService
 ProjectService ..> IdGenerator
-ApplicationService ..> IApplicationRepository
-ApplicationService ..> IProjectRepository
-ApplicationService ..> IUserRepository
-ApplicationService ..> IBookingRepository
-ApplicationService ..> IOfficerRegistrationRepository
-ApplicationService ..> IEligibilityService
 ApplicationService ..> IdGenerator
-BookingService ..> IApplicationRepository
-BookingService ..> IProjectRepository
-BookingService ..> IBookingRepository
-BookingService ..> IUserRepository
 BookingService ..> IdGenerator
-ReceiptService ..> IBookingRepository
-ReceiptService ..> IUserRepository
-ReceiptService ..> IProjectRepository
-OfficerRegistrationService ..> IOfficerRegistrationRepository
-OfficerRegistrationService ..> IProjectRepository
-OfficerRegistrationService ..> IApplicationRepository
-OfficerRegistrationService ..> IEligibilityService
 OfficerRegistrationService ..> IdGenerator
-EnquiryService ..> IEnquiryRepository
 EnquiryService ..> IdGenerator
-EligibilityService ..> IProjectRepository
-ReportService ..> IApplicationRepository
-ReportService ..> IBookingRepository
-ReportService ..> IProjectRepository
-ReportService ..> IUserRepository
 
-' Controller Dependencies
-ControllerContainer *-- AuthenticationController
-ControllerContainer *-- UserController
-ControllerContainer *-- ProjectController
-ControllerContainer *-- ApplicationController
-ControllerContainer *-- OfficerRegistrationController
-ControllerContainer *-- BookingController
-ControllerContainer *-- ReceiptController
-ControllerContainer *-- EnquiryController
-ControllerContainer *-- ReportController
 
-UserController ..> IUserService
-AuthenticationController ..> IAuthenticationService
-ProjectController ..> IProjectService
-ApplicationController ..> IApplicationService
-OfficerRegistrationController ..> IOfficerRegistrationService
-OfficerRegistrationController ..> IProjectService
-BookingController ..> IBookingService
-ReceiptController ..> IReceiptService
-EnquiryController ..> IEnquiryService
-ReportController ..> IReportService
+' == Controller Layer Relationships ==
+' Composition
+ControllerContainer "1" *-- "1" AuthenticationController
+ControllerContainer "1" *-- "1" UserController
+ControllerContainer "1" *-- "1" ProjectController
+ControllerContainer "1" *-- "1" ApplicationController
+ControllerContainer "1" *-- "1" OfficerRegistrationController
+ControllerContainer "1" *-- "1" BookingController
+ControllerContainer "1" *-- "1" ReceiptController
+ControllerContainer "1" *-- "1" EnquiryController
+ControllerContainer "1" *-- "1" ReportController
+' Associations (Controller holds reference to Service Interface)
+UserController "1" --> "1" IUserService
+AuthenticationController "1" --> "1" IAuthenticationService
+ProjectController "1" --> "1" IProjectService
+ApplicationController "1" --> "1" IApplicationService
+OfficerRegistrationController "1" --> "1" IOfficerRegistrationService
+OfficerRegistrationController "1" --> "1" IProjectService
+BookingController "1" --> "1" IBookingService
+ReceiptController "1" --> "1" IReceiptService
+EnquiryController "1" --> "1" IEnquiryService
+ReportController "1" --> "1" IReportService
 
-' UI Dependencies
-MainApp *--> ControllerContainer : aggregates
-MainApp --> LoginUI : creates
-MainApp --> ApplicantUI : creates
-MainApp --> HDBOfficerUI : creates
-MainApp --> HDBManagerUI : creates
 
+' == Views Layer Relationships ==
+' Composition
+MainApp "1" *--> "1" ControllerContainer : uses >
+' Dependencies (Creation / Transient Usage)
+MainApp ..> LoginUI : <<creates>>
+MainApp ..> ApplicantUI : <<creates>>
+MainApp ..> HDBOfficerUI : <<creates>>
+MainApp ..> HDBManagerUI : <<creates>>
+' Associations (UI holds reference to Helper)
+ApplicantUI "1" --> "1" AccountUIHelper
+ApplicantUI "1" --> "1" ProjectUIHelper
+ApplicantUI "1" --> "1" ApplicationUIHelper
+ApplicantUI "1" --> "1" EnquiryUIHelper
+HDBOfficerUI "1" --> "1" AccountUIHelper
+HDBOfficerUI "1" --> "1" ProjectUIHelper
+HDBOfficerUI "1" --> "1" ApplicationUIHelper
+HDBOfficerUI "1" --> "1" EnquiryUIHelper
+HDBOfficerUI "1" --> "1" OfficerRegUIHelper
+HDBOfficerUI "1" --> "1" BookingUIHelper
+HDBManagerUI "1" --> "1" AccountUIHelper
+HDBManagerUI "1" --> "1" ProjectUIHelper
+HDBManagerUI "1" --> "1" ApplicationUIHelper
+HDBManagerUI "1" --> "1" EnquiryUIHelper
+HDBManagerUI "1" --> "1" OfficerRegUIHelper
+' Dependencies (UI uses Controller / Helper uses other components)
 LoginUI ..> AuthenticationController
-LoginUI ..> BaseUI
-
 ApplicantUI ..> UserController
 ApplicantUI ..> ProjectController
 ApplicantUI ..> ApplicationController
 ApplicantUI ..> EnquiryController
 ApplicantUI ..> AuthenticationController
-ApplicantUI --> AccountUIHelper
-ApplicantUI --> ProjectUIHelper
-ApplicantUI --> ApplicationUIHelper
-ApplicantUI --> EnquiryUIHelper
-
 HDBOfficerUI ..> UserController
 HDBOfficerUI ..> ProjectController
 HDBOfficerUI ..> ApplicationController
@@ -1070,13 +1056,6 @@ HDBOfficerUI ..> BookingController
 HDBOfficerUI ..> ReceiptController
 HDBOfficerUI ..> EnquiryController
 HDBOfficerUI ..> AuthenticationController
-HDBOfficerUI --> AccountUIHelper
-HDBOfficerUI --> ProjectUIHelper
-HDBOfficerUI --> ApplicationUIHelper
-HDBOfficerUI --> EnquiryUIHelper
-HDBOfficerUI --> OfficerRegUIHelper
-HDBOfficerUI --> BookingUIHelper
-
 HDBManagerUI ..> UserController
 HDBManagerUI ..> ProjectController
 HDBManagerUI ..> ApplicationController
@@ -1084,56 +1063,36 @@ HDBManagerUI ..> OfficerRegistrationController
 HDBManagerUI ..> EnquiryController
 HDBManagerUI ..> ReportController
 HDBManagerUI ..> AuthenticationController
-HDBManagerUI --> AccountUIHelper
-HDBManagerUI --> ProjectUIHelper
-HDBManagerUI --> ApplicationUIHelper
-HDBManagerUI --> EnquiryUIHelper
-HDBManagerUI --> OfficerRegUIHelper
-
-' UI Helper Dependencies
 AccountUIHelper ..> BaseUI
 AccountUIHelper ..> AuthenticationController
-
 ProjectUIHelper ..> BaseUI
 ProjectUIHelper ..> ProjectController
 ProjectUIHelper ..> UserController
-
 ApplicationUIHelper ..> BaseUI
 ApplicationUIHelper ..> ApplicationController
 ApplicationUIHelper ..> ProjectController
 ApplicationUIHelper ..> IEligibilityService
-
 OfficerRegUIHelper ..> BaseUI
 OfficerRegUIHelper ..> ProjectController
 OfficerRegUIHelper ..> UserController
-
 EnquiryUIHelper ..> BaseUI
 EnquiryUIHelper ..> ProjectController
 EnquiryUIHelper ..> UserController
-
 BookingUIHelper ..> BaseUI
 BookingUIHelper ..> UserController
 
-' Repository Dependencies
-' Dependency: CsvRepositoryHelper uses FileUtil from the Utility package (conceptual)
-CsvRepositoryHelper ..> FileUtil : uses >
-
-' Dependency: CsvRepositoryHelper throws DataAccessException (conceptual)
-CsvRepositoryHelper ..> DataAccessException : throws >
-
-' Dependencies on Helper
-UserRepository --> CsvRepositoryHelper : uses >
-ProjectRepository --> CsvRepositoryHelper : uses >
-ApplicationRepository --> CsvRepositoryHelper : uses >
-OfficerRegistrationRepository --> CsvRepositoryHelper : uses >
-BookingRepository --> CsvRepositoryHelper : uses >
-EnquiryRepository --> CsvRepositoryHelper : uses >
-
-' Utility Dependencies (General Usage)
+' == General Utility Dependencies ==
 Views ..> ValidationUtil
-Service ..> PasswordUtil
-Service ..> IdGenerator
 Repository ..> FileUtil
-Service ..> FileUtil
+
+' == Conceptual Layer Dependencies ==
+' Views ..> Controller : uses >
+' Controller ..> Service : uses >
+' Service ..> Repository : uses >
+' Service ..> Entity : uses >
+' Controller ..> Entity : uses >
+' Views ..> Entity : uses >
+' Repository ..> Entity : uses >
+
 
 @enduml

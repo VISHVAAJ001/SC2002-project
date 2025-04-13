@@ -108,39 +108,41 @@ package Controller <<Folder>> {
          + generateBookingReport(manager: HDBManager, filters: Map<String, String>) : String;
     }
 
-    class ControllerContainer
-    class AuthenticationController
-    class UserController
-    class ProjectController
-    class ApplicationController
-    class OfficerRegistrationController
-    class BookingController
-    class ReceiptController
-    class EnquiryController
-    class ReportController
+    ' --- Service Interfaces ---
+    interface IUserService
+    interface IAuthenticationService
+    interface IProjectService
+    interface IApplicationService
+    interface IOfficerRegistrationService
+    interface IBookingService
+    interface IReceiptService
+    interface IEnquiryService
+    interface IReportService
 
-    ' Controller Dependencies
-    ControllerContainer *-- AuthenticationController
-    ControllerContainer *-- UserController
-    ControllerContainer *-- ProjectController
-    ControllerContainer *-- ApplicationController
-    ControllerContainer *-- OfficerRegistrationController
-    ControllerContainer *-- BookingController
-    ControllerContainer *-- ReceiptController
-    ControllerContainer *-- EnquiryController
-    ControllerContainer *-- ReportController
+    ' --- Relationships ---
 
-    UserController ..> IUserService
-    AuthenticationController ..> IAuthenticationService
-    ProjectController ..> IProjectService
-    ApplicationController ..> IApplicationService
-    OfficerRegistrationController ..> IOfficerRegistrationService
-    OfficerRegistrationController ..> IProjectService
-    BookingController ..> IBookingService
-    ReceiptController ..> IReceiptService
-    EnquiryController ..> IEnquiryService
-    ReportController ..> IReportService
-     
+    ' Composition: ControllerContainer holds exactly one of each controller
+    ControllerContainer "1" *-- "1" AuthenticationController
+    ControllerContainer "1" *-- "1" UserController
+    ControllerContainer "1" *-- "1" ProjectController
+    ControllerContainer "1" *-- "1" ApplicationController
+    ControllerContainer "1" *-- "1" OfficerRegistrationController
+    ControllerContainer "1" *-- "1" BookingController
+    ControllerContainer "1" *-- "1" ReceiptController
+    ControllerContainer "1" *-- "1" EnquiryController
+    ControllerContainer "1" *-- "1" ReportController
+
+    ' Association: Each Controller uses exactly one instance of its required Service(s)
+    UserController "1" --> "1" IUserService
+    AuthenticationController "1" --> "1" IAuthenticationService
+    ProjectController "1" --> "1" IProjectService
+    ApplicationController "1" --> "1" IApplicationService
+    OfficerRegistrationController "1" --> "1" IOfficerRegistrationService
+    OfficerRegistrationController "1" --> "1" IProjectService
+    BookingController "1" --> "1" IBookingService
+    ReceiptController "1" --> "1" IReceiptService
+    EnquiryController "1" --> "1" IEnquiryService
+    ReportController "1" --> "1" IReportService
 }
 
 @enduml

@@ -169,27 +169,13 @@ package Repository <<Folder>> {
         + findByProjectId(projectId: String) : List<OfficerRegistration>
     }
 
-    ' Interfaces & Classes
-    interface IRepository
-    interface IUserRepository
-    interface IProjectRepository
-    interface IApplicationRepository
-    interface IBookingRepository
-    interface IEnquiryRepository
-    interface IOfficerRegistrationRepository
+    ' --- Utility / Exception Placeholders ---
+    class FileUtil <<Utility>>
+    class DataAccessException <<Exception>>
 
-    class UserRepository
-    class ProjectRepository
-    class ApplicationRepository
-    class BookingRepository
-    class EnquiryRepository
-    class OfficerRegistrationRepository
+    ' --- Relationships ---
 
-    class CsvRepositoryHelper
-    class FileUtil
-    class DataAccessException
-
-    ' Inheritance
+    ' Inheritance / Realization
     IRepository <|.. IUserRepository
     IRepository <|.. IProjectRepository
     IRepository <|.. IApplicationRepository
@@ -204,15 +190,17 @@ package Repository <<Folder>> {
     IEnquiryRepository <|.. EnquiryRepository
     IOfficerRegistrationRepository <|.. OfficerRegistrationRepository
 
+    ' Association (Repository uses Helper)
+    UserRepository                "1" --> "1" CsvRepositoryHelper : delegates to >
+    ProjectRepository             "1" --> "1" CsvRepositoryHelper : delegates to >
+    ApplicationRepository         "1" --> "1" CsvRepositoryHelper : delegates to >
+    BookingRepository             "1" --> "1" CsvRepositoryHelper : delegates to >
+    EnquiryRepository             "1" --> "1" CsvRepositoryHelper : delegates to >
+    OfficerRegistrationRepository "1" --> "1" CsvRepositoryHelper : delegates to >
+
     ' Dependencies
     CsvRepositoryHelper ..> FileUtil : uses >
     CsvRepositoryHelper ..> DataAccessException : throws >
-    UserRepository --> CsvRepositoryHelper : uses >
-    ProjectRepository --> CsvRepositoryHelper : uses >
-    ApplicationRepository --> CsvRepositoryHelper : uses >
-    OfficerRegistrationRepository --> CsvRepositoryHelper : uses >
-    BookingRepository --> CsvRepositoryHelper : uses >
-    EnquiryRepository --> CsvRepositoryHelper : uses >
 }
 
 @enduml

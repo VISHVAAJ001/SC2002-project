@@ -206,27 +206,44 @@ package Views <<Folder>> {
 
     class BaseUI
 
-    ' Main App Composition
-    MainApp *--> ControllerContainer : aggregates
-    MainApp --> LoginUI : creates
-    MainApp --> ApplicantUI : creates
-    MainApp --> HDBOfficerUI : creates
-    MainApp --> HDBManagerUI : creates
+    ' --- Relationships ---
 
-    ' UI Dependencies
+    ' Inheritance (Generalization)
+    BaseUI <|-- LoginUI
+    BaseUI <|-- ApplicantUI
+    BaseUI <|-- HDBOfficerUI
+    BaseUI <|-- HDBManagerUI
+
+    ' Composition
+    MainApp "1" *--> "1" ControllerContainer
+
+    ' MainApp Dependencies (Creation/Usage)
+    MainApp ..> LoginUI : <<creates>>
+    MainApp ..> ApplicantUI : <<creates>>
+    MainApp ..> HDBOfficerUI : <<creates>>
+    MainApp ..> HDBManagerUI : <<creates>>
+
+    ' LoginUI Dependencies
     LoginUI ..> AuthenticationController
-    LoginUI ..> BaseUI
 
+    ' ApplicantUI Associations and Dependencies
+    ApplicantUI "1" --> "1" AccountUIHelper
+    ApplicantUI "1" --> "1" ProjectUIHelper
+    ApplicantUI "1" --> "1" ApplicationUIHelper
+    ApplicantUI "1" --> "1" EnquiryUIHelper
     ApplicantUI ..> UserController
     ApplicantUI ..> ProjectController
     ApplicantUI ..> ApplicationController
     ApplicantUI ..> EnquiryController
     ApplicantUI ..> AuthenticationController
-    ApplicantUI --> AccountUIHelper
-    ApplicantUI --> ProjectUIHelper
-    ApplicantUI --> ApplicationUIHelper
-    ApplicantUI --> EnquiryUIHelper
 
+    ' HDBOfficerUI Associations and Dependencies
+    HDBOfficerUI "1" --> "1" AccountUIHelper
+    HDBOfficerUI "1" --> "1" ProjectUIHelper
+    HDBOfficerUI "1" --> "1" ApplicationUIHelper
+    HDBOfficerUI "1" --> "1" EnquiryUIHelper
+    HDBOfficerUI "1" --> "1" OfficerRegUIHelper
+    HDBOfficerUI "1" --> "1" BookingUIHelper
     HDBOfficerUI ..> UserController
     HDBOfficerUI ..> ProjectController
     HDBOfficerUI ..> ApplicationController
@@ -235,13 +252,13 @@ package Views <<Folder>> {
     HDBOfficerUI ..> ReceiptController
     HDBOfficerUI ..> EnquiryController
     HDBOfficerUI ..> AuthenticationController
-    HDBOfficerUI --> AccountUIHelper
-    HDBOfficerUI --> ProjectUIHelper
-    HDBOfficerUI --> ApplicationUIHelper
-    HDBOfficerUI --> EnquiryUIHelper
-    HDBOfficerUI --> OfficerRegUIHelper
-    HDBOfficerUI --> BookingUIHelper
 
+    ' HDBManagerUI Associations and Dependencies
+    HDBManagerUI "1" --> "1" AccountUIHelper
+    HDBManagerUI "1" --> "1" ProjectUIHelper
+    HDBManagerUI "1" --> "1" ApplicationUIHelper
+    HDBManagerUI "1" --> "1" EnquiryUIHelper
+    HDBManagerUI "1" --> "1" OfficerRegUIHelper
     HDBManagerUI ..> UserController
     HDBManagerUI ..> ProjectController
     HDBManagerUI ..> ApplicationController
@@ -249,11 +266,6 @@ package Views <<Folder>> {
     HDBManagerUI ..> EnquiryController
     HDBManagerUI ..> ReportController
     HDBManagerUI ..> AuthenticationController
-    HDBManagerUI --> AccountUIHelper
-    HDBManagerUI --> ProjectUIHelper
-    HDBManagerUI --> ApplicationUIHelper
-    HDBManagerUI --> EnquiryUIHelper
-    HDBManagerUI --> OfficerRegUIHelper
 
     ' UI Helper Dependencies
     AccountUIHelper ..> BaseUI

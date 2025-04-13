@@ -193,7 +193,6 @@ package Entity <<Folder>> {
         - replyDate : LocalDate <<nullable>>
         + Enquiry(enqId: String, userNric: String, projId: String, content: String, submissionDate: LocalDate)
         + addReply(replyContent: String, replyDate: LocalDate) : void
-        + editContent(newContent: String) : void
         + getEnquiryId() : String
         + getUserNric() : String
         + getProjectId() : String <<nullable>>
@@ -221,17 +220,7 @@ package Entity <<Folder>> {
         + setStatus(newStatus: OfficerRegStatus) : void ' Called by OfficerRegistrationService
     }
 
-    class User
-    class Applicant
-    class HDBStaff
-    class HDBOfficer
-    class HDBManager
-    class Project
-    class ProjectFlatInfo
-    class Application
-    class Booking
-    class Enquiry
-    class OfficerRegistration
+    ' --- Relationships ---
 
     ' Inheritance
     User <|-- Applicant
@@ -239,23 +228,21 @@ package Entity <<Folder>> {
     HDBStaff <|-- HDBOfficer
     HDBStaff <|-- HDBManager
 
-    ' Composition / Aggregation
-    Project "1" *-- "1..*" ProjectFlatInfo
-    Project "1" o-- "*" Application
-    Project "1" o-- "*" Booking
-    Project "1" o-- "*" Enquiry
-    Project "1" o-- "*" OfficerRegistration
-    Project ..> User : managerNric
-    Project ..> User : approvedOfficerNrics
-    Application ..> User : applicantNric
-    Application ..> Project : projectId
-    Booking ..> Application : applicationId
-    Booking ..> Project : projectId
-    Booking ..> User : applicantNric
-    Enquiry ..> User : userNric
-    Enquiry ..> Project : projectId (nullable)
-    OfficerRegistration ..> User : officerNric
-    OfficerRegistration ..> Project : projectId
+    ' Composition / Aggregation (Project as the 'whole')
+    Project "1" *-- "1..*" ProjectFlatInfo : contains >
+    Project "1" o-- "*" Application       : has >
+    Project "1" o-- "*" Booking           : has >
+    Project "0..1" o-- "*" Enquiry        : related to >
+    Project "1" o-- "*" OfficerRegistration : has >
+
+    ' Dependencies / FK Lookups (Not already covered by Composition/Aggregation)
+    Project ..> User : managerNric > ' FK: manager
+    Project ..> User : approvedOfficerNrics > ' FK: approved officers (0..*)
+    Application ..> User : applicantNric > ' FK: applicant
+    Booking ..> Application : applicationId > ' FK: source application
+    Booking ..> User : applicantNric > ' FK: applicant
+    Enquiry ..> User : userNric > ' FK: submitter
+    OfficerRegistration ..> User : officerNric > ' FK: officer
 }
 
 @enduml

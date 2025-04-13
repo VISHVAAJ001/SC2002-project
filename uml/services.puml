@@ -189,32 +189,21 @@ package Service <<Folder>> {
          + generateBookingReport(filters: Map<String, String>) : String;
      }
 
-    interface IUserService
-    interface IAuthenticationService
-    interface IBookingService
-    interface IReceiptService
-    interface IEligibilityService
-    interface IProjectService
-    interface IApplicationService
-    interface IOfficerRegistrationService
-    interface IEnquiryService
-    interface IReportService
-
-    class UserService
-    class AuthenticationService
-    class BookingService
-    class ReceiptService
-    class EligibilityService
-    class ProjectService
-    class ApplicationService
-    class OfficerRegistrationService
-    class EnquiryService
-    class ReportService
-
+    ' --- Utility Classes ---
     class PasswordUtil
     class IdGenerator
 
-    ' Inheritance
+    ' --- Repository Interfaces ---
+    interface IUserRepository
+    interface IProjectRepository
+    interface IApplicationRepository
+    interface IBookingRepository
+    interface IOfficerRegistrationRepository
+    interface IEnquiryRepository
+
+    ' --- Relationships ---
+
+    ' Implementation (Realization)
     IUserService <|.. UserService
     IAuthenticationService <|.. AuthenticationService
     IBookingService <|.. BookingService
@@ -226,41 +215,42 @@ package Service <<Folder>> {
     IEnquiryService <|.. EnquiryService
     IReportService <|.. ReportService
 
+    ' Associations (Services holding references -> 1..1)
+    UserService "1" --> "1" IUserRepository
+    AuthenticationService "1" --> "1" IUserRepository
+    ProjectService "1" --> "1" IProjectRepository
+    ProjectService "1" --> "1" IUserRepository
+    ProjectService "1" --> "1" IEligibilityService
+    ApplicationService "1" --> "1" IApplicationRepository
+    ApplicationService "1" --> "1" IProjectRepository
+    ApplicationService "1" --> "1" IUserRepository
+    ApplicationService "1" --> "1" IBookingRepository
+    ApplicationService "1" --> "1" IOfficerRegistrationRepository
+    ApplicationService "1" --> "1" IEligibilityService
+    BookingService "1" --> "1" IApplicationRepository
+    BookingService "1" --> "1" IProjectRepository
+    BookingService "1" --> "1" IBookingRepository
+    BookingService "1" --> "1" IUserRepository
+    ReceiptService "1" --> "1" IBookingRepository
+    ReceiptService "1" --> "1" IUserRepository
+    ReceiptService "1" --> "1" IProjectRepository
+    OfficerRegistrationService "1" --> "1" IOfficerRegistrationRepository
+    OfficerRegistrationService "1" --> "1" IProjectRepository
+    OfficerRegistrationService "1" --> "1" IApplicationRepository
+    OfficerRegistrationService "1" --> "1" IEligibilityService
+    EnquiryService "1" --> "1" IEnquiryRepository
+    EligibilityService "1" --> "1" IProjectRepository
+    ReportService "1" --> "1" IBookingRepository
+    ReportService "1" --> "1" IProjectRepository
+    ReportService "1" --> "1" IUserRepository
+
     ' Dependencies
-    UserService ..> IUserRepository
-    AuthenticationService ..> IUserRepository
     AuthenticationService ..> PasswordUtil
-    ProjectService ..> IProjectRepository
-    ProjectService ..> IUserRepository
-    ProjectService ..> IEligibilityService
     ProjectService ..> IdGenerator
-    ApplicationService ..> IApplicationRepository
-    ApplicationService ..> IProjectRepository
-    ApplicationService ..> IUserRepository
-    ApplicationService ..> IBookingRepository
-    ApplicationService ..> IOfficerRegistrationRepository
-    ApplicationService ..> IEligibilityService
     ApplicationService ..> IdGenerator
-    BookingService ..> IApplicationRepository
-    BookingService ..> IProjectRepository
-    BookingService ..> IBookingRepository
-    BookingService ..> IUserRepository
     BookingService ..> IdGenerator
-    ReceiptService ..> IBookingRepository
-    ReceiptService ..> IUserRepository
-    ReceiptService ..> IProjectRepository
-    OfficerRegistrationService ..> IOfficerRegistrationRepository
-    OfficerRegistrationService ..> IProjectRepository
-    OfficerRegistrationService ..> IApplicationRepository
-    OfficerRegistrationService ..> IEligibilityService
     OfficerRegistrationService ..> IdGenerator
-    EnquiryService ..> IEnquiryRepository
     EnquiryService ..> IdGenerator
-    EligibilityService ..> IProjectRepository
-    ReportService ..> IApplicationRepository    
-    ReportService ..> IBookingRepository
-    ReportService ..> IProjectRepository
-    ReportService ..> IUserRepository
 
 }
 @enduml
