@@ -191,11 +191,87 @@ package Views <<Folder>> {
         + displayBookingReceipt(receiptInfo : BookingReceiptInfo) : void
     }
 
-    ' Inheritance relationship within Views
-    LoginUI --|> BaseUI
-    ApplicantUI --|> BaseUI
-    HDBOfficerUI --|> BaseUI
-    HDBManagerUI --|> BaseUI
+    class MainApp
+    class LoginUI
+    class ApplicantUI
+    class HDBOfficerUI
+    class HDBManagerUI
 
+    class AccountUIHelper
+    class ProjectUIHelper
+    class ApplicationUIHelper
+    class OfficerRegUIHelper
+    class EnquiryUIHelper
+    class BookingUIHelper
+
+    class BaseUI
+
+    ' Main App Composition
+    MainApp *--> ControllerContainer : aggregates
+    MainApp --> LoginUI : creates
+    MainApp --> ApplicantUI : creates
+    MainApp --> HDBOfficerUI : creates
+    MainApp --> HDBManagerUI : creates
+
+    ' UI Dependencies
+    LoginUI ..> AuthenticationController
+    LoginUI ..> BaseUI
+
+    ApplicantUI ..> UserController
+    ApplicantUI ..> ProjectController
+    ApplicantUI ..> ApplicationController
+    ApplicantUI ..> EnquiryController
+    ApplicantUI ..> AuthenticationController
+    ApplicantUI --> AccountUIHelper
+    ApplicantUI --> ProjectUIHelper
+    ApplicantUI --> ApplicationUIHelper
+    ApplicantUI --> EnquiryUIHelper
+
+    HDBOfficerUI ..> UserController
+    HDBOfficerUI ..> ProjectController
+    HDBOfficerUI ..> ApplicationController
+    HDBOfficerUI ..> OfficerRegistrationController
+    HDBOfficerUI ..> BookingController
+    HDBOfficerUI ..> ReceiptController
+    HDBOfficerUI ..> EnquiryController
+    HDBOfficerUI ..> AuthenticationController
+    HDBOfficerUI --> AccountUIHelper
+    HDBOfficerUI --> ProjectUIHelper
+    HDBOfficerUI --> ApplicationUIHelper
+    HDBOfficerUI --> EnquiryUIHelper
+    HDBOfficerUI --> OfficerRegUIHelper
+    HDBOfficerUI --> BookingUIHelper
+
+    HDBManagerUI ..> UserController
+    HDBManagerUI ..> ProjectController
+    HDBManagerUI ..> ApplicationController
+    HDBManagerUI ..> OfficerRegistrationController
+    HDBManagerUI ..> EnquiryController
+    HDBManagerUI ..> ReportController
+    HDBManagerUI ..> AuthenticationController
+    HDBManagerUI --> AccountUIHelper
+    HDBManagerUI --> ProjectUIHelper
+    HDBManagerUI --> ApplicationUIHelper
+    HDBManagerUI --> EnquiryUIHelper
+    HDBManagerUI --> OfficerRegUIHelper
+
+    ' UI Helper Dependencies
+    AccountUIHelper ..> BaseUI
+    AccountUIHelper ..> AuthenticationController
+    ProjectUIHelper ..> BaseUI
+    ProjectUIHelper ..> ProjectController
+    ProjectUIHelper ..> UserController
+    ApplicationUIHelper ..> BaseUI
+    ApplicationUIHelper ..> ApplicationController
+    ApplicationUIHelper ..> ProjectController
+    ApplicationUIHelper ..> IEligibilityService
+    OfficerRegUIHelper ..> BaseUI
+    OfficerRegUIHelper ..> ProjectController
+    OfficerRegUIHelper ..> UserController
+    EnquiryUIHelper ..> BaseUI
+    EnquiryUIHelper ..> ProjectController
+    EnquiryUIHelper ..> UserController
+    BookingUIHelper ..> BaseUI
+    BookingUIHelper ..> UserController
 }
 @enduml

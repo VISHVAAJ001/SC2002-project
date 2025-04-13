@@ -169,7 +169,34 @@ package Repository <<Folder>> {
         + findByProjectId(projectId: String) : List<OfficerRegistration>
     }
 
-    ' Interface Implementation within Repository package
+    ' Interfaces & Classes
+    interface IRepository
+    interface IUserRepository
+    interface IProjectRepository
+    interface IApplicationRepository
+    interface IBookingRepository
+    interface IEnquiryRepository
+    interface IOfficerRegistrationRepository
+
+    class UserRepository
+    class ProjectRepository
+    class ApplicationRepository
+    class BookingRepository
+    class EnquiryRepository
+    class OfficerRegistrationRepository
+
+    class CsvRepositoryHelper
+    class FileUtil
+    class DataAccessException
+
+    ' Inheritance
+    IRepository <|.. IUserRepository
+    IRepository <|.. IProjectRepository
+    IRepository <|.. IApplicationRepository
+    IRepository <|.. IBookingRepository
+    IRepository <|.. IEnquiryRepository
+    IRepository <|.. IOfficerRegistrationRepository
+
     IUserRepository <|.. UserRepository
     IProjectRepository <|.. ProjectRepository
     IApplicationRepository <|.. ApplicationRepository
@@ -177,7 +204,9 @@ package Repository <<Folder>> {
     IEnquiryRepository <|.. EnquiryRepository
     IOfficerRegistrationRepository <|.. OfficerRegistrationRepository
 
-    ' Dependencies on Helper
+    ' Dependencies
+    CsvRepositoryHelper ..> FileUtil : uses >
+    CsvRepositoryHelper ..> DataAccessException : throws >
     UserRepository --> CsvRepositoryHelper : uses >
     ProjectRepository --> CsvRepositoryHelper : uses >
     ApplicationRepository --> CsvRepositoryHelper : uses >

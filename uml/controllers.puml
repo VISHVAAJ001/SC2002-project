@@ -15,7 +15,7 @@ package Controller <<Folder>> {
        + appController : ApplicationController
        + officerRegController : OfficerRegistrationController
        + bookingController : BookingController
-       + receiptController : ReceiptController
+       + receiptController : ReceiptController  
        + enquiryController : EnquiryController
        + reportController : ReportController
        + ControllerContainer(auth: AuthenticationController, user: UserController, proj: ProjectController, app: ApplicationController, reg: OfficerRegistrationController, book: BookingController, receipt: ReceiptController, enq: EnquiryController, report: ReportController) ' Added user controller param
@@ -90,7 +90,7 @@ package Controller <<Folder>> {
         + getBookingReceiptInfo(officer: HDBOfficer, booking: Booking) : BookingReceiptInfo <<throws DataAccessException>>;
     }
 
-     class EnquiryController {
+    class EnquiryController {
         - enquiryService : IEnquiryService; ' Dependency
         + EnquiryController(enquiryService: IEnquiryService);
         + createEnquiry(user: User, projectId: String <<nullable>>, content: String) : Enquiry <<throws InvalidInputException>>;
@@ -100,13 +100,47 @@ package Controller <<Folder>> {
         + viewMyEnquiries(user: User) : List<Enquiry>;
         + viewAllEnquiries(staff: HDBStaff) : List<Enquiry>;
         + viewProjectEnquiries(staff: HDBStaff, projectId: String) : List<Enquiry>;
-     }
+    }
 
-     class ReportController {
+    class ReportController {
          - reportService : IReportService; ' Dependency
          + ReportController(reportService: IReportService);
          + generateBookingReport(manager: HDBManager, filters: Map<String, String>) : String;
-     }
+    }
+
+    class ControllerContainer
+    class AuthenticationController
+    class UserController
+    class ProjectController
+    class ApplicationController
+    class OfficerRegistrationController
+    class BookingController
+    class ReceiptController
+    class EnquiryController
+    class ReportController
+
+    ' Controller Dependencies
+    ControllerContainer *-- AuthenticationController
+    ControllerContainer *-- UserController
+    ControllerContainer *-- ProjectController
+    ControllerContainer *-- ApplicationController
+    ControllerContainer *-- OfficerRegistrationController
+    ControllerContainer *-- BookingController
+    ControllerContainer *-- ReceiptController
+    ControllerContainer *-- EnquiryController
+    ControllerContainer *-- ReportController
+
+    UserController ..> IUserService
+    AuthenticationController ..> IAuthenticationService
+    ProjectController ..> IProjectService
+    ApplicationController ..> IApplicationService
+    OfficerRegistrationController ..> IOfficerRegistrationService
+    OfficerRegistrationController ..> IProjectService
+    BookingController ..> IBookingService
+    ReceiptController ..> IReceiptService
+    EnquiryController ..> IEnquiryService
+    ReportController ..> IReportService
+     
 }
 
 @enduml

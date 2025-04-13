@@ -221,9 +221,41 @@ package Entity <<Folder>> {
         + setStatus(newStatus: OfficerRegStatus) : void ' Called by OfficerRegistrationService
     }
 
-    ' Relationships WITHIN the Entity package
-    Project "1" *-- "1..*" ProjectFlatInfo : contains >
+    class User
+    class Applicant
+    class HDBStaff
+    class HDBOfficer
+    class HDBManager
+    class Project
+    class ProjectFlatInfo
+    class Application
+    class Booking
+    class Enquiry
+    class OfficerRegistration
 
+    ' Inheritance
+    User <|-- Applicant
+    User <|-- HDBStaff
+    HDBStaff <|-- HDBOfficer
+    HDBStaff <|-- HDBManager
+
+    ' Composition / Aggregation
+    Project "1" *-- "1..*" ProjectFlatInfo
+    Project "1" o-- "*" Application
+    Project "1" o-- "*" Booking
+    Project "1" o-- "*" Enquiry
+    Project "1" o-- "*" OfficerRegistration
+    Project ..> User : managerNric
+    Project ..> User : approvedOfficerNrics
+    Application ..> User : applicantNric
+    Application ..> Project : projectId
+    Booking ..> Application : applicationId
+    Booking ..> Project : projectId
+    Booking ..> User : applicantNric
+    Enquiry ..> User : userNric
+    Enquiry ..> Project : projectId (nullable)
+    OfficerRegistration ..> User : officerNric
+    OfficerRegistration ..> Project : projectId
 }
 
 @enduml
