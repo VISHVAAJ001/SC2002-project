@@ -1,39 +1,61 @@
 package com.ntu.fdae.group1.bto.views;
 
 import com.ntu.fdae.group1.bto.controllers.user.UserController;
-import com.ntu.fdae.group1.bto.controllers.project.OfficerRegistrationController;
 import com.ntu.fdae.group1.bto.controllers.project.ProjectController;
-import com.ntu.fdae.group1.bto.models.project.OfficerRegistration;
-import com.ntu.fdae.group1.bto.enums.OfficerRegStatus;
 import com.ntu.fdae.group1.bto.enums.FlatType;
 import com.ntu.fdae.group1.bto.models.project.Project;
 import com.ntu.fdae.group1.bto.models.project.ProjectFlatInfo;
 
-import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.atomic.AtomicInteger; // For numbered lists
+import java.util.concurrent.atomic.AtomicInteger;
 
-/*
- * Helper class to manage common UI tasks related to displaying Project information.
- * This class is intended to be used via composition by role-specific UI classes
- * (ApplicantUI, HDBManagerUI, HDBOfficerUI).
- * It uses separate methods for displaying details based on user role.
+/**
+ * Helper class for project-related UI operations in the BTO Management System.
+ * <p>
+ * This class provides reusable UI components for displaying and managing
+ * project
+ * information, including:
+ * - Displaying lists of projects with filtering options
+ * - Showing detailed project information tailored to different user roles
+ * - Visualizing flat type availability and administrative details
+ * </p>
+ * <p>
+ * The helper follows a composition pattern, working with a BaseUI instance for
+ * common UI operations and controllers for retrieving user and project
+ * information.
+ * It is designed to be used by role-specific UI classes (ApplicantUI,
+ * HDBManagerUI,
+ * HDBOfficerUI) to maintain separation of concerns and reduce code duplication.
+ * </p>
  */
 public class ProjectUIHelper {
 
+    /**
+     * The base UI component for common UI operations.
+     */
     private final BaseUI baseUI; // Use BaseUI for console interactions
+
+    /**
+     * The controller for project-related operations.
+     */
+    @SuppressWarnings("unused")
     private final ProjectController projectController;
+
+    /**
+     * The controller for user-related operations.
+     */
     private final UserController userController;
 
     /**
-     * Constructor for ProjectUIHelper.
-     * 
-     * @param baseUI An instance of BaseUI (or a subclass) to handle console I/O.
+     * Constructs a new ProjectUIHelper with necessary UI and controllers.
+     *
+     * @param baseUI   The base UI for common display operations
+     * @param userCtrl Controller for user-related operations
+     * @param projCtrl Controller for project-related operations
      */
     public ProjectUIHelper(BaseUI baseUI, UserController userCtrl, ProjectController projCtrl) {
         this.baseUI = Objects.requireNonNull(baseUI, "BaseUI cannot be null");
@@ -116,7 +138,9 @@ public class ProjectUIHelper {
      * (Officers/Managers).
      * Shows core info, flat types/units, and administrative details.
      *
-     * @param project The Project object whose details are to be displayed.
+     * @param project      The Project object whose details are to be displayed
+     * @param pendingCount The number of pending officer registrations for the
+     *                     project
      */
     public void displayStaffProjectDetails(Project project, int pendingCount) {
         if (project == null) {
@@ -240,15 +264,17 @@ public class ProjectUIHelper {
     }
 
     /**
- * Displays the availability of different flat types for a given project.
- * @param project The project whose flat availability should be displayed.
- */
+     * Displays the availability of different flat types for a given project.
+     * 
+     * @param project The project whose flat availability should be displayed.
+     */
     public void displayFlatAvailability(Project project) {
         if (project == null) {
             baseUI.displayError("Cannot display flat availability for a null project.");
             return;
         }
-        baseUI.displayMessage("\n--- Available Flats for Project " + project.getProjectId() + " (" + project.getProjectName() + ")" + " ---");
+        baseUI.displayMessage("\n--- Available Flats for Project " + project.getProjectId() + " ("
+                + project.getProjectName() + ")" + " ---");
         Map<FlatType, ProjectFlatInfo> flatInfoMap = project.getFlatTypes();
         boolean flatsAvailable = false;
 
@@ -258,14 +284,14 @@ public class ProjectUIHelper {
             for (Map.Entry<FlatType, ProjectFlatInfo> entry : flatInfoMap.entrySet()) {
                 // Display all types, showing remaining units
                 baseUI.displayMessage(String.format("  Type: %-12s | Remaining: %d",
-                    entry.getKey().name() + ":",
-                    entry.getValue().getRemainingUnits()));
+                        entry.getKey().name() + ":",
+                        entry.getValue().getRemainingUnits()));
                 if (entry.getValue().getRemainingUnits() > 0) {
                     flatsAvailable = true;
                 }
             }
             if (!flatsAvailable) {
-            baseUI.displayMessage("\nWarning: No flats seem available according to current data!");
+                baseUI.displayMessage("\nWarning: No flats seem available according to current data!");
             }
         }
         baseUI.displayMessage("----------------------------------");

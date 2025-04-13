@@ -3,33 +3,71 @@ package com.ntu.fdae.group1.bto.services.booking;
 import com.ntu.fdae.group1.bto.enums.FlatType;
 import com.ntu.fdae.group1.bto.enums.MaritalStatus;
 import com.ntu.fdae.group1.bto.enums.OfficerRegStatus;
-import com.ntu.fdae.group1.bto.enums.FlatType;
-import com.ntu.fdae.group1.bto.enums.MaritalStatus;
-import com.ntu.fdae.group1.bto.enums.OfficerRegStatus;
 import com.ntu.fdae.group1.bto.models.project.Application;
 import com.ntu.fdae.group1.bto.models.project.Project;
 import com.ntu.fdae.group1.bto.models.project.ProjectFlatInfo;
 import com.ntu.fdae.group1.bto.models.project.OfficerRegistration;
-import com.ntu.fdae.group1.bto.models.user.Applicant;
 import com.ntu.fdae.group1.bto.models.user.HDBManager;
 import com.ntu.fdae.group1.bto.models.user.HDBOfficer;
 import com.ntu.fdae.group1.bto.models.user.User;
 import com.ntu.fdae.group1.bto.repository.project.IProjectRepository;
 
 import java.time.LocalDate;
-import java.time.LocalDate;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
 
+/**
+ * Service class that implements eligibility checking rules for the BTO
+ * Management System.
+ * <p>
+ * This class provides business logic for determining eligibility across various
+ * scenarios in the system, including:
+ * - Applicant eligibility for projects and flat types based on age and marital
+ * status
+ * - Officer eligibility for project registration based on concurrency and
+ * conflict rules
+ * - Manager eligibility for project handling based on concurrency constraints
+ * </p>
+ * <p>
+ * The service relies on the project repository for information about existing
+ * projects
+ * when making eligibility determinations.
+ * </p>
+ */
 public class EligibilityService implements IEligibilityService {
+
+    /**
+     * Repository for accessing project data required for eligibility checks.
+     */
     private final IProjectRepository projectRepository;
 
+    /**
+     * Constructs a new EligibilityService with the required project repository.
+     *
+     * @param projectRepository Repository for accessing project data
+     * @throws NullPointerException if projectRepository is null
+     */
     public EligibilityService(IProjectRepository projectRepository) {
         this.projectRepository = Objects.requireNonNull(projectRepository,
                 "Project Repository cannot be null for EligibilityService");
     }
 
+    /**
+     * Checks if a user is eligible to apply for a specific project.
+     * <p>
+     * Eligibility is determined based on the following rules:
+     * - Single applicants aged 35 or older: eligible only for projects with 2-Room
+     * flats
+     * - Married applicants aged 21 or older: eligible for any project with flats
+     * - All other applicants: not eligible
+     * </p>
+     *
+     * @param user    The user (applicant) to check
+     * @param project The project to check eligibility for
+     * @return true if the user is eligible to apply for the project, false
+     *         otherwise
+     */
     @Override
     public boolean canApplicantApply(User user, Project project) {
         if (user == null || project == null)
@@ -47,6 +85,20 @@ public class EligibilityService implements IEligibilityService {
             return false;
     }
 
+    /**
+     * Checks if a user is eligible for a specific flat type.
+     * <p>
+     * Eligibility is determined based on the following rules:
+     * - Single applicants aged 35 or older: eligible only for 2-Room flats
+     * - Married applicants aged 21 or older: eligible for both 2-Room and 3-Room
+     * flats
+     * - All other applicants: not eligible
+     * </p>
+     *
+     * @param user     The user to check eligibility for
+     * @param flatType The flat type to check eligibility against
+     * @return true if the user is eligible for the flat type, false otherwise
+     */
     @Override
     public boolean isApplicantEligibleForFlatType(User user, FlatType flatType) {
         int age = user.getAge();
@@ -64,6 +116,22 @@ public class EligibilityService implements IEligibilityService {
         }
     }
 
+    /**
+     * Determines if an HDB Officer is eligible to register for a specific project.
+     * <p>
+     * The eligibility rules are:
+     * 1. The officer must not have applied for the project as an applicant
+     * 2. The officer must not be handling another project with an overlapping
+     * application period
+     * </p>
+     *
+     * @param officer          The HDB Officer to check eligibility for
+     * @param project          The project the officer wishes to register for
+     * @param allRegistrations Collection of all officer registrations in the system
+     * @param allApplications  Collection of all applications in the system
+     * @return true if the officer is eligible to register for the project, false
+     *         otherwise
+     */
     @Override
     public boolean canOfficerRegister(HDBOfficer officer, Project project,
             Collection<OfficerRegistration> allRegistrations,
@@ -133,6 +201,24 @@ public class EligibilityService implements IEligibilityService {
         return true;
     }
 
+    /**
+     * Checks if an HDB Manager is eligible to handle a new project with the
+     * specified dates.
+     * <p>
+     * A manager is eligible if they are not already managing a project with an
+     * overlapping application period.
+     * </p>
+     * <p>
+     * Application periods overlap when: (StartA <= EndB) AND (EndA >= StartB)
+     * </p>
+     *
+     * @param manager             The HDB Manager to check eligibility for
+     * @param newProjectOpenDate  The opening date of the new project
+     * @param newProjectCloseDate The closing date of the new project
+     * @param allExistingProjects Collection of all existing projects in the system
+     * @return true if the manager is eligible to handle the new project, false
+     *         otherwise
+     */
     @Override
     public boolean checkManagerProjectHandlingEligibility(HDBManager manager, LocalDate newProjectOpenDate,
             LocalDate newProjectCloseDate, Collection<Project> allExistingProjects) {

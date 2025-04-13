@@ -1,11 +1,9 @@
 package com.ntu.fdae.group1.bto.views;
 
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -13,7 +11,6 @@ import java.util.Set;
 import java.util.Objects;
 import java.util.Scanner;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import com.ntu.fdae.group1.bto.controllers.enquiry.EnquiryController;
 import com.ntu.fdae.group1.bto.models.enquiry.Enquiry;
@@ -36,22 +33,116 @@ import com.ntu.fdae.group1.bto.exceptions.AuthorizationException;
 import com.ntu.fdae.group1.bto.exceptions.InvalidInputException;
 import com.ntu.fdae.group1.bto.exceptions.RegistrationException;
 
+/**
+ * User interface for HDB Manager users in the BTO Management System.
+ * <p>
+ * This class provides a console-based interface for HDB managers to interact
+ * with
+ * the system. It allows managers to perform high-level administrative
+ * operations
+ * including:
+ * - Creating, editing, and deleting BTO projects
+ * - Managing project visibility
+ * - Reviewing officer registrations for project handling
+ * - Reviewing BTO applications and withdrawal requests
+ * - Responding to enquiries
+ * - Generating system reports
+ * </p>
+ * <p>
+ * The UI follows a menu-driven approach, with options for project management,
+ * administrative tasks, communication, and reporting. It leverages various UI
+ * helper
+ * classes to manage complex operations while maintaining separation of
+ * concerns.
+ * </p>
+ */
 public class HDBManagerUI extends BaseUI {
+    /**
+     * The authenticated HDB manager user currently using the interface.
+     */
     private final HDBManager user;
+
+    /**
+     * Controller for user-related operations.
+     */
+    @SuppressWarnings("unused")
     private final UserController userController;
+
+    /**
+     * Controller for project-related operations.
+     */
     private final ProjectController projectController;
+
+    /**
+     * Controller for application-related operations.
+     */
     private final ApplicationController applicationController;
+
+    /**
+     * Controller for officer registration operations.
+     */
     private final OfficerRegistrationController officerRegController;
+
+    /**
+     * Controller for enquiry-related operations.
+     */
     private final EnquiryController enquiryController;
+
+    /**
+     * Controller for report generation operations.
+     */
     private final ReportController reportController;
+
+    /**
+     * Controller for authentication-related operations.
+     */
+    @SuppressWarnings("unused")
     private final AuthenticationController authController;
+
+    /**
+     * Helper for project-related UI operations.
+     */
     private final ProjectUIHelper projectUIHelper;
+
+    /**
+     * Helper for account-related UI operations.
+     */
     private final AccountUIHelper accountUIHelper;
+
+    /**
+     * Helper for application-related UI operations.
+     */
     private final ApplicationUIHelper applicationUIHelper;
+
+    /**
+     * Helper for enquiry-related UI operations.
+     */
     private final EnquiryUIHelper enquiryUIHelper;
+
+    /**
+     * Helper for officer registration UI operations.
+     */
     private final OfficerRegUIHelper officerRegUIHelper;
+
+    /**
+     * Current filters applied to project listings.
+     */
     private Map<String, Object> currentProjectFilters;
 
+    /**
+     * Constructs a new HDBManagerUI with the specified dependencies.
+     *
+     * @param user       The authenticated HDB manager user
+     * @param userCtrl   Controller for user operations
+     * @param projCtrl   Controller for project operations
+     * @param appCtrl    Controller for application operations
+     * @param offRegCtrl Controller for officer registration operations
+     * @param enqCtrl    Controller for enquiry operations
+     * @param reportCtrl Controller for report generation operations
+     * @param authCtrl   Controller for authentication operations
+     * @param scanner    Scanner for reading user input
+     * @throws NullPointerException if any parameter is null
+     */
     public HDBManagerUI(HDBManager user,
             UserController userCtrl,
             ProjectController projCtrl,
@@ -70,20 +161,23 @@ public class HDBManagerUI extends BaseUI {
         this.enquiryController = Objects.requireNonNull(enqCtrl);
         this.reportController = Objects.requireNonNull(reportCtrl);
         this.authController = Objects.requireNonNull(authCtrl);
-        this.projectUIHelper = new ProjectUIHelper(this, userCtrl, projCtrl); // Initialize helper; pass in BaseUI and
-                                                                              // UserController
-        this.accountUIHelper = new AccountUIHelper(this, authCtrl); // Initialize account helper; pass in BaseUI and
-                                                                    // AuthController
-        this.applicationUIHelper = new ApplicationUIHelper(this, appCtrl, projCtrl); // Initialize application helper;
-                                                                                     // pass in BaseUI and
-                                                                                     // appController, ProjController
-        this.enquiryUIHelper = new EnquiryUIHelper(this, userCtrl, projCtrl); // Initialize enquiry helper; pass in
-                                                                              // BaseUI and ProjController
-        this.officerRegUIHelper = new OfficerRegUIHelper(this, projCtrl); // Initialize officer registration helper;
-                                                                          // pass in BaseUI and ProjController
+        this.projectUIHelper = new ProjectUIHelper(this, userCtrl, projCtrl);
+        this.accountUIHelper = new AccountUIHelper(this, authCtrl);
+        this.applicationUIHelper = new ApplicationUIHelper(this, appCtrl, projCtrl);
+        this.enquiryUIHelper = new EnquiryUIHelper(this, userCtrl, projCtrl);
+        this.officerRegUIHelper = new OfficerRegUIHelper(this, projCtrl);
         this.currentProjectFilters = new HashMap<>();
     }
 
+    /**
+     * Displays the main menu for HDB manager users and handles their selections.
+     * <p>
+     * This method shows a menu of options available to HDB managers, including
+     * project management, administrative tasks, communication, and reporting.
+     * It runs in a loop until the user chooses to log out, delegating to specific
+     * handler methods based on user input.
+     * </p>
+     */
     public void displayMainMenu() {
         boolean keepRunning = true;
         while (keepRunning) {
@@ -161,6 +255,19 @@ public class HDBManagerUI extends BaseUI {
         }
     }
 
+    /**
+     * Handles the sub-menu for managing BTO projects.
+     * <p>
+     * Displays options for project management including creation, editing,
+     * deletion, and visibility toggling. Delegates to specific handler methods
+     * based on user selection.
+     * </p>
+     *
+     * @throws RegistrationException If an error occurs while accessing officer
+     *                               registration data
+     * @throws InvalidInputException If invalid input is provided for project
+     *                               management operations
+     */
     private void handleManageProjects() throws RegistrationException, InvalidInputException {
         displayHeader("Manage BTO Projects");
         System.out.println("1. Create New Project");
@@ -190,6 +297,25 @@ public class HDBManagerUI extends BaseUI {
         }
     }
 
+    /**
+     * Handles the workflow for creating a new BTO project.
+     * <p>
+     * This method guides the manager through:
+     * - Entering basic project details (name, neighborhood, dates)
+     * - Specifying the available flat types and unit counts
+     * - Setting officer assignment slots
+     * </p>
+     * <p>
+     * After collecting all required information, it delegates to the
+     * ProjectController
+     * to create the new project and displays the result to the user.
+     * </p>
+     *
+     * @throws RegistrationException If an error occurs during project creation
+     *                               related to officer registration
+     * @throws InvalidInputException If invalid input is provided for project
+     *                               creation
+     */
     private void handleCreateProject() throws RegistrationException, InvalidInputException {
         String name = promptForInput("Enter Project Name: ");
         String neighborhood = promptForInput("Enter Neighborhood: ");
@@ -227,6 +353,22 @@ public class HDBManagerUI extends BaseUI {
         }
     }
 
+    /**
+     * Handles the workflow for editing an existing BTO project.
+     * <p>
+     * This method guides the manager through:
+     * - Selecting a project to edit from those they manage
+     * - Viewing the current project details including pending officer registrations
+     * - Updating project attributes (name, neighborhood, dates, officer slots)
+     * </p>
+     * <p>
+     * Changes are validated before being submitted to the ProjectController, and
+     * both success and failure outcomes are reported to the user.
+     * </p>
+     *
+     * @throws InvalidInputException If invalid input is provided for project
+     *                               editing
+     */
     private void handleEditProject() throws InvalidInputException {
         displayHeader("Edit Existing Project");
 
@@ -345,6 +487,18 @@ public class HDBManagerUI extends BaseUI {
         }
     }
 
+    /**
+     * Handles the workflow for deleting a BTO project.
+     * <p>
+     * This method guides the manager through:
+     * - Selecting a project to delete from those they manage
+     * - Confirming the deletion request with appropriate warnings
+     * </p>
+     * <p>
+     * Deletion is subject to business rules (e.g., no active applications).
+     * The outcome of the deletion request is displayed to the user.
+     * </p>
+     */
     private void handleDeleteProject() {
         displayHeader("Delete Project");
         List<Project> myProjects = projectController.getProjectsManagedBy(this.user);
@@ -367,6 +521,19 @@ public class HDBManagerUI extends BaseUI {
         }
     }
 
+    /**
+     * Handles the workflow for toggling a project's visibility status.
+     * <p>
+     * This method guides the manager through:
+     * - Selecting a project to modify from those they manage
+     * - Viewing the current visibility status
+     * - Confirming the toggle operation
+     * </p>
+     * <p>
+     * The visibility change is delegated to the ProjectController, and
+     * the outcome is reported to the user.
+     * </p>
+     */
     private void handleToggleVisibility() {
         displayHeader("Toggle Project Visibility");
         List<Project> myProjects = projectController.getProjectsManagedBy(this.user);
@@ -391,6 +558,22 @@ public class HDBManagerUI extends BaseUI {
         }
     }
 
+    /**
+     * Handles the workflow for viewing all BTO projects in the system.
+     * <p>
+     * This method allows managers to:
+     * - Apply or modify filters to the project list
+     * - View a list of all projects matching the selected filters
+     * - Select a specific project to view its details
+     * </p>
+     * <p>
+     * For selected projects, their details are displayed including pending
+     * officer registration counts.
+     * </p>
+     *
+     * @throws AuthorizationException If the manager doesn't have sufficient
+     *                                privileges
+     */
     private void handleViewAllProjects() throws AuthorizationException {
         displayHeader("All BTO Projects - View & Filter");
 
@@ -501,6 +684,19 @@ public class HDBManagerUI extends BaseUI {
         }
     }
 
+    /**
+     * Handles the workflow for viewing BTO projects managed by the current user.
+     * <p>
+     * Similar to handleViewAllProjects but filters for projects where the
+     * current manager is assigned as the manager. Allows the user to:
+     * - Apply or modify filters to their project list
+     * - View a list of their assigned projects matching the selected filters
+     * - Select a specific project to view its details
+     * </p>
+     *
+     * @throws AuthorizationException If the manager doesn't have sufficient
+     *                                privileges
+     */
     private void handleViewMyProjects() throws AuthorizationException {
         displayHeader("My Managed BTO Projects - View & Filter");
 
@@ -612,6 +808,22 @@ public class HDBManagerUI extends BaseUI {
         }
     }
 
+    /**
+     * Handles the workflow for reviewing pending officer registrations.
+     * <p>
+     * This method allows managers to:
+     * - View a list of pending officer registrations across all their projects
+     * - Select a specific registration to review
+     * - Approve or reject the selected registration
+     * </p>
+     * <p>
+     * The approval or rejection is delegated to the OfficerRegistrationController,
+     * and the outcome is reported to the user.
+     * </p>
+     *
+     * @throws RegistrationException If an error occurs while accessing or
+     *                               processing registration data
+     */
     private void handleReviewOfficerRegistrations() throws RegistrationException {
         displayHeader("Review Pending Officer Registrations");
         List<OfficerRegistration> pendingRegs = officerRegController.getPendingRegistrations(user);
@@ -644,6 +856,23 @@ public class HDBManagerUI extends BaseUI {
         }
     }
 
+    /**
+     * Handles the workflow for reviewing pending BTO applications.
+     * <p>
+     * This method allows managers to:
+     * - View a list of pending applications for projects they manage
+     * - Select a specific application to review
+     * - Approve or reject the selected application
+     * </p>
+     * <p>
+     * The method filters applications to only show those for projects managed
+     * by the current manager. The approval or rejection decision is delegated to
+     * the ApplicationController.
+     * </p>
+     *
+     * @throws ApplicationException If an error occurs while accessing or processing
+     *                              application data
+     */
     private void handleReviewApplications() throws ApplicationException {
         displayHeader("Review Pending BTO Applications");
         List<Application> pendingApps = applicationController.getApplicationsByStatus(user, ApplicationStatus.PENDING);
@@ -686,6 +915,23 @@ public class HDBManagerUI extends BaseUI {
         }
     }
 
+    /**
+     * Handles the workflow for reviewing pending application withdrawal requests.
+     * <p>
+     * This method allows managers to:
+     * - View a list of applications with withdrawal requests for their projects
+     * - Select a specific withdrawal request to review
+     * - Approve or reject the selected withdrawal request
+     * </p>
+     * <p>
+     * The method filters to show only withdrawal requests for projects managed
+     * by the current manager. The decision is delegated to the
+     * ApplicationController.
+     * </p>
+     *
+     * @throws ApplicationException If an error occurs while accessing or processing
+     *                              application data
+     */
     private void handleReviewWithdrawals() throws ApplicationException {
         displayHeader("Review Pending Application Withdrawals");
         // Fetch apps that *could* have withdrawals (PENDING or SUCCESSFUL)
@@ -728,6 +974,23 @@ public class HDBManagerUI extends BaseUI {
         }
     }
 
+    /**
+     * Handles the workflow for viewing and replying to enquiries.
+     * <p>
+     * This method allows managers to:
+     * - View a list of all enquiries in the system
+     * - Select a specific enquiry to view and potentially reply to
+     * - Submit a reply for unreplied enquiries
+     * </p>
+     * <p>
+     * Managers can reply to general enquiries and enquiries for projects they
+     * manage.
+     * The reply process is delegated to the EnquiryController.
+     * </p>
+     *
+     * @throws InvalidInputException If invalid input is provided while handling
+     *                               enquiries
+     */
     private void handleViewReplyEnquiries() throws InvalidInputException {
         displayHeader("View/Reply Enquiries");
         List<Enquiry> allEnquiries = enquiryController.viewAllEnquiries(); // Manager sees all
@@ -779,6 +1042,19 @@ public class HDBManagerUI extends BaseUI {
         }
     }
 
+    /**
+     * Handles the workflow for generating booking reports.
+     * <p>
+     * This method allows managers to:
+     * - Specify filters for the report (flat type, project name, age, marital
+     * status)
+     * - Generate a formatted booking report based on the selected filters
+     * </p>
+     * <p>
+     * The report generation is delegated to the ReportController, and the
+     * formatted report is displayed to the user.
+     * </p>
+     */
     private void handleGenerateReport() {
         displayHeader("Generate Booking Report");
         Map<String, String> filters = new HashMap<>();
@@ -832,10 +1108,30 @@ public class HDBManagerUI extends BaseUI {
         // pause();
     }
 
+    /**
+     * Handles the password change workflow for the HDB manager.
+     * <p>
+     * Delegates to the AccountUIHelper to manage the password change process.
+     * </p>
+     *
+     * @return true if the password was successfully changed, false otherwise
+     */
     private boolean handleChangePassword() {
         return this.accountUIHelper.handlePasswordChange(this.user);
     }
 
+    /**
+     * Prompts the user for a date input with the option to keep the current value.
+     * <p>
+     * If the user enters a blank value, the current date is retained.
+     * Otherwise, the input is parsed as a date using the standard date formatter.
+     * </p>
+     *
+     * @param prompt       The message to display to the user
+     * @param currentValue The current date value to retain if input is blank
+     * @return The new date value if provided, or the current value if input is
+     *         blank
+     */
     private LocalDate promptForDateOrKeep(String prompt, LocalDate currentValue) {
         while (true) {
             String input = promptForInput(
@@ -851,6 +1147,19 @@ public class HDBManagerUI extends BaseUI {
         }
     }
 
+    /**
+     * Prompts the user for an integer input with the option to keep the current
+     * value.
+     * <p>
+     * If the user enters a blank value, the current integer is retained.
+     * Otherwise, the input is parsed as an integer.
+     * </p>
+     *
+     * @param prompt       The message to display to the user
+     * @param currentValue The current integer value to retain if input is blank
+     * @return The new integer value if provided, or the current value if input is
+     *         blank
+     */
     private int promptForIntOrKeep(String prompt, int currentValue) {
         while (true) {
             String input = promptForInput(prompt + " (Enter number or leave blank to keep '" + currentValue + "'): ");
@@ -865,6 +1174,19 @@ public class HDBManagerUI extends BaseUI {
         }
     }
 
+    /**
+     * Prompts the user for a string input with the option to keep the current
+     * value.
+     * <p>
+     * If the user enters a blank value, the original string is retained.
+     * Otherwise, the input is trimmed and returned.
+     * </p>
+     *
+     * @param prompt        The message to display to the user
+     * @param originalValue The original string value to retain if input is blank
+     * @return The new string value if provided, or the original value if input is
+     *         blank
+     */
     private String promptForOptionalInput(String prompt, String originalValue) {
         // Assuming promptForInput exists in BaseUI and returns the raw user input
         // string
@@ -874,5 +1196,4 @@ public class HDBManagerUI extends BaseUI {
         }
         return input.trim(); // Return trimmed user input
     }
-
 }

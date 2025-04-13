@@ -5,8 +5,6 @@ import com.ntu.fdae.group1.bto.controllers.user.UserController;
 import com.ntu.fdae.group1.bto.models.enquiry.Enquiry;
 import com.ntu.fdae.group1.bto.models.project.Project;
 
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -29,9 +27,11 @@ public class EnquiryUIHelper {
     private static final int SNIPPET_LENGTH = 40; // Max length for content snippet in list view
 
     /**
-     * Constructor for EnquiryUIHelper.
-     * 
-     * @param baseUI An instance of BaseUI (or a subclass) to handle console I/O.
+     * Constructs a new EnquiryUIHelper with the required UI and controllers.
+     *
+     * @param baseUI            The base UI for displaying common UI components
+     * @param userController    The controller for user operations
+     * @param projectController The controller for project operations
      */
     public EnquiryUIHelper(BaseUI baseUI, UserController userController, ProjectController projectController) {
         this.userController = Objects.requireNonNull(userController);
@@ -172,15 +172,16 @@ public class EnquiryUIHelper {
             // Use displayMessage for potentially multi-line output
             baseUI.displayMessage(String.format("%d. %s EnqID: %s | User: %s | Project: %s (%s) | Date: %s",
                     index, repliedStatus, enq.getEnquiryId(), enq.getUserNric(), projName,
-                    enq.getProjectId() == null ? "N/A" : enq.getProjectId(), baseUI.formatDateSafe(enq.getSubmissionDate())));
+                    enq.getProjectId() == null ? "N/A" : enq.getProjectId(),
+                    baseUI.formatDateSafe(enq.getSubmissionDate())));
             baseUI.displayMessage(String.format("   Q: %s", enq.getContent())); // Question on new line
 
             if (enq.isReplied()) {
                 baseUI.displayMessage(
                         String.format("   A: %s (on %s)", enq.getReply(), baseUI.formatDateSafe(enq.getReplyDate()))); // Reply
-                                                                                                                // on
-                                                                                                                // new
-                                                                                                                // line
+                // on
+                // new
+                // line
             }
             enquiryMap.put(index, enq);
             index++;

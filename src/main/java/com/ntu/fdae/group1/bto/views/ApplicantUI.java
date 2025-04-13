@@ -1,48 +1,109 @@
 package com.ntu.fdae.group1.bto.views;
 
 import com.ntu.fdae.group1.bto.controllers.project.ApplicationController;
-import com.ntu.fdae.group1.bto.controllers.project.OfficerRegistrationController;
 import com.ntu.fdae.group1.bto.controllers.project.ProjectController;
 import com.ntu.fdae.group1.bto.controllers.enquiry.EnquiryController;
 import com.ntu.fdae.group1.bto.controllers.user.AuthenticationController; // Added
 import com.ntu.fdae.group1.bto.controllers.user.UserController;
-import com.ntu.fdae.group1.bto.enums.ApplicationStatus;
-import com.ntu.fdae.group1.bto.enums.FlatType;
-import com.ntu.fdae.group1.bto.enums.MaritalStatus;
 import com.ntu.fdae.group1.bto.models.enquiry.Enquiry;
-import com.ntu.fdae.group1.bto.models.project.Application;
 import com.ntu.fdae.group1.bto.models.project.Project;
-import com.ntu.fdae.group1.bto.models.project.ProjectFlatInfo;
 import com.ntu.fdae.group1.bto.models.user.Applicant;
-import com.ntu.fdae.group1.bto.exceptions.ApplicationException;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
-
 import java.util.Objects;
-// Import other necessary Entity/Enum/Exception types as needed
 
-import java.util.List;
-import java.util.Optional;
-import java.util.Scanner;
-import java.util.Objects;
-// Import other necessary types
-
+/**
+ * User interface for Applicant users in the BTO Management System.
+ * <p>
+ * This class provides a console-based interface for applicants to interact with
+ * the system. It allows applicants to:
+ * - Browse available BTO projects
+ * - Apply for BTO flats
+ * - View and withdraw applications
+ * - Submit and manage enquiries
+ * - Change their password
+ * </p>
+ * <p>
+ * The UI follows a menu-driven approach, with each option delegating to
+ * specific
+ * handler methods. It leverages various UI helper classes to manage complex
+ * operations while maintaining separation of concerns.
+ * </p>
+ */
 public class ApplicantUI extends BaseUI {
+    /**
+     * The authenticated applicant user currently using the interface.
+     */
     private final Applicant user;
+
+    /**
+     * Controller for user-related operations.
+     */
+    @SuppressWarnings("unused")
     private final UserController userController;
+
+    /**
+     * Controller for project-related operations.
+     */
     private final ProjectController projectController;
+
+    /**
+     * Controller for application-related operations.
+     */
+    @SuppressWarnings("unused")
     private final ApplicationController applicationController;
+
+    /**
+     * Controller for enquiry-related operations.
+     */
     private final EnquiryController enquiryController;
+
+    /**
+     * Controller for authentication-related operations.
+     */
+    @SuppressWarnings("unused")
     private final AuthenticationController authController;
-    private final ProjectUIHelper projectUIHelper; // Use the helper
-    private final AccountUIHelper accountUIHelper; // Use the helper
+
+    /**
+     * Helper for project-related UI operations.
+     */
+    private final ProjectUIHelper projectUIHelper;
+
+    /**
+     * Helper for account-related UI operations.
+     */
+    private final AccountUIHelper accountUIHelper;
+
+    /**
+     * Helper for enquiry-related UI operations.
+     */
     private final EnquiryUIHelper enquiryUIHelper;
+
+    /**
+     * Helper for application-related UI operations.
+     */
     private final ApplicationUIHelper applicationUIHelper;
+
+    /**
+     * Current filters applied to project listings.
+     */
     private Map<String, Object> currentProjectFilters;
 
+    /**
+     * Constructs a new ApplicantUI with the specified dependencies.
+     *
+     * @param user     The authenticated applicant user
+     * @param userCtrl Controller for user operations
+     * @param projCtrl Controller for project operations
+     * @param appCtrl  Controller for application operations
+     * @param enqCtrl  Controller for enquiry operations
+     * @param authCtrl Controller for authentication operations
+     * @param scanner  Scanner for reading user input
+     * @throws NullPointerException if any parameter is null
+     */
     public ApplicantUI(Applicant user,
             UserController userCtrl,
             ProjectController projCtrl,
@@ -64,6 +125,14 @@ public class ApplicantUI extends BaseUI {
         this.currentProjectFilters = new HashMap<>();
     }
 
+    /**
+     * Displays the main menu for applicant users and handles their selections.
+     * <p>
+     * This method shows a menu of options available to applicants and delegates
+     * to specific handler methods based on user input. It runs in a loop until
+     * the user chooses to log out.
+     * </p>
+     */
     public void displayMainMenu() {
         boolean keepRunning = true;
         while (keepRunning) {
@@ -119,6 +188,16 @@ public class ApplicantUI extends BaseUI {
         }
     }
 
+    /**
+     * Handles the workflow for viewing and applying for BTO projects.
+     * <p>
+     * This method allows applicants to:
+     * - Manage filters for the project list view
+     * - Browse available projects
+     * - View project details
+     * - Apply for a selected project
+     * </p>
+     */
     private void handleViewAndApplyProjects() {
         displayHeader("View Available BTO Projects");
 
@@ -193,10 +272,26 @@ public class ApplicantUI extends BaseUI {
         }
     }
 
+    /**
+     * Handles the workflow for viewing and withdrawing applications.
+     * <p>
+     * Delegates to the ApplicationUIHelper for displaying the applicant's
+     * applications and handling withdrawal requests.
+     * </p>
+     */
     private void handleViewAndWithdrawApplication() {
         applicationUIHelper.performViewAndWithdraw(this.user);
     }
 
+    /**
+     * Handles the workflow for submitting a new enquiry.
+     * <p>
+     * This method allows applicants to:
+     * - Select a project to enquire about
+     * - Enter the content of their enquiry
+     * - Submit the enquiry to the system
+     * </p>
+     */
     private void handleSubmitEnquiry() {
         displayHeader("Submit Enquiry");
         List<Project> projects = projectController.getVisibleProjectsForUser(this.user, this.currentProjectFilters);
@@ -219,6 +314,15 @@ public class ApplicantUI extends BaseUI {
         }
     }
 
+    /**
+     * Handles the workflow for managing existing enquiries.
+     * <p>
+     * This method allows applicants to:
+     * - View a list of their submitted enquiries
+     * - View details of a specific enquiry
+     * - Edit or delete an enquiry (if it hasn't been replied to)
+     * </p>
+     */
     private void handleManageMyEnquiries() {
         displayHeader("Manage My Enquiries");
         List<Enquiry> enquiries = enquiryController.viewMyEnquiries(this.user); // Get data
@@ -258,7 +362,14 @@ public class ApplicantUI extends BaseUI {
         }
     }
 
-    // Helper method to handle actual edit action
+    /**
+     * Handles the action of editing an existing enquiry.
+     * <p>
+     * Prompts the user for new content and updates the enquiry if valid.
+     * </p>
+     *
+     * @param enquiryId The ID of the enquiry to edit
+     */
     private void handleEditEnquiryAction(String enquiryId) {
         String newContent = promptForInput("Enter new content for the enquiry: ");
         if (newContent != null && !newContent.trim().isEmpty()) {
@@ -277,7 +388,14 @@ public class ApplicantUI extends BaseUI {
         }
     }
 
-    // Helper method to handle actual delete action
+    /**
+     * Handles the action of deleting an existing enquiry.
+     * <p>
+     * Attempts to delete the enquiry and displays the result to the user.
+     * </p>
+     *
+     * @param enquiryId The ID of the enquiry to delete
+     */
     private void handleDeleteEnquiryAction(String enquiryId) {
         try {
             boolean success = enquiryController.deleteEnquiry(enquiryId, this.user);
@@ -293,6 +411,14 @@ public class ApplicantUI extends BaseUI {
         }
     }
 
+    /**
+     * Handles the password change workflow for the applicant.
+     * <p>
+     * Delegates to the AccountUIHelper to manage the password change process.
+     * </p>
+     *
+     * @return true if the password was successfully changed, false otherwise
+     */
     private boolean handleChangePassword() {
         return accountUIHelper.handlePasswordChange(this.user);
     }

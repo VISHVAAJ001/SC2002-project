@@ -25,24 +25,122 @@ import java.util.Scanner;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
+/**
+ * User interface for HDB Officer users in the BTO Management System.
+ * <p>
+ * This class provides a console-based interface for HDB officers to interact
+ * with
+ * the system. It allows officers to perform both applicant-like operations and
+ * officer-specific duties, including:
+ * - Browsing and applying for BTO projects (as an applicant)
+ * - Managing their own applications and enquiries
+ * - Requesting registration to handle specific projects
+ * - Managing projects they are approved to handle
+ * - Processing bookings and generating receipts
+ * - Responding to project-related enquiries
+ * </p>
+ * <p>
+ * The UI follows a menu-driven approach, with primary and sub-menu options that
+ * delegate to specific handler methods. It leverages various UI helper classes
+ * to manage complex operations while maintaining separation of concerns.
+ * </p>
+ */
 public class HDBOfficerUI extends BaseUI {
+    /**
+     * The authenticated HDB officer user currently using the interface.
+     */
     private final HDBOfficer user;
+
+    /**
+     * Controller for user-related operations.
+     */
     private final UserController userController;
+
+    /**
+     * Controller for project-related operations.
+     */
     private final ProjectController projectController;
+
+    /**
+     * Controller for application-related operations.
+     */
     private final ApplicationController applicationController;
+
+    /**
+     * Controller for officer registration operations.
+     */
     private final OfficerRegistrationController officerRegController;
+
+    /**
+     * Controller for booking-related operations.
+     */
     private final BookingController bookingController;
+
+    /**
+     * Controller for receipt generation operations.
+     */
     private final ReceiptController receiptController;
+
+    /**
+     * Controller for enquiry-related operations.
+     */
     private final EnquiryController enquiryController;
+
+    /**
+     * Controller for authentication-related operations.
+     */
     private final AuthenticationController authController;
-    private final ProjectUIHelper projectUIHelper; 
+
+    /**
+     * Helper for project-related UI operations.
+     */
+    private final ProjectUIHelper projectUIHelper;
+
+    /**
+     * Helper for account-related UI operations.
+     */
     private final AccountUIHelper accountUIHelper;
-    private final EnquiryUIHelper enquiryUIHelper; 
+
+    /**
+     * Helper for enquiry-related UI operations.
+     */
+    private final EnquiryUIHelper enquiryUIHelper;
+
+    /**
+     * Helper for application-related UI operations.
+     */
     private final ApplicationUIHelper applicationUIHelper;
-    private final OfficerRegUIHelper officerRegUIHelper; 
+
+    /**
+     * Helper for officer registration UI operations.
+     */
+    private final OfficerRegUIHelper officerRegUIHelper;
+
+    /**
+     * Helper for booking-related UI operations.
+     */
     private final BookingUIHelper bookingUIHelper;
+
+    /**
+     * Current filters applied to project listings.
+     */
     private Map<String, Object> currentProjectFilters;
 
+    /**
+     * Constructs a new HDBOfficerUI with the specified dependencies.
+     *
+     * @param user        The authenticated HDB officer user
+     * @param userCtrl    Controller for user operations
+     * @param projCtrl    Controller for project operations
+     * @param appCtrl     Controller for application operations
+     * @param offRegCtrl  Controller for officer registration operations
+     * @param bookCtrl    Controller for booking operations
+     * @param receiptCtrl Controller for receipt operations
+     * @param enqCtrl     Controller for enquiry operations
+     * @param authCtrl    Controller for authentication operations
+     * @param scanner     Scanner for reading user input
+     * @throws NullPointerException if any parameter is null
+     */
     public HDBOfficerUI(HDBOfficer user,
             UserController userCtrl,
             ProjectController projCtrl,
@@ -72,6 +170,15 @@ public class HDBOfficerUI extends BaseUI {
         this.currentProjectFilters = new HashMap<>();
     }
 
+    /**
+     * Displays the main menu for HDB officer users and handles their selections.
+     * <p>
+     * This method shows a menu of options available to HDB officers, including
+     * applicant-like operations, officer-specific duties, and account management.
+     * It runs in a loop until the user chooses to log out, delegating to specific
+     * handler methods based on user input.
+     * </p>
+     */
     public void displayMainMenu() {
         boolean keepRunning = true;
         while (keepRunning) {
@@ -150,8 +257,16 @@ public class HDBOfficerUI extends BaseUI {
 
     // --- Handler Methods ---
 
-    // Duplicated/Similar Applicant Methods (Could potentially be shared via a
-    // helper if identical)
+    /**
+     * Handles the workflow for viewing and applying for BTO projects.
+     * <p>
+     * This method allows officers (in their applicant capacity) to:
+     * - Manage filters for the project list view
+     * - Browse available projects
+     * - View project details
+     * - Apply for a selected project
+     * </p>
+     */
     private void handleViewAndApplyProjects() {
         displayHeader("View Available BTO Projects");
 
@@ -226,10 +341,26 @@ public class HDBOfficerUI extends BaseUI {
         }
     }
 
+    /**
+     * Handles the workflow for viewing and withdrawing applications.
+     * <p>
+     * Delegates to the ApplicationUIHelper for displaying the officer's
+     * personal applications and handling withdrawal requests.
+     * </p>
+     */
     private void handleViewAndWithdrawApplication() {
         applicationUIHelper.performViewAndWithdraw(this.user);
     }
 
+    /**
+     * Handles the workflow for submitting a new personal enquiry.
+     * <p>
+     * This method allows officers (in their applicant capacity) to:
+     * - Select a project to enquire about
+     * - Enter the content of their enquiry
+     * - Submit the enquiry to the system
+     * </p>
+     */
     private void handleSubmitEnquiry() {
         displayHeader("Submit Enquiry");
         List<Project> projects = projectController.getVisibleProjectsForUser(this.user, this.currentProjectFilters);
@@ -252,6 +383,15 @@ public class HDBOfficerUI extends BaseUI {
         }
     }
 
+    /**
+     * Handles the workflow for managing personal enquiries.
+     * <p>
+     * This method allows officers to:
+     * - View a list of their submitted enquiries
+     * - View details of a specific enquiry
+     * - Edit or delete an enquiry (if it hasn't been replied to)
+     * </p>
+     */
     private void handleManageMyEnquiries() {
         displayHeader("Manage My Enquiries");
         List<Enquiry> enquiries = enquiryController.viewMyEnquiries(this.user); // Get data
@@ -291,7 +431,14 @@ public class HDBOfficerUI extends BaseUI {
         }
     }
 
-    // Helper method to handle actual edit action
+    /**
+     * Handles the action of editing an existing personal enquiry.
+     * <p>
+     * Prompts the user for new content and updates the enquiry if valid.
+     * </p>
+     *
+     * @param enquiryId The ID of the enquiry to edit
+     */
     private void handleEditEnquiryAction(String enquiryId) {
         String newContent = promptForInput("Enter new content for the enquiry: ");
         if (newContent != null && !newContent.trim().isEmpty()) {
@@ -310,6 +457,14 @@ public class HDBOfficerUI extends BaseUI {
         }
     }
 
+    /**
+     * Handles the action of deleting an existing personal enquiry.
+     * <p>
+     * Attempts to delete the enquiry and displays the result to the user.
+     * </p>
+     *
+     * @param enquiryId The ID of the enquiry to delete
+     */
     private void handleDeleteEnquiryAction(String enquiryId) {
         try {
             boolean success = enquiryController.deleteEnquiry(enquiryId, this.user);
@@ -328,34 +483,53 @@ public class HDBOfficerUI extends BaseUI {
     /**
      * Handles the process for an HDB Officer to select a project and request
      * registration to handle it.
+     * <p>
+     * This method guides the officer through:
+     * - Viewing available projects that need officer handling
+     * - Selecting a specific project
+     * - Confirming their registration request
+     * - Viewing the details of their submitted registration
+     * </p>
      */
     private void handleRequestRegistration() {
         displayHeader("Register for Project Handling");
         try {
             List<Project> availableProjects = projectController.getProjectsAvailableForRegistration(this.user);
-            if (availableProjects == null || availableProjects.isEmpty()) { return; }
+            if (availableProjects == null || availableProjects.isEmpty()) {
+                return;
+            }
 
-            Project selectedProject = projectUIHelper.selectProjectFromList(availableProjects, "Select Project to Register For...");
-            if (selectedProject == null) { return; }
+            Project selectedProject = projectUIHelper.selectProjectFromList(availableProjects,
+                    "Select Project to Register For...");
+            if (selectedProject == null) {
+                return;
+            }
 
             String projectIdToRegister = selectedProject.getProjectId();
-            displayMessage("You selected Project: " + selectedProject.getProjectName() + " (ID: " + projectIdToRegister + ")");
+            displayMessage(
+                    "You selected Project: " + selectedProject.getProjectName() + " (ID: " + projectIdToRegister + ")");
 
-            if (!promptForConfirmation("Confirm registration request...?")) { return; }
+            if (!promptForConfirmation("Confirm registration request...?")) {
+                return;
+            }
 
             OfficerRegistration registration = officerRegController.requestRegistration(this.user, projectIdToRegister);
             displayMessage("Registration requested successfully!");
 
             this.officerRegUIHelper.displayOfficerRegistrationDetails(registration);
 
-        } catch (RegistrationException e) {}
-          catch (Exception e) {}
+        } catch (RegistrationException e) {
+        } catch (Exception e) {
+        }
     }
 
     /**
      * Handles viewing the status of all project handling registrations submitted by
      * the current HDB Officer.
-     * (Implementation remains the same as previous version)
+     * <p>
+     * Retrieves and displays a list of all registration requests the officer has
+     * submitted, showing their current status and related information.
+     * </p>
      */
     private void handleViewRegistrationStatus() {
         displayHeader("View My Project Registration Status");
@@ -375,9 +549,15 @@ public class HDBOfficerUI extends BaseUI {
 
     /**
      * Handles the sub-menu for managing the specific project the officer is
-     * approved to handle. Finds the project, displays its details (including
-     * pending officer registration count), and offers relevant management actions
-     * like booking, receipts, and enquiry handling.
+     * approved to handle.
+     * <p>
+     * This method:
+     * - Finds the project the officer is handling
+     * - Displays comprehensive project details
+     * - Offers a sub-menu of management actions including booking, receipts, and
+     * enquiries
+     * - Delegates to specific handler methods based on user selection
+     * </p>
      */
     private void handleManageHandlingProject() {
         displayHeader("Manage Project Being Handled");
@@ -388,7 +568,8 @@ public class HDBOfficerUI extends BaseUI {
             handlingProject = officerRegController.findApprovedHandlingProject(this.user);
         } catch (Exception e) {
             displayError("Error finding the project you are handling: " + e.getMessage());
-            // logger.log(Level.SEVERE, "Error finding handling project for officer " + user.getNric(), e);
+            // logger.log(Level.SEVERE, "Error finding handling project for officer " +
+            // user.getNric(), e);
             return; // Cannot proceed
         }
 
@@ -408,25 +589,26 @@ public class HDBOfficerUI extends BaseUI {
             try {
                 // Call the updated controller method (accepting HDBStaff)
                 projectSpecificPendingCount = officerRegController.getPendingRegistrationCountForProject(
-                    this.user, // Pass the HDBOfficer user
-                    handlingProject.getProjectId()
-                );
+                        this.user, // Pass the HDBOfficer user
+                        handlingProject.getProjectId());
             } catch (AuthorizationException ae) {
                 displayError("Authorization Error fetching pending count: " + ae.getMessage());
             } catch (IllegalArgumentException iae) {
                 displayError("Internal Error fetching pending count: " + iae.getMessage());
             } catch (RuntimeException re) {
                 displayError("Error fetching pending registration count: " + re.getMessage());
-            } 
+            }
 
             // --- Step 2b: Display Project Details ---
             displayMessage("You are managing Project: " + handlingProject.getProjectName() + " ("
                     + handlingProject.getProjectId() + ")");
             displayMessage("--------------------------------------------------");
 
-            // Display full project details using the STAFF view helper, passing the fetched count
+            // Display full project details using the STAFF view helper, passing the fetched
+            // count
             // Ensure you use the variable declared above: projectSpecificPendingCount
-            projectUIHelper.displayStaffProjectDetails(handlingProject, projectSpecificPendingCount); // <<< Use correct variable
+            projectUIHelper.displayStaffProjectDetails(handlingProject, projectSpecificPendingCount); // <<< Use correct
+                                                                                                      // variable
 
             // --- Step 2c: Display Contextual Actions Sub-Menu ---
             System.out.println("\n--- Management Actions for this Project ---");
@@ -467,12 +649,25 @@ public class HDBOfficerUI extends BaseUI {
             if (keepManaging && choice != 0) {
                 pause();
             }
-        } 
-    } 
+        }
+    }
 
     /**
-     * Handles booking by first listing eligible (SUCCESSFUL) applicants for the
-     * project. Uses ProjectUIHelper for flat availability.
+     * Handles booking by listing eligible (SUCCESSFUL) applicants for the
+     * project and processing a flat booking.
+     * <p>
+     * This method guides the officer through:
+     * - Viewing successful applicants eligible for booking
+     * - Selecting an applicant
+     * - Viewing available flat types
+     * - Selecting and confirming a flat type
+     * - Creating the booking through the BookingController
+     * </p>
+     *
+     * @param project The project from which flats can be booked
+     * @throws BookingException      If there's an error in the booking process
+     * @throws InvalidInputException If invalid input is provided
+     * @throws DataAccessException   If there's an error accessing project data
      */
     private void handlePerformBookingAction(Project project)
             throws BookingException, InvalidInputException, DataAccessException {
@@ -480,43 +675,65 @@ public class HDBOfficerUI extends BaseUI {
 
         // 1. Get and filter applications (Keep UI logic for now)
         List<Application> allProjectApps;
-        try { allProjectApps = applicationController.getProjectApplications(this.user, project.getProjectId()); }
-        catch (ApplicationException e) { displayError("Failed to retrieve applications"); return; }
-        List<Application> successfulApps = allProjectApps.stream().filter(a -> a.getStatus() == ApplicationStatus.SUCCESSFUL).collect(Collectors.toList());
-        if (successfulApps.isEmpty()) { displayMessage("No applicants ready for booking."); return; }
+        try {
+            allProjectApps = applicationController.getProjectApplications(this.user, project.getProjectId());
+        } catch (ApplicationException e) {
+            displayError("Failed to retrieve applications");
+            return;
+        }
+        List<Application> successfulApps = allProjectApps.stream()
+                .filter(a -> a.getStatus() == ApplicationStatus.SUCCESSFUL).collect(Collectors.toList());
+        if (successfulApps.isEmpty()) {
+            displayMessage("No applicants ready for booking.");
+            return;
+        }
 
         // 2. Display list of eligible applicants (Manual display linked to selection)
         displayMessage("--- Applicants Ready for Booking ---");
         AtomicInteger counter = new AtomicInteger(1);
         successfulApps.forEach(app -> {
             String applicantName = userController.getUserName(app.getApplicantNric());
-            String preference = (app.getPreferredFlatType() != null) ? "Pref: " + app.getPreferredFlatType() : "Pref: N/A";
+            String preference = (app.getPreferredFlatType() != null) ? "Pref: " + app.getPreferredFlatType()
+                    : "Pref: N/A";
             displayMessage(String.format("[%d] AppID: %s | NRIC: %s (%s) | %s",
-                    counter.getAndIncrement(), app.getApplicationId(), app.getApplicantNric(), applicantName, preference));
+                    counter.getAndIncrement(), app.getApplicationId(), app.getApplicantNric(), applicantName,
+                    preference));
         });
-        displayMessage("[0] Cancel"); displayMessage("----------------------------------");
+        displayMessage("[0] Cancel");
+        displayMessage("----------------------------------");
 
         // 3. Prompt Officer to select applicant
         int choice = promptForInt("Select applicant number: ");
-        if (choice <= 0 || choice > successfulApps.size()) { displayMessage("Booking cancelled."); return; }
+        if (choice <= 0 || choice > successfulApps.size()) {
+            displayMessage("Booking cancelled.");
+            return;
+        }
         Application selectedApp = successfulApps.get(choice - 1);
         FlatType applicantPreference = selectedApp.getPreferredFlatType();
 
         // 4. DELEGATE display of available flats to ProjectUIHelper
         Project currentProject = projectController.findProjectById(project.getProjectId()); // Refresh project data
-        if (currentProject == null) throw new DataAccessException("Project " + project.getProjectId() + " not found for booking.", null);
+        if (currentProject == null)
+            throw new DataAccessException("Project " + project.getProjectId() + " not found for booking.", null);
         this.projectUIHelper.displayFlatAvailability(currentProject);
-        if (applicantPreference != null) { displayMessage("Applicant's Preference: " + applicantPreference); }
+        if (applicantPreference != null) {
+            displayMessage("Applicant's Preference: " + applicantPreference);
+        }
 
         // 5. Prompt for final flat type
         FlatType finalFlatType = promptForEnum("Enter FINAL Flat Type chosen: ", FlatType.class,
                 currentProject.getFlatTypes().keySet().stream() // Filter choices based on project offering
                         .collect(Collectors.toList()));
-        if (finalFlatType == null) { displayMessage("Booking cancelled."); return; }
+        if (finalFlatType == null) {
+            displayMessage("Booking cancelled.");
+            return;
+        }
 
         // 6. Confirmation
-        if (!promptForConfirmation(String.format("Confirm booking %s for %s?", finalFlatType, selectedApp.getApplicantNric()))) {
-             displayMessage("Booking cancelled."); return;
+        if (!promptForConfirmation(
+                String.format("Confirm booking %s for %s?", finalFlatType, selectedApp.getApplicantNric()))) {
+            displayMessage("Booking cancelled.");
+            return;
         }
 
         // 7. Call Controller
@@ -529,17 +746,22 @@ public class HDBOfficerUI extends BaseUI {
 
     /**
      * Handles the process of generating a booking receipt for a specific project.
-     * It retrieves completed bookings for the project, delegates the selection
-     * process to BookingUIHelper, retrieves receipt details from the ReceiptController,
-     * and delegates the final display to BookingUIHelper.
+     * <p>
+     * This method guides the officer through:
+     * - Viewing completed bookings for the project
+     * - Selecting a specific booking
+     * - Retrieving receipt details from the ReceiptController
+     * - Displaying the formatted receipt
+     * </p>
      *
-     * @param project The project for which to generate receipts. Must not be null.
-     * @throws DataAccessException If there's an error accessing data for bookings or receipt info.
-     * @throws InvalidInputException If invalid input is somehow passed (less likely here).
-     * @throws BookingException If there's an error specifically related to fetching bookings.
+     * @param project The project for which to generate receipts
+     * @throws DataAccessException   If there's an error accessing booking data
+     * @throws InvalidInputException If invalid input is provided
+     * @throws BookingException      If there's an error retrieving bookings
      */
     private void handleGenerateReceiptAction(Project project)
-            throws DataAccessException, InvalidInputException, BookingException { // Declare exceptions controller/service might throw
+            throws DataAccessException, InvalidInputException, BookingException { // Declare exceptions
+                                                                                  // controller/service might throw
 
         Objects.requireNonNull(project, "Project cannot be null for generating receipts.");
         displayHeader("Generate Booking Receipt (Project: " + project.getProjectId() + ")");
@@ -574,17 +796,18 @@ public class HDBOfficerUI extends BaseUI {
         // 5. Call Receipt Controller to get the detailed info object
         BookingReceiptInfo receiptInfo = null; // Initialize
         try {
-            // Pass the current HDBOfficer user for context/authorization if needed by controller/service
+            // Pass the current HDBOfficer user for context/authorization if needed by
+            // controller/service
             receiptInfo = receiptController.getBookingReceiptInfo(this.user, selectedBooking);
-        } catch (Exception e) { 
+        } catch (Exception e) {
             displayError("Failed to generate receipt information: " + e.getMessage());
             return; // Cannot proceed if receipt info fails
         }
 
         // 6. Defensive Check: Ensure receiptInfo is not null
         if (receiptInfo == null) {
-             displayError("Failed to retrieve receipt details (null returned from controller).");
-             return;
+            displayError("Failed to retrieve receipt details (null returned from controller).");
+            return;
         }
 
         // 7. Delegate the formatted display of the receipt to BookingUIHelper
@@ -592,12 +815,17 @@ public class HDBOfficerUI extends BaseUI {
     }
 
     /**
-     * Handles viewing enquiries for the project being handled and provides an
-     * option
-     * to reply if an enquiry is selected and unreplied.
-     * Uses EnquiryUIHelper for display tasks.
-     * 
-     * @param projectId The ID of the project being managed.
+     * Handles viewing and replying to enquiries for the project being handled.
+     * <p>
+     * This method guides the officer through:
+     * - Viewing all enquiries for the specific project
+     * - Selecting an enquiry to view details
+     * - Replying to unanswered enquiries
+     * </p>
+     *
+     * @param projectId The ID of the project being managed
+     * @throws InvalidInputException If invalid input is provided
+     * @throws DataAccessException   If there's an error accessing enquiry data
      */
     private void handleViewAndReplyProjectEnquiriesAction(String projectId)
             throws InvalidInputException, DataAccessException {
@@ -658,6 +886,14 @@ public class HDBOfficerUI extends BaseUI {
         }
     }
 
+    /**
+     * Handles the password change workflow for the HDB officer.
+     * <p>
+     * Delegates to the AccountUIHelper to manage the password change process.
+     * </p>
+     *
+     * @return true if the password was successfully changed, false otherwise
+     */
     private boolean handleChangePassword() {
         return accountUIHelper.handlePasswordChange(this.user);
     }

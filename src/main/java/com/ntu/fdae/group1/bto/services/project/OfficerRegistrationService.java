@@ -21,13 +21,50 @@ import com.ntu.fdae.group1.bto.services.booking.IEligibilityService;
 import com.ntu.fdae.group1.bto.utils.*;
 import com.ntu.fdae.group1.bto.models.project.*;
 
+/**
+ * Service that manages the registration of HDB Officers to projects in the BTO
+ * Management System.
+ * <p>
+ * This service implements the business logic for creating, retrieving, and
+ * managing
+ * officer registrations to projects. It acts as an intermediary between
+ * controllers
+ * and the data access layer, applying domain-specific rules and managing the
+ * workflow
+ * of officer registrations.
+ * </p>
+ * 
+ * The service handles:
+ * <ul>
+ * <li>Creating new registration requests from officers</li>
+ * <li>Processing approval/rejection of registrations</li>
+ * <li>Checking registration status for authorization</li>
+ * <li>Retrieving registration information for specific officers or
+ * projects</li>
+ * </ul>
+ * 
+ */
 public class OfficerRegistrationService implements IOfficerRegistrationService {
-
     private final IOfficerRegistrationRepository registrationRepo;
     private final IProjectRepository projectRepo;
     private final IApplicationRepository applicationRepo;
     private final IEligibilityService eligibilityService;
 
+    /**
+     * Constructs a new OfficerRegistrationService with the specified repositories
+     * and services.
+     * <p>
+     * Uses dependency injection to receive the required repositories and services,
+     * and performs
+     * null checks to ensure valid dependencies.
+     * </p>
+     * 
+     * @param registrationRepo   The repository for officer registration data
+     * @param projectRepo        The repository for project data
+     * @param applicationRepo    The repository for application data
+     * @param eligibilityService The service for checking officer eligibility
+     * @throws NullPointerException if any of the repositories or services are null
+     */
     public OfficerRegistrationService(IOfficerRegistrationRepository registrationRepo,
             IProjectRepository projectRepo,
             IApplicationRepository applicationRepo,
@@ -39,6 +76,16 @@ public class OfficerRegistrationService implements IOfficerRegistrationService {
         this.eligibilityService = Objects.requireNonNull(eligibilityService, "Eligibility Service cannot be null");
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Creates a new registration request for an officer to be assigned to a
+     * project.
+     * The registration is initially created with PENDING status and requires
+     * approval
+     * from a manager before the officer can perform actions on the project.
+     * </p>
+     */
     @Override
     public OfficerRegistration requestProjectRegistration(HDBOfficer officer, String projectId)
             throws RegistrationException {
@@ -66,6 +113,17 @@ public class OfficerRegistrationService implements IOfficerRegistrationService {
         return newRegistration;
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Updates the status of a registration request, typically used by managers
+     * to approve or reject officers' requests to work on projects.
+     * </p>
+     * <p>
+     * When a registration is approved or rejected, a response date is automatically
+     * captured in the registration record.
+     * </p>
+     */
     @Override
     public boolean reviewRegistration(HDBManager manager, String registrationId, boolean approve)
             throws RegistrationException {
@@ -85,7 +143,8 @@ public class OfficerRegistrationService implements IOfficerRegistrationService {
             throw new RegistrationException("Registration " + registrationId + " is not PENDING.");
 
         if (approve) {
-            if (project.getApprovedOfficerNrics().size() >= project.getMaxOfficerSlots() || project.getRemainingOfficerSlots() <= 0) {
+            if (project.getApprovedOfficerNrics().size() >= project.getMaxOfficerSlots()
+                    || project.getRemainingOfficerSlots() <= 0) {
                 registration.setStatus(OfficerRegStatus.REJECTED);
                 registrationRepo.save(registration);
                 System.err.println("Service: Registration " + registrationId + " auto-rejected due to max slots.");
@@ -159,6 +218,14 @@ public class OfficerRegistrationService implements IOfficerRegistrationService {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Retrieves all registration requests that are currently pending approval.
+     * This method is typically used by managers to view and process pending
+     * registration requests.
+     * </p>
+     */
     @Override
     public List<OfficerRegistration> getPendingRegistrations() {
         // Ensure findAll() doesn't return null map before streaming
@@ -170,6 +237,15 @@ public class OfficerRegistrationService implements IOfficerRegistrationService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Retrieves all registration requests for a specific project that are currently
+     * pending approval.
+     * This method is typically used by managers to view and process pending
+     * registration requests for their projects.
+     * </p>
+     */
     @Override
     public List<OfficerRegistration> getPendingRegistrationsForProject(String projectId) {
         if (projectId == null || projectId.trim().isEmpty()) {
@@ -187,20 +263,33 @@ public class OfficerRegistrationService implements IOfficerRegistrationService {
 
             // Filter the results for PENDING status
             return projectRegistrations.stream()
-                    .filter(reg -> reg != null && reg.getStatus() == OfficerRegStatus.PENDING) // Add null check just in case
+                    .filter(reg -> reg != null && reg.getStatus() == OfficerRegStatus.PENDING) // Add null check just in
+                                                                                               // case
                     .collect(Collectors.toList());
 
         } catch (DataAccessException e) {
-             System.err.println("Service DataAccess ERROR: Failed to get registrations for project " + projectId + ": " + e.getMessage());
-             // Re-throw or wrap in a service-level runtime exception
-             throw new RuntimeException("Data access error while fetching pending registrations for project.", e);
+            System.err.println("Service DataAccess ERROR: Failed to get registrations for project " + projectId + ": "
+                    + e.getMessage());
+            // Re-throw or wrap in a service-level runtime exception
+            throw new RuntimeException("Data access error while fetching pending registrations for project.", e);
         } catch (Exception e) {
             // Catch any other unexpected errors from the repository layer
-            System.err.println("Service ERROR: Unexpected error getting pending registrations for project " + projectId + ": " + e.getMessage());
-            throw new RuntimeException("Failed to retrieve pending registrations for project due to an internal error.", e);
+            System.err.println("Service ERROR: Unexpected error getting pending registrations for project " + projectId
+                    + ": " + e.getMessage());
+            throw new RuntimeException("Failed to retrieve pending registrations for project due to an internal error.",
+                    e);
         }
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Retrieves the count of registration requests for a specific project that are
+     * currently pending approval.
+     * This method is typically used by managers to quickly get the number of
+     * pending registration requests for their projects.
+     * </p>
+     */
     @Override
     public int getPendingRegistrationCountForProject(String projectId) {
         // Simply call the other method and get the size.
@@ -210,6 +299,15 @@ public class OfficerRegistrationService implements IOfficerRegistrationService {
         return getPendingRegistrationsForProject(projectId).size();
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Retrieves all registration requests associated with a specific project,
+     * regardless of their status. This method enables project managers to view
+     * and manage all officers requesting access to or already assigned to a
+     * project.
+     * </p>
+     */
     @Override
     public List<OfficerRegistration> getRegistrationsByProject(String projectId) {
         if (projectId == null || projectId.trim().isEmpty())
@@ -217,6 +315,14 @@ public class OfficerRegistrationService implements IOfficerRegistrationService {
         return registrationRepo.findByProjectId(projectId);
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Retrieves all registration requests submitted by a specific officer,
+     * regardless of their status. This method enables officers to track the
+     * status of their project registration requests.
+     * </p>
+     */
     @Override
     public List<OfficerRegistration> getRegistrationsByOfficer(String officerNric) {
         if (officerNric == null || officerNric.trim().isEmpty()) {

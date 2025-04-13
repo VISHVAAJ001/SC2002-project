@@ -35,12 +35,12 @@ enum FlatType {
 ' --- Entity Layer ---
 package Entity <<Folder>> {
     abstract class User {
-        # nric : String
-        # passwordHash : String
-        # name: String
-        # age : int
-        # maritalStatus : MaritalStatus
-        # role : UserRole <<get>>
+        - nric : String
+        - passwordHash : String
+        - name: String
+        - age : int
+        - maritalStatus : MaritalStatus
+        - role : UserRole <<get>>
         + {abstract} getRole() : UserRole
         + getNric() : String
         + getName() : String

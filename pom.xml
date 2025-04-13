@@ -5,12 +5,12 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>com.ntu.fdae.group1.bto</groupId>
-  <artifactId>bto-management-system</artifactId>
-  <version>1.0-SNAPSHOT</version>
+  <artifactId>fdae-bto-project</artifactId>
+  <version>1.0</version>
 
-  <name>bto-management-system</name>
+  <name>FDAE Bto Project</name>
   <!-- FIXME change it to the project's website -->
-  <url>http://www.example.com</url>
+  <url>https://vishvaaj001.github.io/SC2002-project/</url>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
