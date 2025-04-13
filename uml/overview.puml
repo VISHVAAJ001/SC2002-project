@@ -77,7 +77,7 @@ package Entity <<Folder>> {
         + ProjectFlatInfo(flatType: FlatType, totalUnits: int, remainingUnits: int, price: double)
         + decreaseRemainingUnits() : boolean
         + increaseRemainingUnits() : void
-        + getTypeName() : String ' Returns enum name or custom string
+        + getTypeName() : String
         + getTotalUnits() : int
         + getRemainingUnits() : int
         + getPrice() : double
@@ -245,6 +245,18 @@ package Exception <<Folder>> {
 
 ' --- Repository Package ---
 package Repository <<Folder>> {
+
+    ' --- Helper Class ---
+    class CsvRepositoryHelper<ID, T> <<Helper>> {
+        - filePath : String <<final>>
+        - header : String[] <<final>>
+        - deserializer : Function<List<String[]>, Map<ID, T>> <<final>>
+        - serializer : Function<Map<ID, T>, List<String[]>> <<final>>
+        + CsvRepositoryHelper(filePath: String, header: String[], deserializer: Function<List<String[]>, Map<ID, T>>, serializer: Function<Map<ID, T>, List<String[]>>)
+        + loadData() : Map<ID, T> <<throws DataAccessException>>
+        + saveData(entities: Map<ID, T>) : void <<throws DataAccessException>>
+    }
+
     interface IRepository<T, ID> <<DIP>> {
         + findById(id : ID) : T <<nullable>>
         + findAll() : Map<ID, T>
@@ -254,7 +266,6 @@ package Repository <<Folder>> {
     }
 
     interface IUserRepository extends IRepository<User, String> {
-        ' Add any user-specific query methods here (if needed later)
     }
 
     interface IProjectRepository extends IRepository<Project, String> {
@@ -287,28 +298,29 @@ package Repository <<Folder>> {
 
     class UserRepository implements IUserRepository {
         - USER_FILE_PATH : String <<static>> final
+        - USER_CSV_HEADER : String[] <<static>> final
         - users : Map<String, User>
-        - getUserCsvHeader() : String[]
+        - csvHelper : CsvRepositoryHelper<String, User> <<final>>
         - deserializeUsers(csvData : List<String[]>) : Map<String, User>
-        - serializeUsers() : List<String[]>
+        - serializeUsers(usersToSerialize : Map<String, User>) : List<String[]>
         + UserRepository()
         + loadAll() : Map<String, User> <<throws DataAccessException>>
-        + saveAll(users: Map<String, User>) : void
-        + save(user: User) : void
+        + saveAll(entities : Map<String, User>) : void
+        + save(entity : User) : void
         + findById(id: String) : User <<nullable>>
         + findAll() : Map<String, User>
     }
 
     class ProjectRepository implements IProjectRepository {
         - PROJECT_FILE_PATH : String <<static>> final
+        - PROJECT_CSV_HEADER : String[] <<static>> final
         - FLAT_INFO_FILE_PATH : String <<static>> final
+        - FLAT_INFO_CSV_HEADER : String[] <<static>> final
         - projects : Map<String, Project>
+        - csvHelper : CsvRepositoryHelper<String, Project> <<final>>
         - loadedFlatInfoIds : Set<String>
-        - getProjectCsvHeader() : String[]
-        - getFlatInfoCsvHeader() : String[]
-        - deserializeProjects(projectData : List<String[]>, flatInfoData : List<String[]>, foundFlatInfos : Set<String>) : Map<String, Project>
-        - serializeProjects() : List<String[]>
-        - serializeFlatInfos() : List<String[]>
+        - deserializeProjectsAndFlatInfo(projectData : List<String[]>) : Map<String, Project> <<throws DataAccessException>>
+        - serializeProjectsAndFlatInfo(projectsToSerialize : Map<String, Project>) : List<String[]> <<throws DataAccessException>>
         + ProjectRepository()
         + loadAll() : Map<String, Project> <<throws DataAccessException>>
         + saveAll(projects: Map<String, Project>) : void
@@ -316,18 +328,19 @@ package Repository <<Folder>> {
         + findById(projectId: String) : Project <<nullable>>
         + findAll() : Map<String, Project>
         + findAllFlatInfoIds() : Set<String>
-        + deleteById(projectId : String) : void <<throws DataAccessException>>
+        + deleteById(id : String) : void <<throws DataAccessException>>
     }
 
     class ApplicationRepository implements IApplicationRepository {
         - APPLICATION_FILE_PATH : String <<static>> final
+        - APPLICATION_CSV_HEADER : String[] <<static>> final
         - applications : Map<String, Application>
-        - getApplicationCsvHeader() : String[]
+        - csvHelper : CsvRepositoryHelper<String, Application> <<final>>
         - deserializeApplications(applicationData : List<String[]>) : Map<String, Application>
-        - serializeApplications() : List<String[]>
+        - serializeApplications(appsToSerialize : Map<String, Application>) : List<String[]>
         + ApplicationRepository()
         + loadAll() : Map<String, Application> <<throws DataAccessException>>
-        + saveAll(applications: Map<String, Application>) : void
+        + saveAll(entities : Map<String, Application>) : void
         + save(application: Application) : void
         + findById(applicationId: String) : Application <<nullable>>
         + findAll() : Map<String, Application>
@@ -338,13 +351,14 @@ package Repository <<Folder>> {
 
     class BookingRepository implements IBookingRepository {
         - BOOKING_FILE_PATH : String <<static>> final
+        - BOOKING_CSV_HEADER : String[] <<static>> final
         - bookings : Map<String, Booking>
-        - getBookingCsvHeader() : String[]
+        - csvHelper : CsvRepositoryHelper<String, Booking> <<final>>
         - deserializeBookings(bookingData : List<String[]>) : Map<String, Booking>
-        - serializeBookings() : List<String[]>
+        - serializeBookings(booksToSerialize : Map<String, Booking>) : List<String[]>
         + BookingRepository()
         + loadAll() : Map<String, Booking> <<throws DataAccessException>>
-        + saveAll(bookings: Map<String, Booking>) : void
+        + saveAll(entities : Map<String, Booking>) : void
         + save(booking: Booking) : void
         + findById(bookingId: String) : Booking <<nullable>>
         + findAll() : Map<String, Booking>
@@ -355,13 +369,14 @@ package Repository <<Folder>> {
 
     class EnquiryRepository implements IEnquiryRepository {
         - ENQUIRY_FILE_PATH : String <<static>> final
+        - ENQUIRY_CSV_HEADER : String[] <<static>> final
         - enquiries : Map<String, Enquiry>
-        - getEnquiryCsvHeader() : String[]
+        - csvHelper : CsvRepositoryHelper<String, Enquiry> <<final>>
         - deserializeEnquiries(enquiryData : List<String[]>) : Map<String, Enquiry>
-        - serializeEnquiries() : List<String[]>
+        - serializeEnquiries(enqsToSerialize : Map<String, Enquiry>) : List<String[]>
         + EnquiryRepository()
         + loadAll() : Map<String, Enquiry> <<throws DataAccessException>>
-        + saveAll(enquiries: Map<String, Enquiry>) : void
+        + saveAll(entities : Map<String, Enquiry>) : void
         + save(enquiry: Enquiry) : void
         + findById(enquiryId: String) : Enquiry <<nullable>>
         + findAll() : Map<String, Enquiry>
@@ -372,13 +387,14 @@ package Repository <<Folder>> {
 
     class OfficerRegistrationRepository implements IOfficerRegistrationRepository {
         - OFFICER_REGISTRATION_FILE_PATH : String <<static>> final
+        - REGISTRATION_CSV_HEADER : String[] <<static>> final
         - registrations : Map<String, OfficerRegistration>
-        - getRegistrationCsvHeader() : String[]
-        - deserializeRegistrations(registrationData : List<String[]>) : Map<String, OfficerRegistration>
-        - serializeRegistrations() : List<String[]>
+        - csvHelper : CsvRepositoryHelper<String, OfficerRegistration> <<final>>
+        - deserializeRegistrations(registrationData : List<String[]>) : Map<String, OfficerRegistration> 
+        - serializeRegistrations(regsToSerialize : Map<String, OfficerRegistration>) : List<String[]>
         + OfficerRegistrationRepository()
         + loadAll() : Map<String, OfficerRegistration> <<throws DataAccessException>>
-        + saveAll(registrations: Map<String, OfficerRegistration>) : void
+        + saveAll(entities : Map<String, OfficerRegistration>) : void
         + save(registration: OfficerRegistration) : void
         + findById(registrationId: String) : OfficerRegistration <<nullable>>
         + findAll() : Map<String, OfficerRegistration>
@@ -1099,12 +1115,19 @@ BookingUIHelper ..> BaseUI
 BookingUIHelper ..> UserController
 
 ' Repository Dependencies
-UserRepository ..> FileUtil
-ProjectRepository ..> FileUtil
-ApplicationRepository ..> FileUtil
-BookingRepository ..> FileUtil
-EnquiryRepository ..> FileUtil
-OfficerRegistrationRepository ..> FileUtil
+' Dependency: CsvRepositoryHelper uses FileUtil from the Utility package (conceptual)
+CsvRepositoryHelper ..> FileUtil : uses >
+
+' Dependency: CsvRepositoryHelper throws DataAccessException (conceptual)
+CsvRepositoryHelper ..> DataAccessException : throws >
+
+' Dependencies on Helper
+UserRepository --> CsvRepositoryHelper : uses >
+ProjectRepository --> CsvRepositoryHelper : uses >
+ApplicationRepository --> CsvRepositoryHelper : uses >
+OfficerRegistrationRepository --> CsvRepositoryHelper : uses >
+BookingRepository --> CsvRepositoryHelper : uses >
+EnquiryRepository --> CsvRepositoryHelper : uses >
 
 ' Utility Dependencies (General Usage)
 Views ..> ValidationUtil

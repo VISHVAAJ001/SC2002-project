@@ -126,8 +126,6 @@ public class ProjectRepository implements IProjectRepository {
     }
 
     private Map<String, Project> deserializeProjectsAndFlatInfo(List<String[]> projectData) throws DataAccessException {
-        // This method IS the deserializer function passed to the helper.
-        // It now needs to handle reading the secondary file as well.
         this.loadedFlatInfoIds.clear(); // Reset for this load operation
         Map<String, Project> projectMap = new HashMap<>();
         Map<String, Map<FlatType, ProjectFlatInfo>> flatInfoByProjectId = new HashMap<>();
@@ -195,9 +193,6 @@ public class ProjectRepository implements IProjectRepository {
 
 
     private List<String[]> serializeProjectsAndFlatInfo(Map<String, Project> projectsToSerialize) throws DataAccessException {
-         // This method IS the serializer function passed to the helper.
-         // It needs to handle writing the secondary file as well.
-
          List<String[]> serializedProjectData = new ArrayList<>();
          List<String[]> serializedFlatInfoData = new ArrayList<>();
          int flatInfoIdCounter = 1; // Simple counter for flat info IDs
