@@ -28,12 +28,12 @@ jobs:
         run: mvn javadoc:javadoc
 
       - name: Add .nojekyll file
-        run: echo > target/site/apidocs/.nojekyll
+        run: echo > target/reports/apidocs/.nojekyll
 
       - name: Upload Javadoc Artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: target/site/apidocs
+          path: target/reports/apidocs
 
   deploy:
     needs: build
