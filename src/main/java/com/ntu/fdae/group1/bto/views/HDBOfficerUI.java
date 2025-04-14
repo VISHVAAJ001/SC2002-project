@@ -17,7 +17,9 @@ import com.ntu.fdae.group1.bto.exceptions.*; // Import custom exceptions
 import com.ntu.fdae.group1.bto.enums.ApplicationStatus;
 import com.ntu.fdae.group1.bto.enums.FlatType;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -392,10 +394,58 @@ public class HDBOfficerUI extends BaseUI {
      */
     private void handleSubmitEnquiry() {
         displayHeader("Submit Enquiry");
-        List<Project> projects = projectController.getVisibleProjectsForUser(this.user, this.currentProjectFilters);
 
-        Project selectedProject = projectUIHelper.selectProjectFromList(projects,
-                "Select Project to Submit Enquiry");
+        // Use a LinkedHashMap to store projects, preventing duplicates and maintaining order
+        Map<String, Project> projectsForEnquiryMap = new LinkedHashMap<>();
+
+        // 1. Get projects normally visible for application (active period, eligible etc.)
+        try {
+            List<Project> activeProjects = projectController.getVisibleProjectsForUser(this.user, this.currentProjectFilters);
+            if (activeProjects != null) {
+                activeProjects.forEach(p -> projectsForEnquiryMap.put(p.getProjectId(), p));
+            }
+        } catch (Exception e) {
+            displayError("Error retrieving available projects: " + e.getMessage());
+            // Decide if you want to continue or return. Let's continue to check for booked project.
+        }
+
+        // 2. Check if the user has an active application (PENDING, SUCCESSFUL, BOOKED)
+        Project associatedProject = null;
+        try {
+            Application currentApp = applicationController.getMyApplication(this.user);
+            if (currentApp != null) {
+                ApplicationStatus status = currentApp.getStatus();
+                if (status == ApplicationStatus.PENDING ||
+                    status == ApplicationStatus.SUCCESSFUL ||
+                    status == ApplicationStatus.BOOKED)
+                {
+                    // Fetch the project details for this application
+                    associatedProject = projectController.findProjectById(currentApp.getProjectId());
+                    if (associatedProject != null) {
+                        // Add this project to the map (if not already present)
+                        // putIfAbsent ensures we don't overwrite if it was already added from the active list
+                        projectsForEnquiryMap.putIfAbsent(associatedProject.getProjectId(), associatedProject);
+                    } else {
+                         displayMessage("Note: Could not find details for project ID " + currentApp.getProjectId() + " associated with your application.");
+                    }
+                }
+            }
+        } catch (Exception e) {
+            displayError("Error checking your current application status: " + e.getMessage());
+            // Continue, maybe they can still select from active projects
+        }
+
+        // 3. Convert the map values back to a list for the selection helper
+        List<Project> projectsToShow = new ArrayList<>(projectsForEnquiryMap.values());
+
+        if (projectsToShow.isEmpty()) {
+            displayMessage("There are no projects available for you to submit an enquiry about at this time.");
+            return;
+        }
+
+        // 4. Let the user select from the combined list
+        Project selectedProject = projectUIHelper.selectProjectFromList(projectsToShow,
+                "Select Project to Submit Enquiry About"); // Use the combined list
 
         if (selectedProject != null) {
             String content = promptForInput("Enter your enquiry content: ");
