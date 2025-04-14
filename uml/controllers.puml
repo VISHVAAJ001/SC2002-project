@@ -33,6 +33,7 @@ package Controller <<Folder>> {
         + AuthenticationController(authService: IAuthenticationService);
         + login(nric: String, password: String) : User <<throws AuthenticationException>>
         + changePassword(user: User, newPassword: String) : boolean
+        + registerApplicant(nric: String, plainPassword: String, name: String, age: int, maritalStatus MaritalStatus) : boolean <<throws AuthenticationException, DataAccessException>>; 
     }
 
     class ProjectController {

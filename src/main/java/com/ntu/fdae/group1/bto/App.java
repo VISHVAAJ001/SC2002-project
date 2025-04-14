@@ -10,7 +10,7 @@ import com.ntu.fdae.group1.bto.models.user.HDBOfficer;
 import com.ntu.fdae.group1.bto.models.user.HDBManager;
 
 // Views
-import com.ntu.fdae.group1.bto.views.LoginUI;
+import com.ntu.fdae.group1.bto.views.MainMenuUI;
 import com.ntu.fdae.group1.bto.views.ApplicantUI;
 import com.ntu.fdae.group1.bto.views.HDBOfficerUI;
 import com.ntu.fdae.group1.bto.views.HDBManagerUI;
@@ -64,9 +64,9 @@ public class App {
     private final Scanner scanner;
 
     /**
-     * UI component responsible for handling user login.
+     * UI component responsible for handling main menu.
      */
-    private final LoginUI loginUI;
+    private final MainMenuUI mainMenuUI;
 
     /**
      * Represents the currently authenticated user.
@@ -85,7 +85,7 @@ public class App {
     public App(ControllerContainer controllerContainer, Scanner scanner) {
         this.controllerContainer = controllerContainer;
         this.scanner = scanner;
-        this.loginUI = new LoginUI(controllerContainer.authController, scanner);
+        this.mainMenuUI = new MainMenuUI(controllerContainer.authController, scanner);
     }
 
     /**
@@ -188,43 +188,43 @@ public class App {
      * <p>
      * This method controls the application's main lifecycle:
      * 1. Displays a welcome message
-     * 2. Shows the login UI if no user is logged in
+     * 2. Shows the main menu UI if no user is logged in
      * 3. Routes logged-in users to their role-specific UI
      * 4. Handles logout by resetting the current user
      * 5. Performs cleanup when the application terminates
      * </p>
      */
     public void run() {
-        // TODO: Could consider printing a logo or welcome message here
+        System.out.println("   ___    _____    ___   __  __    ___  ");
+        System.out.println("  | _ )  |_   _|  / _ \\ |  \\/  |  / __| ");
+        System.out.println("  | _ \\    | |   | (_) || |\\/| |  \\__ \\ ");
+        System.out.println("  |___/   _|_|_   \\___/ |_|__|_|  |___/ ");
+        System.out.println("_|\"\"\"\"\"|_|\"\"\"\"\"|_|\"\"\"\"\"|_|\"\"\"\"\"|_|\"\"\"\"\"|");
+        System.out.println("\"`-0-0-'\"`-0-0-'\"`-0-0-'\"`-0-0-'\"`-0-0-'");
+
         System.out.println("\nWelcome to the BTO Management System!");
 
         boolean isApplicationRunning = true;
         while (isApplicationRunning) {
             if (currentUser == null) {
-                // If no user is logged in, display the login screen
-                currentUser = loginUI.displayLogin(); // This method handles the login logic via AuthController
+                currentUser = mainMenuUI.displayMainMenu();
 
                 if (currentUser == null) {
-                    // If displayLogin returns null, it typically means the user chose to exit.
+                    // If displayMainMenu returns null, it means the user chose to exit.
                     System.out.println("Exiting application.");
-                    isApplicationRunning = false; // Set flag to break the loop
+                    isApplicationRunning = false;
                 }
             } else {
                 // If a user is logged in, route them to their specific UI
                 routeToRoleUI(currentUser);
-
-                // When the role-specific UI returns, it means the user logged out.
                 System.out.println("\nYou have been logged out.");
-                currentUser = null; // Reset currentUser to force login screen next iteration
+                currentUser = null; // Reset currentUser to null
             }
         }
 
         // Cleanup before exiting
         scanner.close();
-        System.out.println("Thank you for using the BTO Management System!");
-        // Maybe can add a saveAll() call here if repositories don't save automatically
-        // e.g., userRepository.saveAll(); projectRepository.saveAll(); etc.
-        // However, saving on modification within services is generally safer.
+        System.out.println("\nThank you for using the BTO Management System!");
     }
 
     /**
@@ -240,8 +240,6 @@ public class App {
      * @param user The authenticated user to route to the appropriate UI
      */
     private void routeToRoleUI(User user) {
-        System.out.printf("\nWelcome, %s (%s)! Routing to your dashboard...\n", user.getName(), user.getRole());
-
         try {
             switch (user.getRole()) {
                 case APPLICANT:

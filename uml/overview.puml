@@ -451,12 +451,14 @@ package Service <<Folder>> {
     interface IAuthenticationService <<ISP>> {
         + login(nric: String, password: String) : User <<throws AuthenticationException>>
         + changePassword(user: User, newPassword: String) : boolean
+        + registerApplicant(nric: String, plainPassword: String, name: String, age: int, maritalStatus MaritalStatus) : boolean <<throws AuthenticationException, DataAccessException>>
     }
     class AuthenticationService implements IAuthenticationService {
         - userRepository : IUserRepository
         + AuthenticationService(userRepository: IUserRepository)
         + login(nric: String, password: String) : User <<throws AuthenticationException>>
         + changePassword(user: User, newPassword: String) : boolean
+        + registerApplicant(nric: String, plainPassword: String, name: String, age: int, maritalStatus MaritalStatus) : boolean <<throws AuthenticationException, DataAccessException>>
     }
 
     interface IBookingService <<ISP>> {
@@ -646,6 +648,7 @@ package Controller <<Folder>> {
         + AuthenticationController(authService: IAuthenticationService);
         + login(nric: String, password: String) : User <<throws AuthenticationException>>
         + changePassword(user: User, newPassword: String) : boolean
+        + registerApplicant(nric: String, plainPassword: String, name: String, age: int, maritalStatus MaritalStatus) : boolean <<throws AuthenticationException, DataAccessException>>; 
     }
 
     class ProjectController {
@@ -726,11 +729,13 @@ package Controller <<Folder>> {
 package Views <<Folder>> {
     class MainApp {
         - controllerContainer : ControllerContainer
+        - scanner : Scanner
+        - mainMenuUI : MainMenuUI
         - currentUser : User <<nullable>>
-        + MainApp(controllers: ControllerContainer)
+        + MainApp(controllers: ControllerContainer, scanner: Scanner)
         + {static} main(args : String[]) : void
+        + {static} initialiseComponents : ControllerContainer
         + run() : void
-        - showLoginMenu() : void
         - routeToRoleUI(user: User) : void
     }
 
@@ -739,6 +744,7 @@ package Views <<Folder>> {
         + BaseUI(scanner: Scanner)
         + displayMessage(message: String) : void
         + promptForInput(prompt: String) : String
+        + promptForPassword(prompt: String) : String
         + promptForInt(prompt: String) : int
         + promptForDouble(prompt: String) : double
         + promptForDate(prompt: String) : LocalDate
@@ -757,6 +763,13 @@ package Views <<Folder>> {
         - authController : AuthenticationController
         + LoginUI(authController: AuthenticationController, scanner: Scanner)
         + displayLogin() : User <<nullable>>
+        + displayRegister() : void
+    }
+
+    class MainMenuUI extends BaseUI {
+        - loginUI : LoginUI
+        + MainMenuUI(authController: AuthenticationController, scanner: Scanner)
+        + displayMainMenu() : User <<nullable>>
     }
 
     class ApplicantUI extends BaseUI {

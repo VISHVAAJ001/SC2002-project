@@ -9,20 +9,24 @@ skinparam linetype ortho
 ' --- Views Layer ---
 package Views <<Folder>> {
     class MainApp {
-        - controllerContainer : ControllerContainer ' Dependency
+        - controllerContainer : ControllerContainer
+        - scanner : Scanner
+        - mainMenuUI : MainMenuUI
         - currentUser : User <<nullable>>
-        + MainApp(controllers: ControllerContainer)
+        + MainApp(controllers: ControllerContainer, scanner: Scanner)
         + {static} main(args : String[]) : void
+        + {static} initialiseComponents : ControllerContainer
         + run() : void
-        - showLoginMenu() : void
         - routeToRoleUI(user: User) : void
     }
+
 
     abstract class BaseUI {
         # scanner : Scanner
         + BaseUI(scanner: Scanner)
         + displayMessage(message: String) : void
         + promptForInput(prompt: String) : String
+        + promptForPassword(prompt: String) : String
         + promptForInt(prompt: String) : int
         + promptForDouble(prompt: String) : double
         + promptForDate(prompt: String) : LocalDate
@@ -38,9 +42,16 @@ package Views <<Folder>> {
     }
 
     class LoginUI extends BaseUI {
-        - authController : AuthenticationController ' Dependency
+        - authController : AuthenticationController
         + LoginUI(authController: AuthenticationController, scanner: Scanner)
         + displayLogin() : User <<nullable>>
+        + displayRegister() : void
+    }
+
+    class MainMenuUI extends BaseUI {
+        - loginUI : LoginUI
+        + MainMenuUI(authController: AuthenticationController, scanner: Scanner)
+        + displayMainMenu() : User <<nullable>>
     }
 
     class ApplicantUI extends BaseUI {
