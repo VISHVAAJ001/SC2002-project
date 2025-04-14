@@ -86,6 +86,13 @@ public class LoginUI extends BaseUI {
         }
     }
 
+    /**
+     * Displays the registration prompt and handles the registration process.
+     * <p>
+     * This method collects user information, validates it, and attempts to register
+     * the user through the AuthenticationController.
+     * </p>
+     */
     public void displayRegister() {
         displayHeader("Register");
         while (true) {
