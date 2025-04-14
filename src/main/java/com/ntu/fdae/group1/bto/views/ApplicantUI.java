@@ -136,7 +136,11 @@ public class ApplicantUI extends BaseUI {
     public void displayMainMenu() {
         boolean keepRunning = true;
         while (keepRunning) {
-            displayHeader("Applicant Menu - Welcome " + (user != null ? user.getName() : "User"));
+            if (user != null) {
+                displayHeader("Applicant Menu - Welcome " + user.getName() + " (" + user.getAge() + ", " + user.getMaritalStatus() + ")");
+            } else {
+                displayHeader("Applicant Menu - Welcome User (Age, Marital Status)");
+            }
 
             System.out.println("--- BTO Projects & Application ---");
             System.out.println("[1] View & Apply for Available Projects"); // Combined View/Apply Flow

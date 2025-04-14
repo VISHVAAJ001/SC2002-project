@@ -181,7 +181,11 @@ public class HDBManagerUI extends BaseUI {
     public void displayMainMenu() {
         boolean keepRunning = true;
         while (keepRunning) {
-            displayHeader("HDB Manager Menu - Welcome " + (user != null ? user.getName() : "User"));
+            if (user != null) {
+                displayHeader("HDB Manager Menu - Welcome " + user.getName() + " (" + user.getAge() + ", " + user.getMaritalStatus() + ")");
+            } else {
+                displayHeader("Applicant Menu - Welcome User (Age, Marital Status)");
+            }
 
             System.out.println("--- Manager Project Role ---");
             System.out.println("[1] Manage My Projects (Create/Edit/Delete/Visbility)"); // Combined
