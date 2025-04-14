@@ -934,10 +934,11 @@ public class HDBManagerUI extends BaseUI {
      */
     private void handleReviewWithdrawals() throws ApplicationException {
         displayHeader("Review Pending Application Withdrawals");
-        // Fetch apps that *could* have withdrawals (PENDING or SUCCESSFUL)
+        // Fetch apps that *could* have withdrawals (PENDING, SUCCESSFUL, or BOOKED)
         List<Application> allPotentialApps = new ArrayList<>(
                 applicationController.getApplicationsByStatus(user, ApplicationStatus.PENDING));
         allPotentialApps.addAll(applicationController.getApplicationsByStatus(user, ApplicationStatus.SUCCESSFUL));
+        allPotentialApps.addAll(applicationController.getApplicationsByStatus(user, ApplicationStatus.BOOKED));
 
         // Filter for those with withdrawal requests AND managed by this manager
         List<Project> myProjects = projectController.getProjectsManagedBy(this.user);
