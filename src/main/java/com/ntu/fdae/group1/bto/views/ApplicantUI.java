@@ -141,18 +141,19 @@ public class ApplicantUI extends BaseUI {
         boolean keepRunning = true;
         while (keepRunning) {
             if (user != null) {
-                displayHeader("Applicant Menu - Welcome " + user.getName() + " (" + user.getAge() + ", " + user.getMaritalStatus() + ")");
+                displayHeader("Applicant Menu - Welcome " + user.getName() + " (" + user.getAge() + ", "
+                        + user.getMaritalStatus() + ")");
             } else {
                 displayHeader("Applicant Menu - Welcome User (Age, Marital Status)");
             }
 
             System.out.println("--- BTO Projects & Application ---");
-            System.out.println("[1] View & Apply for Available Projects"); // Combined View/Apply Flow
-            System.out.println("[2] View My Application Status & Request Withdrawal"); // Combined View/Withdrawal Flow
+            System.out.println("[1] View & Apply for Available Projects");
+            System.out.println("[2] View My Application Status & Request Withdrawal");
             System.out.println("----------------------------------");
             System.out.println("--- Enquiries ---");
             System.out.println("[3] Submit Enquiry");
-            System.out.println("[4] Manage My Enquiries (View/Edit/Delete)"); // Combined Flow
+            System.out.println("[4] Manage My Enquiries (View/Edit/Delete)");
             System.out.println("----------------------------------");
             System.out.println("--- Account ---");
             System.out.println("[5] Change Password");
@@ -198,7 +199,8 @@ public class ApplicantUI extends BaseUI {
 
     /**
      * Handles the workflow for viewing and applying for BTO projects.
-     * Restrict certain users (based on application status) from applying to projects.
+     * Restrict certain users (based on application status) from applying to
+     * projects.
      * <p>
      * This method allows applicants to:
      * - Manage filters for the project list view
@@ -209,20 +211,20 @@ public class ApplicantUI extends BaseUI {
      */
     private void handleViewAndApplyProjects() {
         // Upfront check for existing active application
-        // If users have the statuses PENDING, SUCCESSFUL, or BOOKED, they are not able to apply for any projects
+        // If users have the statuses PENDING, SUCCESSFUL, or BOOKED, they are not able
+        // to apply for any projects
         // If status is UNSUCCESSFUL or WITHDRAWN, the user *can* apply again
         try {
             Application currentApp = applicationController.getMyApplication(this.user);
             if (currentApp != null) {
                 ApplicationStatus status = currentApp.getStatus();
-                
+
                 if (status == ApplicationStatus.PENDING ||
-                    status == ApplicationStatus.SUCCESSFUL ||
-                    status == ApplicationStatus.BOOKED)
-                {
+                        status == ApplicationStatus.SUCCESSFUL ||
+                        status == ApplicationStatus.BOOKED) {
                     String reason = String.format(
-                        "Sorry. You are not able to apply for any projects.\nReason: You already have an active application (ID: %s, Status: %s). You cannot submit a new one until it is concluded.",
-                        currentApp.getApplicationId(), status);
+                            "Sorry. You are not able to apply for any projects.\nReason: You already have an active application (ID: %s, Status: %s). You cannot submit a new one until it is concluded.",
+                            currentApp.getApplicationId(), status);
                     displayError(reason); // Display the specific reason
                     return; // Exit the method immediately, user cannot proceed
                 }
@@ -231,7 +233,7 @@ public class ApplicantUI extends BaseUI {
             displayError("Error checking your current application status: " + e.getMessage());
             return;
         }
-        
+
         displayHeader("View Available BTO Projects");
 
         boolean filtersWereActive = !currentProjectFilters.isEmpty(); // Check if filters exist *before* asking
@@ -328,12 +330,15 @@ public class ApplicantUI extends BaseUI {
     private void handleSubmitEnquiry() {
         displayHeader("Submit Enquiry");
 
-        // Use a LinkedHashMap to store projects, preventing duplicates and maintaining order
+        // Use a LinkedHashMap to store projects, preventing duplicates and maintaining
+        // order
         Map<String, Project> projectsForEnquiryMap = new LinkedHashMap<>();
 
-        // 1. Get projects normally visible for application (active period, eligible etc.)
+        // 1. Get projects normally visible for application (active period, eligible
+        // etc.)
         try {
-            List<Project> activeProjects = projectController.getVisibleProjectsForUser(this.user, this.currentProjectFilters);
+            List<Project> activeProjects = projectController.getVisibleProjectsForUser(this.user,
+                    this.currentProjectFilters);
             if (activeProjects != null) {
                 activeProjects.forEach(p -> projectsForEnquiryMap.put(p.getProjectId(), p));
             }
@@ -348,17 +353,18 @@ public class ApplicantUI extends BaseUI {
             if (currentApp != null) {
                 ApplicationStatus status = currentApp.getStatus();
                 if (status == ApplicationStatus.PENDING ||
-                    status == ApplicationStatus.SUCCESSFUL ||
-                    status == ApplicationStatus.BOOKED)
-                {
+                        status == ApplicationStatus.SUCCESSFUL ||
+                        status == ApplicationStatus.BOOKED) {
                     // Fetch the project details for this application
                     associatedProject = projectController.findProjectById(currentApp.getProjectId());
                     if (associatedProject != null) {
                         // Add this project to the map (if not already present)
-                        // putIfAbsent ensures we don't overwrite if it was already added from the active list
+                        // putIfAbsent ensures we don't overwrite if it was already added from the
+                        // active list
                         projectsForEnquiryMap.putIfAbsent(associatedProject.getProjectId(), associatedProject);
                     } else {
-                         displayMessage("Note: Could not find details for project ID " + currentApp.getProjectId() + " associated with your application.");
+                        displayMessage("Note: Could not find details for project ID " + currentApp.getProjectId()
+                                + " associated with your application.");
                     }
                 }
             }

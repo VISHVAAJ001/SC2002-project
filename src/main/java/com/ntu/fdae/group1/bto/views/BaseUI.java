@@ -82,6 +82,27 @@ public abstract class BaseUI {
     }
 
     /**
+     * Prompts the user for a password input, masking the input for security.
+     * <p>
+     * This method uses System.console() to read the password securely. If
+     * System.console() is not available (e.g., in some IDEs), it falls back to
+     * regular input.
+     * </p>
+     * 
+     * @param prompt The message to display before input.
+     * @return The password entered by the user.
+     */
+    public String promptForPassword(String prompt) {
+        if (System.console() == null) {
+            return promptForInput(prompt);
+        }
+
+        System.out.print(prompt + " ");
+        char[] passwordChars = System.console().readPassword();
+        return new String(passwordChars);
+    }
+
+    /**
      * Prompts the user for an integer input with basic error handling.
      * 
      * @param prompt The message to display before input.
