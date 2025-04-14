@@ -263,6 +263,8 @@ public class HDBOfficerUI extends BaseUI {
 
     /**
      * Handles the workflow for viewing and applying for BTO projects.
+     * Restrict certain users (based on application status) from applying to projects.
+
      * <p>
      * This method allows officers (in their applicant capacity) to:
      * - Manage filters for the project list view
@@ -272,6 +274,29 @@ public class HDBOfficerUI extends BaseUI {
      * </p>
      */
     private void handleViewAndApplyProjects() {
+        // Upfront check for existing active application
+        // If users have the statuses PENDING, SUCCESSFUL, or BOOKED, they are not able to apply for any projects
+        // If status is UNSUCCESSFUL or WITHDRAWN, the user *can* apply again
+        try {
+            Application currentApp = applicationController.getMyApplication(this.user);
+            if (currentApp != null) {
+                ApplicationStatus status = currentApp.getStatus();
+                if (status == ApplicationStatus.PENDING ||
+                    status == ApplicationStatus.SUCCESSFUL ||
+                    status == ApplicationStatus.BOOKED)
+                {
+                    String reason = String.format(
+                        "Sorry. You are not able to apply for any projects.\nReason: You already have an active application (ID: %s, Status: %s). You cannot submit a new one until it is concluded.",
+                        currentApp.getApplicationId(), status);
+                    displayError(reason); // Display the specific reason
+                    return; // Exit the method immediately, user cannot proceed
+                }
+            }
+        } catch (Exception e) {
+            displayError("Error checking your current application status: " + e.getMessage());
+            return;
+        }
+
         displayHeader("View Available BTO Projects");
 
         boolean filtersWereActive = !currentProjectFilters.isEmpty(); // Check if filters exist *before* asking

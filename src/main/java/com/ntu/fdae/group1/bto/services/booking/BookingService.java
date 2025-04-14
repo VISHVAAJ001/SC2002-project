@@ -3,6 +3,7 @@ package com.ntu.fdae.group1.bto.services.booking;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 import com.ntu.fdae.group1.bto.enums.ApplicationStatus;
 import com.ntu.fdae.group1.bto.enums.FlatType;
@@ -64,10 +65,10 @@ public class BookingService implements IBookingService {
      */
     public BookingService(IApplicationRepository appRepo, IProjectRepository projRepo,
             IBookingRepository bookingRepo, IUserRepository userRepo) {
-        this.applicationRepo = appRepo;
-        this.projectRepo = projRepo;
-        this.bookingRepo = bookingRepo;
-        this.userRepo = userRepo;
+            this.applicationRepo = Objects.requireNonNull(appRepo);
+            this.projectRepo = Objects.requireNonNull(projRepo);
+            this.bookingRepo = Objects.requireNonNull(bookingRepo);
+            this.userRepo = Objects.requireNonNull(userRepo);
     }
 
     /**
@@ -91,9 +92,7 @@ public class BookingService implements IBookingService {
         if (applicantNRIC == null || applicantNRIC.trim().isEmpty()) {
             throw new BookingException("Applicant NRIC cannot be empty.");
         }
-        if (flatType == null) {
-            throw new BookingException("Flat type must be specified for booking.");
-        }
+        Objects.requireNonNull(flatType, "Flat type must be specified for booking.");
 
         // 3. Verify that the applicant exists and has the correct role (or is generally
         // a valid user)
@@ -112,33 +111,17 @@ public class BookingService implements IBookingService {
             throw new BookingException("Applicant " + applicantNRIC + " already has an existing booking (ID: "
                     + existingBooking.getBookingId() + "). Cannot book another flat.");
         }
-        // Optional: Double-check via application status (might be redundant but safer)
-        // Requires applicationRepo to support finding all apps by NRIC
-        /*
-         * List<Application> userApplications =
-         * applicationRepo.findAllByApplicantNric(applicantNRIC); // Need this method
-         * boolean alreadyBooked = userApplications.stream().anyMatch(app ->
-         * app.getStatus() == ApplicationStatus.BOOKED);
-         * if (alreadyBooked) {
-         * throw new BookingException("Applicant " + applicantNRIC +
-         * " already has a booked application.");
-         * }
-         */
-
-        // 5. Retrieve the applicant's specific application that should be in SUCCESSFUL
-        // state
-        // (Assuming an applicant can only have one non-terminal application active at a
-        // time)
-        Application application = applicationRepo.findByApplicantNric(applicantNRIC); // Re-fetch or use from above if
-                                                                                      // available
+        
+        // 5. Retrieve the applicant's specific application that should be in SUCCESSFUL state
+        // (Assuming an applicant can only have one non-terminal application active at a time)
+        Application application = applicationRepo.findByApplicantNric(applicantNRIC); // Re-fetch or use from above if available
         if (application == null) {
-            // This case might indicate data inconsistency if the previous booking check
-            // passed
+            // This case might indicate data inconsistency if the previous booking check passed
             throw new BookingException("No active application found for applicant " + applicantNRIC
                     + " eligible for booking.");
         }
 
-        if (!application.getStatus().equals(ApplicationStatus.SUCCESSFUL)) {
+        if (application.getStatus() != ApplicationStatus.SUCCESSFUL) {
             throw new BookingException("Application status must be SUCCESSFUL to book. Current status for App ID "
                     + application.getApplicationId() + ": " + application.getStatus());
         }
@@ -158,16 +141,38 @@ public class BookingService implements IBookingService {
                     + " is not authorized to handle bookings for project " + project.getProjectId());
         }
 
-        // 8. Check flat availability in the project
-        // Use getFlatTypes().get(flatType) for Map access or keep getFlatInfo if
-        // preferred
+        // 8. Check if requested flat type matches application preference
+        FlatType preferredType = application.getPreferredFlatType();
+        if (preferredType == null) {
+            // This indicates a data integrity issue if an application is SUCCESSFUL but has no preferred type set.
+            throw new BookingException(
+                    "Booking failed: Applicant's preferred flat type is missing from the successful application (ID: " + application.getApplicationId() + "). Cannot proceed.");
+        }
+        if (!preferredType.equals(flatType)) {
+            throw new BookingException(
+                    String.format("Booking failed: The selected flat type (%s) does not match the applicant's approved preference (%s) on the application (ID: %s).",
+                            flatType.name(), preferredType.name(), application.getApplicationId()));
+        }
+
+        // 9. Check flat availability in the project
+        // Use getFlatTypes().get(flatType) for Map access or keep getFlatInfo if preferred
         ProjectFlatInfo flatInfo = project.getFlatTypes().get(flatType);
+        // Should pass check since preferredType validation passed
+        // Covers the case where the project configuration might be inconsistent.
         if (flatInfo == null) {
             throw new BookingException(
                     "Project '" + project.getProjectName() + "' does not offer flat type: " + flatType.name());
         }
 
-        // 9. Create and save the new booking record
+        // 10. Check REMAINING UNITS for the specific flat type
+        if (flatInfo.getRemainingUnits() <= 0) {
+            throw new BookingException(
+                String.format("Booking failed: No remaining units available for the required flat type (%s) in project '%s'.",
+                              flatType.name(), project.getProjectName())
+            );
+        }
+
+        // 11. Create and save the new booking record
         String bookingId = IdGenerator.generateBookingId(); // Assuming static utility method
         LocalDate bookingDate = LocalDate.now();
         Booking newBooking = new Booking(bookingId, application.getApplicationId(), applicantNRIC,

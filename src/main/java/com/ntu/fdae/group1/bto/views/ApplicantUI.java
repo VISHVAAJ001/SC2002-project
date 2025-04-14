@@ -5,7 +5,9 @@ import com.ntu.fdae.group1.bto.controllers.project.ProjectController;
 import com.ntu.fdae.group1.bto.controllers.enquiry.EnquiryController;
 import com.ntu.fdae.group1.bto.controllers.user.AuthenticationController; // Added
 import com.ntu.fdae.group1.bto.controllers.user.UserController;
+import com.ntu.fdae.group1.bto.enums.ApplicationStatus;
 import com.ntu.fdae.group1.bto.models.enquiry.Enquiry;
+import com.ntu.fdae.group1.bto.models.project.Application;
 import com.ntu.fdae.group1.bto.models.project.Project;
 import com.ntu.fdae.group1.bto.models.user.Applicant;
 
@@ -194,6 +196,7 @@ public class ApplicantUI extends BaseUI {
 
     /**
      * Handles the workflow for viewing and applying for BTO projects.
+     * Restrict certain users (based on application status) from applying to projects.
      * <p>
      * This method allows applicants to:
      * - Manage filters for the project list view
@@ -203,6 +206,30 @@ public class ApplicantUI extends BaseUI {
      * </p>
      */
     private void handleViewAndApplyProjects() {
+        // Upfront check for existing active application
+        // If users have the statuses PENDING, SUCCESSFUL, or BOOKED, they are not able to apply for any projects
+        // If status is UNSUCCESSFUL or WITHDRAWN, the user *can* apply again
+        try {
+            Application currentApp = applicationController.getMyApplication(this.user);
+            if (currentApp != null) {
+                ApplicationStatus status = currentApp.getStatus();
+                
+                if (status == ApplicationStatus.PENDING ||
+                    status == ApplicationStatus.SUCCESSFUL ||
+                    status == ApplicationStatus.BOOKED)
+                {
+                    String reason = String.format(
+                        "Sorry. You are not able to apply for any projects.\nReason: You already have an active application (ID: %s, Status: %s). You cannot submit a new one until it is concluded.",
+                        currentApp.getApplicationId(), status);
+                    displayError(reason); // Display the specific reason
+                    return; // Exit the method immediately, user cannot proceed
+                }
+            }
+        } catch (Exception e) {
+            displayError("Error checking your current application status: " + e.getMessage());
+            return;
+        }
+        
         displayHeader("View Available BTO Projects");
 
         boolean filtersWereActive = !currentProjectFilters.isEmpty(); // Check if filters exist *before* asking
