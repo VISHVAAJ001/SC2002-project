@@ -15,6 +15,7 @@ import com.ntu.fdae.group1.bto.exceptions.ApplicationException;
 import com.ntu.fdae.group1.bto.models.project.Application;
 import com.ntu.fdae.group1.bto.models.project.Project;
 import com.ntu.fdae.group1.bto.models.user.User;
+import com.ntu.fdae.group1.bto.models.project.ProjectFlatInfo;
 
 /**
  * Helper class for application-related UI operations in the BTO Management
@@ -68,12 +69,12 @@ public class ApplicationUIHelper {
 
     /**
      * Guides the user through submitting an application for a specific project,
-     * including handling flat type preferences based on eligibility.
+     * including handling flat type preferences based on eligibility and availability.
      * <p>
      * This method:
      * - Retrieves the project details
-     * - Determines eligible flat types for the user
-     * - Prompts for preference selection if multiple eligible types exist
+     * - Determines selectable flat types (eligible and available) for the user
+     * - Prompts for preference selection if multiple selectable types exist
      * - Confirms submission with the user
      * - Submits the application via the ApplicationController
      * - Displays success confirmation or error messages
@@ -98,73 +99,82 @@ public class ApplicationUIHelper {
                 return;
             }
 
-            // 2. Determine Eligible Flat Types for THIS user and THIS project
-            List<FlatType> eligibleTypes = new ArrayList<>();
-            if (project.getFlatTypes().containsKey(FlatType.TWO_ROOM)
-                    && isApplicantEligibleForFlatType(user, FlatType.TWO_ROOM)) {
-                eligibleTypes.add(FlatType.TWO_ROOM);
+            // 2. Determine Selectable Flat Types for THIS user and THIS project (Eligible and Available)
+            List<FlatType> selectableTypes = new ArrayList<>();
+            for (FlatType potentialType : project.getFlatTypes().keySet()) {
+                ProjectFlatInfo flatInfo = project.getFlatInfo(potentialType); // Get info for the type
+                // Check all conditions: eligible? offered? units remaining?
+                if (isApplicantEligibleForFlatType(user, potentialType) &&
+                        flatInfo != null && // Make sure info exists
+                        flatInfo.getRemainingUnits() > 0) {
+                    selectableTypes.add(potentialType);
+                }
             }
-            if (project.getFlatTypes().containsKey(FlatType.THREE_ROOM)
-                    && isApplicantEligibleForFlatType(user, FlatType.THREE_ROOM)) {
-                eligibleTypes.add(FlatType.THREE_ROOM);
-            }
-            // Add checks for other flat types if needed
-
-            // 3. Determine Preference: Implicitly set or prompt if multiple options
+            // 3. Handle Scenarios based on selectableTypes
             FlatType determinedPreference = null;
-            boolean requiresChoice = false;
 
-            if (eligibleTypes.isEmpty()) {
-                // This check is defensive; getVisibleProjects should prevent this scenario
-                baseUI.displayError(
-                        "Error: No eligible flat types found for you in project '" + project.getProjectName() + "'.");
-                return;
-            } else if (eligibleTypes.size() == 1) {
-                // Implicitly set if only one eligible type offered
-                determinedPreference = eligibleTypes.get(0);
-                baseUI.displayMessage("Based on eligibility, your application targets: "
-                        + baseUI.formatEnumName(determinedPreference));
+            if (selectableTypes.isEmpty()) {
+                // Scenario: No types are eligible OR available
+                baseUI.displayError("Sorry, there are no flat types currently available or eligible for you in project '"
+                                + project.getProjectName() + "'. Cannot proceed with application.");
+                return; // Exit the submission process
+            } else if (selectableTypes.size() == 1) {
+                // Scenario: Exactly one type is eligible AND available
+                determinedPreference = selectableTypes.get(0);
+                baseUI.displayMessage("Only " + baseUI.formatEnumName(determinedPreference)
+                                + " flats are available and eligible for you in this project.");
+                // Proceed directly to confirmation
             } else {
-                // Multiple eligible types offered, user needs to choose
-                requiresChoice = true;
-            }
+                // Scenario: Multiple types are eligible AND available - User must choose
+                baseUI.displayMessage("This project offers multiple flat types you are eligible for and which have units available.");
 
-            // 4. Prompt for Preference ONLY if required
-            if (requiresChoice) {
-                baseUI.displayMessage("This project offers multiple flat types you are eligible for.");
+                // --- Prompting ---
+                StringBuilder promptBuilder = new StringBuilder("Select your preferred flat type:\n");
+                Map<Integer, FlatType> choiceMap = new HashMap<>();
+                int choiceIndex = 1;
+                for (FlatType type : selectableTypes) {
+                    promptBuilder.append(String.format("[%d] %s\n", choiceIndex, baseUI.formatEnumName(type)));
+                    choiceMap.put(choiceIndex, type);
+                    choiceIndex++;
+                }
+                promptBuilder.append("[0] Cancel / Back\n");
+                promptBuilder.append("---------------------------------\n");
+                promptBuilder.append("Enter your choice: ");
 
-                determinedPreference = baseUI.promptForEnum(
-                        "Select your preferred flat type:",
-                        FlatType.class, // Pass the Enum class
-                        eligibleTypes // Pass the list of ONLY the valid choices
-                );
+                // Get user input
+                int userChoice = baseUI.promptForInt(promptBuilder.toString());
 
-                // If user cancels the selection, exit the submission process
-                if (determinedPreference == null) {
+                // Validate and map choice
+                if (userChoice == 0) {
                     baseUI.displayMessage("Cancelling application submission.");
                     return; // Exit the submission process
+                } else if (choiceMap.containsKey(userChoice)) {
+                    determinedPreference = choiceMap.get(userChoice);
+                } else {
+                    baseUI.displayError("Invalid choice.");
+                    baseUI.displayMessage("Cancelling application submission.");
+                    return; // Exit on invalid choice
                 }
             }
 
-            // 5. Final Confirmation
+            // If determinedPreference is still null here, something went wrong (should have been caught)
+             if (determinedPreference == null) {
+                 baseUI.displayError("Internal error determining flat type preference. Cancelling.");
+                 return;
+             }
+
+            // 4. Final Confirmation (using the now determined valid preference)
             String confirmationPrompt = "Confirm application submission for project " + project.getProjectName() + " ("
                     + projectId + ")";
-            if (determinedPreference != null) {
-                confirmationPrompt += " (Preference: " + baseUI.formatEnumName(determinedPreference)
-                        + ")?";
-            } else {
-                confirmationPrompt += " (Specific type based on eligibility or no preference indicated)?";
-            }
+            confirmationPrompt += " (Targeting: " + baseUI.formatEnumName(determinedPreference) + ")?"; // Changed wording slightly
 
-            // If promptForConfirmation returns false, user cancelled.
             if (!baseUI.promptForConfirmation(confirmationPrompt)) {
                 baseUI.displayMessage("Application submission cancelled.");
                 return; // Exit the submission process
             }
 
-            // 6. Call Controller/Service with the *determined* preference
+            // 5. Call Controller/Service with the *determined* preference
             Application app = applicationController.submitApplication(user, projectId, determinedPreference);
-
             // 7. Display Success Feedback
             baseUI.displayMessage("----------------------------------");
             baseUI.displayMessage("Application Submitted Successfully!");
