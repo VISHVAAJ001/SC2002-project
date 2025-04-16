@@ -66,6 +66,7 @@ package Views <<Folder>> {
         - enquiryUIHelper : EnquiryUIHelper ' Dependency
         - applicationUIHelper : ApplicationUIHelper ' Dependency
         - handleViewAndApplyProjects() : void
+        - handleViewAndWithdrawApplication() : void
         - handleSubmitEnquiry() : void
         - handleManageMyEnquiries() : void
         - handleEditEnquiryAction() : void

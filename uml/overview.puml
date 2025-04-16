@@ -784,6 +784,7 @@ package Views <<Folder>> {
         - enquiryUIHelper : EnquiryUIHelper
         - applicationUIHelper : ApplicationUIHelper
         - handleViewAndApplyProjects() : void
+        - handleViewAndWithdrawApplication() : void
         - handleSubmitEnquiry() : void
         - handleManageMyEnquiries() : void
         - handleEditEnquiryAction() : void
@@ -811,6 +812,7 @@ package Views <<Folder>> {
         - bookingUIHelper : BookingUIHelper
         - currentProjectFilters : Map<String, Object>
         - handleViewAndApplyProjects() : void
+        - handleViewAndWithdrawApplication() : void
         - handleSubmitEnquiry() : void
         - handleManageMyEnquiries() : void
         - handleEditEnquiryAction() : void
@@ -841,23 +843,23 @@ package Views <<Folder>> {
         - enquiryUIHelper : EnquiryUIHelper
         - officerRegUIHelper : OfficerRegUIHelper
         - currentProjectFilters : Map<String, Object>
-        - handleManageProjects() : void
-        - handleCreateProject() : void
-        - handleEditProject() : void
+        - handleManageProjects() : void <<throws RegistrationException, InvalidInputException>>
+        - handleCreateProject() : void <<throws RegistrationException, InvalidInputException>>
+        - handleEditProject() : void <<throws InvalidInputException>>
         - handleDeleteProject() : void
         - handleToggleVisibility() : void
-        - handleViewAllProjects() : void
-        - handleViewMyProjects() : void
-        - handleReviewOfficerRegistrations() : void
-        - handleReviewApplications() : void
-        - handleReviewWithdrawal() : void
-        - handleViewReplyEnquiries() : void
+        - handleViewAllProjects() : void <<throws AuthorizationException>>
+        - handleViewMyProjects() : void <<throws AuthorizationException>>
+        - handleReviewOfficerRegistrations() : void <<throws RegistrationException>>
+        - handleReviewApplications() : void <<throws ApplicationException>>
+        - handleReviewWithdrawal() : void <<throws ApplicationException>>
+        - handleViewReplyEnquiries() : void <<throws InvalidInputException>>
         - handleGenerateReport() : void
         - handleChangePassword() : void
         - promptForDateOrKeep(prompt : String, currentValue : LocalDate) : LocalDate
         - promptForIntOrKeep(prompt : String, currentValue : int) : int
         - promptForOptionalInput(prompt : String, originalValue : String) : String
-        + HDBManagerUI(user: HDBManager, userCtrl: UserController, projCtrl: ProjectController, appCtrl: ApplicationController, offRegCtrl: OfficerRegistrationController, enqCtrl: EnquiryController, reportCtrl: ReportController, authCtrl: AuthenticationController, scanner: Scanner)
+        + HDBManagerUI(user: HDBManager, projCtrl: ProjectController, appCtrl: ApplicationController, offRegCtrl: OfficerRegistrationController, enqCtrl: EnquiryController, reportCtrl: ReportController, authCtrl: AuthenticationController, scanner: Scanner)
         + displayMainMenu() : void
      }
 
