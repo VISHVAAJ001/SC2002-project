@@ -689,7 +689,7 @@ package Controller <<Folder>> {
         + getPendingRegistrations(manager: HDBManager) : List<OfficerRegistration>;
         + getPendingRegistrationCountForProject(staff : HDBStaff, projectId : String) : int
         + getProjectRegistrations(staff: HDBStaff, projectId: String) : List<OfficerRegistration>;
-        + getApprovedHandlingProject(officer: HDBOfficer) : Project <<nullable>>
+        + getApprovedHandlingProject(officer: HDBOfficer) : List<Project> <<nullable>>
         + getMyRegistrations(officer: HDBOfficer): List<OfficerRegistration>;
     }
 

@@ -1,6 +1,5 @@
 package com.ntu.fdae.group1.bto.controllers.project;
 
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
 import java.util.ArrayList;
@@ -225,64 +224,54 @@ public class OfficerRegistrationController {
     }
 
     /**
-     * Finds the single active project an officer is currently approved to handle.
-     * Fetches all registrations for the officer, filters for APPROVED status,
-     * and then selects the most relevant project (active or most recent past).
+     * Finds ALL projects an officer is currently approved to handle.
+     * Fetches all registrations for the officer and filters for APPROVED status.
      *
-     * @param officer The officer whose handling project is sought.
-     * @return The Project object they are handling, or null if none found or not
-     *         approved.
+     * @param officer The officer whose approved projects are sought.
+     * @return A List containing all Project objects they are approved for.
+     *         Returns an empty list if the officer is null, has no registrations,
+     *         or has no APPROVED registrations.
      */
-    public Project findApprovedHandlingProject(HDBOfficer officer) {
+    public List<Project> findApprovedHandlingProject(HDBOfficer officer) {
+        List<Project> approvedProjects = new ArrayList<>();
+
         if (officer == null) {
-            return null;
+            return approvedProjects;
         }
 
-        // Step 1: Get ALL registrations for this officer using the service
-        List<OfficerRegistration> allMyRegistrations = registrationService.getRegistrationsByOfficer(officer.getNric());
+        try {
+            // Step 1: Get ALL registrations for this officer using the service
+            List<OfficerRegistration> allMyRegistrations = registrationService.getRegistrationsByOfficer(officer.getNric());
 
-        // Step 2: Filter this list for APPROVED status *within the controller*
-        List<OfficerRegistration> approvedRegistrations = allMyRegistrations.stream()
-                .filter(reg -> reg.getStatus() == OfficerRegStatus.APPROVED)
-                .collect(Collectors.toList());
+            // Step 2: Filter this list for APPROVED status
+            List<OfficerRegistration> approvedRegistrations = allMyRegistrations.stream()
+                    .filter(reg -> reg != null && reg.getStatus() == OfficerRegStatus.APPROVED)
+                    .collect(Collectors.toList());
 
-        // --- The rest of the logic remains the same as before ---
-
-        if (approvedRegistrations.isEmpty()) {
-            return null; // Not approved for any project
-        }
-
-        // Logic to select the "current" handling project from the approved list
-        LocalDate currentDate = LocalDate.now();
-        Project potentiallyActiveProject = null;
-        Project mostRecentPastProject = null;
-        LocalDate mostRecentPastEndDate = LocalDate.MIN;
-
-        for (OfficerRegistration reg : approvedRegistrations) { // Loop through only the APPROVED ones
-            try {
-                // Use ProjectService to get details for the approved project ID
-                Project project = projectService.findProjectById(reg.getProjectId());
-                if (project != null) {
-                    // Check if this approved project is currently active
-                    if (!currentDate.isBefore(project.getOpeningDate())
-                            && !currentDate.isAfter(project.getClosingDate())) {
-                        potentiallyActiveProject = project;
-                        break; // Prioritize active project
-                    } else if (currentDate.isAfter(project.getClosingDate())) {
-                        // Track the most recently ended past project
-                        if (project.getClosingDate().isAfter(mostRecentPastEndDate)) {
-                            mostRecentPastEndDate = project.getClosingDate();
-                            mostRecentPastProject = project;
-                        }
-                    }
-                }
-            } catch (Exception e) {
-                System.err.println("Error fetching project " + reg.getProjectId() + " details: " + e.getMessage());
+            if (approvedRegistrations.isEmpty()) {
+                return approvedProjects;
             }
-        }
 
-        // Return active or most recent past approved project
-        return (potentiallyActiveProject != null) ? potentiallyActiveProject : mostRecentPastProject;
+            // Step 3: Get Project details for EACH approved registration and add to the list
+            for (OfficerRegistration reg : approvedRegistrations) {
+                try {
+                    Project project = projectService.findProjectById(reg.getProjectId());
+                    if (project != null) {
+                        approvedProjects.add(project);
+                    } else {
+                        System.err.println("Warning: Approved registration found for non-existent project ID: "
+                                + reg.getProjectId() + " for officer " + officer.getNric());
+                    }
+                } catch (Exception e) {
+                    System.err.println("Error fetching details for approved project ID "
+                            + reg.getProjectId() + ": " + e.getMessage());
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Error fetching registrations for officer " + officer.getNric() + ": " + e.getMessage());
+            return new ArrayList<>();
+        }
+        return approvedProjects;
     }
 
     /**
