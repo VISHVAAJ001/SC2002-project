@@ -14,8 +14,8 @@ import com.ntu.fdae.group1.bto.enums.MaritalStatus;
 import com.ntu.fdae.group1.bto.exceptions.ApplicationException;
 import com.ntu.fdae.group1.bto.models.project.Application;
 import com.ntu.fdae.group1.bto.models.project.Project;
-import com.ntu.fdae.group1.bto.models.user.User;
 import com.ntu.fdae.group1.bto.models.project.ProjectFlatInfo;
+import com.ntu.fdae.group1.bto.models.user.User;
 
 /**
  * Helper class for application-related UI operations in the BTO Management
@@ -233,10 +233,15 @@ public class ApplicationUIHelper {
             baseUI.displayMessage("Application ID:    " + app.getApplicationId());
             baseUI.displayMessage("Project ID:        " + app.getProjectId() + " (" + projectName + ")");
             baseUI.displayMessage("Submission Date: " + app.getSubmissionDate()); // Add formatting if needed
-            baseUI.displayMessage("Current Status:    " + baseUI.formatEnumName(app.getStatus()));
+            String statusDisplay = baseUI.formatEnumName(app.getStatus());
+            if (app.getRequestedWithdrawalDate() != null) {
+            statusDisplay += " (Withdrawal Requested)";
+             }
             if (app.getPreferredFlatType() != null) {
                 baseUI.displayMessage("Preference/Target: " + baseUI.formatEnumName(app.getPreferredFlatType()));
             }
+            baseUI.displayMessage("Current Status:    " + statusDisplay);
+
             // Display withdrawal date if tracked?
             // if (app.getRequestedWithdrawalDate() != null) { ... }
             baseUI.displayMessage("----------------------------------");
