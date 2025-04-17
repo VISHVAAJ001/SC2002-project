@@ -690,6 +690,7 @@ package Controller <<Folder>> {
         + getPendingRegistrationCountForProject(staff : HDBStaff, projectId : String) : int
         + getProjectRegistrations(staff: HDBStaff, projectId: String) : List<OfficerRegistration>;
         + getApprovedHandlingProject(officer: HDBOfficer) : Project <<nullable>>
+        + findAllApprovedProjectsForOfficer(officer: HDBOfficer) : List<Project>;
         + getMyRegistrations(officer: HDBOfficer): List<OfficerRegistration>;
     }
 

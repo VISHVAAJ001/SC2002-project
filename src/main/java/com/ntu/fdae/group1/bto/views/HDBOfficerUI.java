@@ -639,77 +639,100 @@ public class HDBOfficerUI extends BaseUI {
      * </p>
      */
     private void handleManageHandlingProject() {
-        displayHeader("Manage Project Being Handled");
+        displayHeader("Manage Approved Project(s)");
 
-        // --- Step 1: Find the project the officer is handling ---
-        Project handlingProject = null;
+        // --- Step 1: Find ALL approved projects for the officer ---
+        List<Project> approvedProjects;
         try {
-            handlingProject = officerRegController.findApprovedHandlingProject(this.user);
+            approvedProjects = officerRegController.findAllApprovedProjectsForOfficer(this.user);
         } catch (Exception e) {
-            displayError("Error finding the project you are handling: " + e.getMessage());
-            // logger.log(Level.SEVERE, "Error finding handling project for officer " +
-            // user.getNric(), e);
-            return; // Cannot proceed
+            displayError("Error retrieving the list of projects you are approved for: " + e.getMessage());
+            return;
         }
 
-        if (handlingProject == null) {
+        // --- Step 2: Handle different scenarios (0, 1, or multiple projects) ---
+        Project selectedProject = null;
+
+        if (approvedProjects.isEmpty()) {
             displayMessage("You are not currently approved to handle any specific project.");
             displayMessage("Please ensure your registration request has been approved by a manager.");
-            return; // Go back to main menu
+            return;
+        } else if (approvedProjects.size() == 1) {
+            selectedProject = approvedProjects.get(0); // Only one project, select it directly
+            displayMessage("You are approved for the following project:");
+        } else {
+            // Multiple projects - Prompt for selection
+            displayMessage("You are approved for multiple projects. Please select one to manage:");
+            for (int i = 0; i < approvedProjects.size(); i++) {
+                Project p = approvedProjects.get(i);
+                System.out.printf("[%d] %s (%s)\n", i + 1, p.getProjectName(), p.getProjectId());
+            }
+            System.out.println("-------------------------------------------");
+            System.out.println("[0] Back to Main Officer Menu");
+            System.out.println("===========================================");
+
+            int choice = -1;
+            while (selectedProject == null) {
+                choice = promptForInt("Enter your choice: ");
+                if (choice == 0) {
+                    return;
+                } else if (choice > 0 && choice <= approvedProjects.size()) {
+                    selectedProject = approvedProjects.get(choice - 1);
+                } else {
+                    displayError("Invalid choice. Please enter a number between 0 and " + approvedProjects.size() + ".");
+                }
+            }
+             clearConsole();
         }
 
-        // --- Step 2: Display Project Details and Sub-Menu Loop ---
+        // --- Step 3: Manage the SELECTED Project ---
+        // Now 'selectedProject' holds the project to manage (either the only one or the one chosen)
         boolean keepManaging = true;
         while (keepManaging) {
-            clearConsole(); // Optional: Clear screen for better sub-menu visibility
+            clearConsole();
 
-            // --- Step 2a: Fetch Pending Count for THIS project ---
-            int projectSpecificPendingCount = 0; // Default to 0 if fetch fails
+            // --- Step 3a: Fetch Pending Count for THIS selected project ---
+            int projectSpecificPendingCount = 0;
             try {
-                // Call the updated controller method (accepting HDBStaff)
                 projectSpecificPendingCount = officerRegController.getPendingRegistrationCountForProject(
-                        this.user, // Pass the HDBOfficer user
-                        handlingProject.getProjectId());
+                        this.user,
+                        selectedProject.getProjectId());
             } catch (AuthorizationException ae) {
                 displayError("Authorization Error fetching pending count: " + ae.getMessage());
             } catch (IllegalArgumentException iae) {
-                displayError("Internal Error fetching pending count: " + iae.getMessage());
+                 displayError("Internal Error fetching pending count (Invalid Project?): " + iae.getMessage());
             } catch (RuntimeException re) {
                 displayError("Error fetching pending registration count: " + re.getMessage());
             }
 
-            // --- Step 2b: Display Project Details ---
-            displayMessage("You are managing Project: " + handlingProject.getProjectName() + " ("
-                    + handlingProject.getProjectId() + ")");
+            // --- Step 3b: Display Details for the SELECTED Project ---
+            displayMessage("You are managing Project: " + selectedProject.getProjectName() + " ("
+                    + selectedProject.getProjectId() + ")");
             displayMessage("--------------------------------------------------");
 
-            // Display full project details using the STAFF view helper, passing the fetched
-            // count
-            // Ensure you use the variable declared above: projectSpecificPendingCount
-            projectUIHelper.displayStaffProjectDetails(handlingProject, projectSpecificPendingCount); // <<< Use correct
-                                                                                                      // variable
+            projectUIHelper.displayStaffProjectDetails(selectedProject, projectSpecificPendingCount);
 
-            // --- Step 2c: Display Contextual Actions Sub-Menu ---
+            // --- Step 3c: Display Contextual Actions Sub-Menu ---
             System.out.println("\n--- Management Actions for this Project ---");
             System.out.println("[1] Book Flat for Successful Applicant");
             System.out.println("[2] Generate Booking Receipt for Applicant");
             System.out.println("[3] View / Reply Enquiries for this Project");
             System.out.println("-------------------------------------------");
-            System.out.println("[0] Back to Main Officer Menu");
+            System.out.println("[0] Back to Project Selection / Main Menu");
             System.out.println("===========================================");
 
-            int choice = promptForInt("Enter action for this project: ");
+            int actionChoice = promptForInt("Enter action for this project: ");
 
-            try { // Catch exceptions specific to actions within this sub-menu
-                switch (choice) {
+            try {
+                switch (actionChoice) {
                     case 1:
-                        handlePerformBookingAction(handlingProject);
+                        handlePerformBookingAction(selectedProject);
                         break;
                     case 2:
-                        handleGenerateReceiptAction(handlingProject);
+                        handleGenerateReceiptAction(selectedProject);
                         break;
                     case 3:
-                        handleViewAndReplyProjectEnquiriesAction(handlingProject.getProjectId());
+                        handleViewAndReplyProjectEnquiriesAction(selectedProject.getProjectId());
                         break;
                     case 0:
                         keepManaging = false;
@@ -719,17 +742,17 @@ public class HDBOfficerUI extends BaseUI {
                         break;
                 }
             } catch (DataAccessException | BookingException | InvalidInputException e) {
-                // Catch exceptions relevant to booking, receipt, enquiry actions
                 displayError("Operation failed: " + e.getMessage());
-            } catch (Exception e) { // Catch any other unexpected errors
-                displayError("An unexpected error occurred: " + e.getMessage());
+            } catch (Exception e) {
+                displayError("An unexpected error occurred during the action: " + e.getMessage());
             }
 
-            if (keepManaging && choice != 0) {
+            if (keepManaging && actionChoice != 0) {
                 pause();
             }
         }
     }
+    
 
     /**
      * Handles booking by listing eligible (SUCCESSFUL) applicants for the

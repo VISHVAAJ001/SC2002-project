@@ -75,6 +75,7 @@ package Controller <<Folder>> {
         + getPendingRegistrationCountForProject(staff : HDBStaff, projectId : String) : int <<throws AuthorizationException>>
         + getProjectRegistrations(staff: HDBStaff, projectId: String) : List<OfficerRegistration>;
         + getApprovedHandlingProject(officer: HDBOfficer) : Project;
+        + findAllApprovedProjectsForOfficer(officer: HDBOfficer) : List<Project>;
         + getMyRegistrations(officer: HDBOfficer): List<OfficerRegistration>;
     }
 

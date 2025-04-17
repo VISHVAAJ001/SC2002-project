@@ -246,7 +246,6 @@ public class OfficerRegistrationController {
                 .filter(reg -> reg.getStatus() == OfficerRegStatus.APPROVED)
                 .collect(Collectors.toList());
 
-        // --- The rest of the logic remains the same as before ---
 
         if (approvedRegistrations.isEmpty()) {
             return null; // Not approved for any project
@@ -283,6 +282,47 @@ public class OfficerRegistrationController {
 
         // Return active or most recent past approved project
         return (potentiallyActiveProject != null) ? potentiallyActiveProject : mostRecentPastProject;
+    }
+
+    /**
+     * Finds all projects an officer is currently approved to handle.
+     *
+     * @param officer The officer whose approved projects are sought.
+     * @return A List of all Project objects they are approved for. Returns an empty list if none found or not approved.
+     */
+    public List<Project> findAllApprovedProjectsForOfficer(HDBOfficer officer) {
+        List<Project> approvedProjects = new ArrayList<>();
+        if (officer == null) {
+            return approvedProjects; // Return empty list
+        }
+
+        try {
+            // Step 1: Get ALL registrations for this officer
+            List<OfficerRegistration> allMyRegistrations = registrationService.getRegistrationsByOfficer(officer.getNric());
+
+            // Step 2: Filter for APPROVED status
+            List<OfficerRegistration> approvedRegistrations = allMyRegistrations.stream()
+                    .filter(reg -> reg.getStatus() == OfficerRegStatus.APPROVED)
+                    .collect(Collectors.toList());
+
+            // Step 3: Get Project details for each approved registration
+            for (OfficerRegistration reg : approvedRegistrations) {
+                try {
+                    Project project = projectService.findProjectById(reg.getProjectId());
+                    if (project != null) {
+                        approvedProjects.add(project);
+                    } else {
+                         System.err.println("Warning: Approved registration found for non-existent project ID: " + reg.getProjectId() + " for officer " + officer.getNric());
+                    }
+                } catch (Exception e) {
+                    System.err.println("Error fetching details for approved project ID " + reg.getProjectId() + ": " + e.getMessage());
+                }
+            }
+        } catch (Exception e) {
+             System.err.println("Error fetching registrations for officer " + officer.getNric() + ": " + e.getMessage());
+             return new ArrayList<>();
+        }
+        return approvedProjects;
     }
 
     /**
