@@ -74,8 +74,7 @@ package Controller <<Folder>> {
         + getPendingRegistrations(manager: HDBManager) : List<OfficerRegistration>;
         + getPendingRegistrationCountForProject(staff : HDBStaff, projectId : String) : int <<throws AuthorizationException>>
         + getProjectRegistrations(staff: HDBStaff, projectId: String) : List<OfficerRegistration>;
-        + getApprovedHandlingProject(officer: HDBOfficer) : Project;
-        + findAllApprovedProjectsForOfficer(officer: HDBOfficer) : List<Project>;
+        + getApprovedHandlingProject(officer: HDBOfficer) : List<Project> <<nullable>>
         + getMyRegistrations(officer: HDBOfficer): List<OfficerRegistration>;
     }
 

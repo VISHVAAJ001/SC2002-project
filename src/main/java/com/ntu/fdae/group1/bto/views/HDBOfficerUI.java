@@ -17,6 +17,7 @@ import com.ntu.fdae.group1.bto.exceptions.*; // Import custom exceptions
 import com.ntu.fdae.group1.bto.enums.ApplicationStatus;
 import com.ntu.fdae.group1.bto.enums.FlatType;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -641,30 +642,69 @@ public class HDBOfficerUI extends BaseUI {
     private void handleManageHandlingProject() {
         displayHeader("Manage Approved Project(s)");
 
-        // --- Step 1: Find ALL approved projects for the officer ---
-        List<Project> approvedProjects;
+        // --- Step 1: Find ALL approved projects ---
+        List<Project> allApprovedProjects;
         try {
-            approvedProjects = officerRegController.findAllApprovedProjectsForOfficer(this.user);
+            allApprovedProjects = officerRegController.findApprovedHandlingProject(this.user);
         } catch (Exception e) {
             displayError("Error retrieving the list of projects you are approved for: " + e.getMessage());
             return;
         }
 
-        // --- Step 2: Handle different scenarios (0, 1, or multiple projects) ---
-        Project selectedProject = null;
-
-        if (approvedProjects.isEmpty()) {
+        // --- Step 2: Check if any approved projects exist at all ---
+        if (allApprovedProjects.isEmpty()) {
             displayMessage("You are not currently approved to handle any specific project.");
             displayMessage("Please ensure your registration request has been approved by a manager.");
             return;
-        } else if (approvedProjects.size() == 1) {
-            selectedProject = approvedProjects.get(0); // Only one project, select it directly
-            displayMessage("You are approved for the following project:");
+        }
+
+        // --- Step 3: Display ALL approved projects with their status ---
+        displayMessage("Projects you are approved for:");
+        LocalDate currentDate = LocalDate.now();
+        List<Project> activeManageableProjects = new ArrayList<>();
+
+        for (Project project : allApprovedProjects) {
+            if (project == null) continue;
+
+            String statusTag = "";
+
+            // Determine status and populate the active list
+            if (project.getOpeningDate() == null || project.getClosingDate() == null) {
+                statusTag = " (Status Unavailable - Missing Dates)";
+            } else if (!currentDate.isBefore(project.getOpeningDate()) && !currentDate.isAfter(project.getClosingDate())) {
+                statusTag = " (Active)";
+                activeManageableProjects.add(project);
+            } else if (currentDate.isBefore(project.getOpeningDate())) {
+                statusTag = String.format(" (Upcoming - Opens %s)", project.getOpeningDate());
+            } else {
+                statusTag = String.format(" (Past - Closed %s)", project.getClosingDate());
+            }
+
+            System.out.printf("  - %s (%s)%s\n",
+                    project.getProjectName(),
+                    project.getProjectId(),
+                    statusTag);
+        }
+        System.out.println("-------------------------------------------");
+        pause();
+
+        // --- Step 4: Handle scenarios based on the number of ACTIVE projects ---
+        Project selectedProject = null;
+
+        if (activeManageableProjects.isEmpty()) {
+            displayMessage("None of your approved projects are currently active for management.");
+            return;
+
+        } else if (activeManageableProjects.size() == 1) {
+            selectedProject = activeManageableProjects.get(0);
+            displayMessage("\nManaging the currently active project: " + selectedProject.getProjectName());
+
         } else {
-            // Multiple projects - Prompt for selection
-            displayMessage("You are approved for multiple projects. Please select one to manage:");
-            for (int i = 0; i < approvedProjects.size(); i++) {
-                Project p = approvedProjects.get(i);
+            // Multiple ACTIVE projects - Prompt for selection from the ACTIVE list
+            displayMessage("\nMultiple projects are active. Please select one to manage:");
+            // Iterate ONLY over activeManageableProjects for selection menu
+            for (int i = 0; i < activeManageableProjects.size(); i++) {
+                Project p = activeManageableProjects.get(i);
                 System.out.printf("[%d] %s (%s)\n", i + 1, p.getProjectName(), p.getProjectId());
             }
             System.out.println("-------------------------------------------");
@@ -676,75 +716,60 @@ public class HDBOfficerUI extends BaseUI {
                 choice = promptForInt("Enter your choice: ");
                 if (choice == 0) {
                     return;
-                } else if (choice > 0 && choice <= approvedProjects.size()) {
-                    selectedProject = approvedProjects.get(choice - 1);
+                } else if (choice > 0 && choice <= activeManageableProjects.size()) {
+                    selectedProject = activeManageableProjects.get(choice - 1);
                 } else {
-                    displayError("Invalid choice. Please enter a number between 0 and " + approvedProjects.size() + ".");
+                    displayError("Invalid choice. Please enter a number between 0 and " + activeManageableProjects.size() + ".");
                 }
             }
-             clearConsole();
+            clearConsole();
         }
 
-        // --- Step 3: Manage the SELECTED Project ---
-        // Now 'selectedProject' holds the project to manage (either the only one or the one chosen)
+        // --- Step 5: Manage the SELECTED *ACTIVE* Project ---
         boolean keepManaging = true;
         while (keepManaging) {
             clearConsole();
 
-            // --- Step 3a: Fetch Pending Count for THIS selected project ---
-            int projectSpecificPendingCount = 0;
-            try {
-                projectSpecificPendingCount = officerRegController.getPendingRegistrationCountForProject(
-                        this.user,
-                        selectedProject.getProjectId());
-            } catch (AuthorizationException ae) {
-                displayError("Authorization Error fetching pending count: " + ae.getMessage());
-            } catch (IllegalArgumentException iae) {
-                 displayError("Internal Error fetching pending count (Invalid Project?): " + iae.getMessage());
-            } catch (RuntimeException re) {
-                displayError("Error fetching pending registration count: " + re.getMessage());
-            }
+            // --- Step 5a: Fetch Pending Count ---
+             int projectSpecificPendingCount = 0;
+             try {
+                 projectSpecificPendingCount = officerRegController.getPendingRegistrationCountForProject(
+                         this.user,
+                         selectedProject.getProjectId());
+             } catch (AuthorizationException | RuntimeException e) {
+                 displayError("Warning: Could not fetch pending registration count: " + e.getMessage());
+             }
 
-            // --- Step 3b: Display Details for the SELECTED Project ---
-            displayMessage("You are managing Project: " + selectedProject.getProjectName() + " ("
+
+            // --- Step 5b: Display Details for the SELECTED Project ---
+            displayMessage("Managing Active Project: " + selectedProject.getProjectName() + " ("
                     + selectedProject.getProjectId() + ")");
             displayMessage("--------------------------------------------------");
-
             projectUIHelper.displayStaffProjectDetails(selectedProject, projectSpecificPendingCount);
 
-            // --- Step 3c: Display Contextual Actions Sub-Menu ---
-            System.out.println("\n--- Management Actions for this Project ---");
+            // --- Step 5c: Display Contextual Actions Sub-Menu ---
+            System.out.println("\n--- Management Actions for this Active Project ---");
             System.out.println("[1] Book Flat for Successful Applicant");
             System.out.println("[2] Generate Booking Receipt for Applicant");
             System.out.println("[3] View / Reply Enquiries for this Project");
             System.out.println("-------------------------------------------");
-            System.out.println("[0] Back to Project Selection / Main Menu");
+            System.out.println("[0] Back");
             System.out.println("===========================================");
 
-            int actionChoice = promptForInt("Enter action for this project: ");
+            int actionChoice = promptForInt("Enter action: ");
 
             try {
                 switch (actionChoice) {
-                    case 1:
-                        handlePerformBookingAction(selectedProject);
-                        break;
-                    case 2:
-                        handleGenerateReceiptAction(selectedProject);
-                        break;
-                    case 3:
-                        handleViewAndReplyProjectEnquiriesAction(selectedProject.getProjectId());
-                        break;
-                    case 0:
-                        keepManaging = false;
-                        break;
-                    default:
-                        displayError("Invalid choice.");
-                        break;
+                    case 1: handlePerformBookingAction(selectedProject); break;
+                    case 2: handleGenerateReceiptAction(selectedProject); break;
+                    case 3: handleViewAndReplyProjectEnquiriesAction(selectedProject.getProjectId()); break;
+                    case 0: keepManaging = false; break;
+                    default: displayError("Invalid choice."); break;
                 }
             } catch (DataAccessException | BookingException | InvalidInputException e) {
                 displayError("Operation failed: " + e.getMessage());
             } catch (Exception e) {
-                displayError("An unexpected error occurred during the action: " + e.getMessage());
+                displayError("An unexpected error occurred: " + e.getMessage());
             }
 
             if (keepManaging && actionChoice != 0) {
