@@ -1,3 +1,3 @@
 enquiryId,userNric,projectId,content,reply,isReplied,submissionDate,replyDate
-ENQ007,S1234567A,PROJ003,HELLO I AM EDITED,,false,2025-04-07,
-ENQ008,S9876543C,PROJ001,ahdhwadaidawiduagdaugdawgdgad,HELLO I AM REPLYING!,true,2025-04-08,2025-04-08
+ENQ002,S4321098C,PROJ001,Are there any grants for married applicants?,Yes. Please refer to the HDB Website for more information.,true,2025-04-14,2025-04-14
+ENQ001,S4321098C,PROJ002,Are there any grants available for married applicants?,Yes. Please refer to the HDB Website for more information.,true,2025-04-14,2025-04-14
