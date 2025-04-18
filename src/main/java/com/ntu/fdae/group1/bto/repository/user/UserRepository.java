@@ -38,7 +38,7 @@ public class UserRepository implements IUserRepository {
     /**
      * File path for the CSV file that stores user data.
      */
-    private static final String USER_FILE_PATH = "resources/users.csv";
+    private static final String USER_FILE_PATH = "data/users.csv";
 
     /**
      * Column headers for the CSV file that stores user data.

@@ -29,7 +29,7 @@ import java.util.stream.Collectors;
  * </p>
  */
 public class EnquiryRepository implements IEnquiryRepository {
-    private static final String ENQUIRY_FILE_PATH = "resources/enquiries.csv";
+    private static final String ENQUIRY_FILE_PATH = "data/enquiries.csv";
     private static final String[] ENQUIRY_CSV_HEADER = new String[] {
             "enquiryId", "userNric", "projectId", "content", "reply",
             "isReplied", "submissionDate", "replyDate"

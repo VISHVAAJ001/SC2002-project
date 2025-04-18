@@ -5,11 +5,10 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>com.ntu.fdae.group1.bto</groupId>
-  <artifactId>fdae-bto-project</artifactId>
+  <artifactId>fdae-group1-bto-project</artifactId>
   <version>1.0</version>
 
   <name>FDAE Bto Project</name>
-  <!-- FIXME change it to the project's website -->
   <url>https://vishvaaj001.github.io/SC2002-project/</url>
 
   <properties>
@@ -51,6 +50,14 @@
         <plugin>
           <artifactId>maven-jar-plugin</artifactId>
           <version>3.0.2</version>
+          <configuration>
+            <archive>
+              <manifest>
+                <addClasspath>true</addClasspath>
+                <mainClass>com.ntu.fdae.group1.bto.App</mainClass>
+              </manifest>
+            </archive>
+          </configuration>
         </plugin>
         <plugin>
           <artifactId>maven-install-plugin</artifactId>

@@ -39,12 +39,12 @@ public class ProjectRepository implements IProjectRepository {
     /**
      * Path to the CSV file where project data is stored.
      */
-    private static final String PROJECT_FILE_PATH = "resources/projects.csv";
+    private static final String PROJECT_FILE_PATH = "data/projects.csv";
 
     /**
      * Path to the CSV file where project flat information is stored.
      */
-    private static final String FLAT_INFO_FILE_PATH = "resources/projects_flat_info.csv";
+    private static final String FLAT_INFO_FILE_PATH = "data/projects_flat_info.csv";
 
     /**
      * CSV header columns for the projects file.

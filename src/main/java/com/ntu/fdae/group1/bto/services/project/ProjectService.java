@@ -446,30 +446,31 @@ public class ProjectService implements IProjectService {
     public List<Project> getVisibleProjectsForUser(User user, Map<String, Object> filters) {
         LocalDate currentDate = LocalDate.now();
         Map<String, Project> projectMap = projectRepo.findAll();
-        
+
         if (projectMap == null || projectMap.isEmpty()) {
             return Collections.emptyList();
         }
 
         List<Project> allProjects = new ArrayList<>(projectMap.values());
         Stream<Project> stream = allProjects.stream()
-            // --- Base Filters ---
-            // 1. Must be marked as Visible
-            .filter(Project::isVisible)
+                // --- Base Filters ---
+                // 1. Must be marked as Visible
+                .filter(Project::isVisible)
 
-            // 2. Must be within the Active Application Period
-            .filter(project -> {
-                // Check for non-null dates first
-                if (project.getOpeningDate() == null || project.getClosingDate() == null) {
-                    return false; // Cannot apply if dates are missing
-                }
-                // Check if currentDate is ON or AFTER openingDate AND ON or BEFORE closingDate
-                return !currentDate.isBefore(project.getOpeningDate()) &&
-                       !currentDate.isAfter(project.getClosingDate());
-            })
+                // 2. Must be within the Active Application Period
+                .filter(project -> {
+                    // Check for non-null dates first
+                    if (project.getOpeningDate() == null || project.getClosingDate() == null) {
+                        return false; // Cannot apply if dates are missing
+                    }
+                    // Check if currentDate is ON or AFTER openingDate AND ON or BEFORE closingDate
+                    return !currentDate.isBefore(project.getOpeningDate()) &&
+                            !currentDate.isAfter(project.getClosingDate());
+                })
 
-            // 3. User must meet basic eligibility for the project (age, marital status vs flat types offered)
-            .filter(project -> isProjectEligibleForApplicant(user, project));
+                // 3. User must meet basic eligibility for the project (age, marital status vs
+                // flat types offered)
+                .filter(project -> isProjectEligibleForApplicant(user, project));
 
         // Apply optional filters from the map (Neighbourhood, Flat Type)
         stream = applyOptionalFilters(stream, filters, false); // isStaffView = false

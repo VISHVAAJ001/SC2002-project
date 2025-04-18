@@ -36,7 +36,7 @@ public class OfficerRegistrationRepository implements IOfficerRegistrationReposi
     /**
      * Path to the CSV file where officer registration data is stored.
      */
-    private static final String OFFICER_REGISTRATION_FILE_PATH = "resources/officer_registrations.csv";
+    private static final String OFFICER_REGISTRATION_FILE_PATH = "data/officer_registrations.csv";
 
     /**
      * CSV header columns for the officer registrations file.
