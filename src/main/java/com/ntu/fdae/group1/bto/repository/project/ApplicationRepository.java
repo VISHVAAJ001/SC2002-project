@@ -35,7 +35,7 @@ public class ApplicationRepository implements IApplicationRepository {
     /**
      * Path to the CSV file where application data is stored.
      */
-    private static final String APPLICATION_FILE_PATH = "resources/applications.csv";
+    private static final String APPLICATION_FILE_PATH = "data/applications.csv";
 
     /**
      * Header row defining the columns in the application CSV file.

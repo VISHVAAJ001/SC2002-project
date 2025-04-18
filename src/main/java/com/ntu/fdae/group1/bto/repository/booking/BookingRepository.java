@@ -28,7 +28,7 @@ import java.util.Map;
  * </p>
  */
 public class BookingRepository implements IBookingRepository {
-    private static final String BOOKING_FILE_PATH = "resources/bookings.csv";
+    private static final String BOOKING_FILE_PATH = "data/bookings.csv";
     private static final String[] BOOKING_CSV_HEADER = new String[] {
             "bookingId", "applicationId", "applicantNric", "projectId",
             "bookedFlatType", "bookingDate"
