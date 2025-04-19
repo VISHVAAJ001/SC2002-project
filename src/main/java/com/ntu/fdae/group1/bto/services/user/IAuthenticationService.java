@@ -47,6 +47,6 @@ public interface IAuthenticationService {
      * @throws AuthenticationException if NRIC already exists or validation fails.
      * @throws DataAccessException     if saving fails.
      */
-    boolean registerApplicant(String nric, String plainPassword, String name, int age, MaritalStatus maritalStatus)
+    boolean registerApplicant(String nric, String name, int age, MaritalStatus maritalStatus)
             throws AuthenticationException, DataAccessException;
 }

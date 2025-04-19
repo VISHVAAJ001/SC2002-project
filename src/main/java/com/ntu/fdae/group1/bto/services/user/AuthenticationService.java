@@ -32,6 +32,8 @@ public class AuthenticationService implements IAuthenticationService {
      * Repository for accessing and manipulating user data.
      */
     private final IUserRepository userRepository;
+    private static final String DEFAULT_PASSWORD = "password";
+
 
     /**
      * Constructs a new AuthenticationService with the specified user repository.
@@ -100,15 +102,14 @@ public class AuthenticationService implements IAuthenticationService {
     }
 
     /**
-     * Registers a new applicant user.
+     * Registers a new applicant user using default password.
      * <p>
      * Validates the provided information, checks for NRIC uniqueness,
-     * hashes the password,
+     * hashes default password,
      * creates a new Applicant object, and saves it to the repository.
      * </p>
      * 
      * @param nric          NRIC of the new user (must be unique)
-     * @param plainPassword The desired password (will be hashed)
      * @param name          Full name of the user
      * @param age           Age of the user
      * @param maritalStatus Marital status of the user
@@ -117,7 +118,7 @@ public class AuthenticationService implements IAuthenticationService {
      * @throws DataAccessException     if saving fails.
      */
     @Override
-    public boolean registerApplicant(String nric, String plainPassword, String name, int age,
+    public boolean registerApplicant(String nric, String name, int age,
             MaritalStatus maritalStatus)
             throws AuthenticationException, DataAccessException {
 
@@ -125,9 +126,7 @@ public class AuthenticationService implements IAuthenticationService {
         if (!ValidationUtil.isValidNric(nric)) {
             throw new AuthenticationException("Invalid NRIC format provided.");
         }
-        if (plainPassword == null || plainPassword.trim().isEmpty()) {
-            throw new AuthenticationException("Password cannot be empty.");
-        }
+
         if (name == null || name.trim().isEmpty()) {
             throw new AuthenticationException("Name cannot be empty.");
         }
@@ -143,11 +142,11 @@ public class AuthenticationService implements IAuthenticationService {
             throw new AuthenticationException("NRIC '" + nric + "' already exists. Cannot register.");
         }
 
-        // 3. Hash Password
-        String hashedPassword = PasswordUtil.hashPassword(plainPassword);
+        // 3. Hash default password
+        String hashedPassword = PasswordUtil.hashPassword(DEFAULT_PASSWORD);
 
         // 4. Create Applicant Object (By default, all user who registers is Applicant)
-        Applicant newApplicant = new Applicant(nric, hashedPassword, name.trim(), age, maritalStatus);
+        Applicant newApplicant = new Applicant(nric,  hashedPassword, name.trim(), age, maritalStatus);
 
         // 5. Save to Repository
         try {

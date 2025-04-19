@@ -56,9 +56,9 @@ public class AuthenticationController {
      * @throws AuthenticationException if NRIC already exists or validation fails.
      * @throws DataAccessException     if saving fails.
      */
-    public boolean registerApplicant(String nric, String plainPassword, String name, int age,
+    public boolean registerApplicant(String nric, String name, int age,
             MaritalStatus maritalStatus)
             throws AuthenticationException, DataAccessException {
-        return authService.registerApplicant(nric, plainPassword, name, age, maritalStatus);
+        return authService.registerApplicant(nric, name, age, maritalStatus);
     }
 }
