@@ -23,14 +23,14 @@ package Service <<Folder>> {
     interface IAuthenticationService <<ISP>> {
         + login(nric: String, password: String) : User <<throws AuthenticationException>>
         + changePassword(user: User, newPassword: String) : boolean
-        + registerApplicant(nric: String, plainPassword: String, name: String, age: int, maritalStatus MaritalStatus) : boolean <<throws AuthenticationException, DataAccessException>>
+        + registerApplicant(nric: String, name: String, age: int, maritalStatus MaritalStatus) : boolean <<throws AuthenticationException, DataAccessException>>
     }
     class AuthenticationService implements IAuthenticationService {
         - userRepository : IUserRepository ' Dependency on Repository Interface
         + AuthenticationService(userRepository: IUserRepository)
         + login(nric: String, password: String) : User <<throws AuthenticationException>>
-        + changePassword(user: User, newPassword: String) : boolean
-        + registerApplicant(nric: String, plainPassword: String, name: String, age: int, maritalStatus MaritalStatus) : boolean <<throws AuthenticationException, DataAccessException>>
+        + changePassword(user: User, newPassword: String) : boolean <<throws WeakPasswordException, DataAccessException>>
+        + registerApplicant(nric: String, name: String, age: int, maritalStatus MaritalStatus) : boolean <<throws AuthenticationException, DataAccessException>>
     }
 
     interface IBookingService <<ISP>> {

@@ -4,11 +4,15 @@ import com.ntu.fdae.group1.bto.models.user.Applicant;
 import com.ntu.fdae.group1.bto.models.user.User;
 import com.ntu.fdae.group1.bto.repository.user.IUserRepository;
 import com.ntu.fdae.group1.bto.utils.PasswordUtil;
+import com.ntu.fdae.group1.bto.utils.PasswordValidationUtil;
 import com.ntu.fdae.group1.bto.utils.ValidationUtil;
+
+import java.util.Objects;
+
 import com.ntu.fdae.group1.bto.enums.MaritalStatus;
 import com.ntu.fdae.group1.bto.exceptions.AuthenticationException;
 import com.ntu.fdae.group1.bto.exceptions.DataAccessException;
-
+import com.ntu.fdae.group1.bto.exceptions.WeakPasswordException;
 /**
  * Implementation of the IAuthenticationService interface that provides
  * authentication
@@ -73,20 +77,27 @@ public class AuthenticationService implements IAuthenticationService {
     }
 
     /**
-     * Changes a user's password to a new value.
+     * Changes a user's password after validating its strength.
      * <p>
-     * Generates a new password hash from the provided password,
-     * updates the user object, and persists the change to the repository.
+     * Validates the new password against strength criteria, generates a new
+     * password hash, updates the user object, and persists the change.
      * </p>
      *
      * @param user        The user whose password should be changed
      * @param newPassword The new password to set
+     * @throws WeakPasswordException   if the new password does not meet strength criteria.
+     * @throws DataAccessException     if there's an error saving the user data.
      * @return true if the password was successfully changed, false if any inputs
      *         are invalid
      */
-    public boolean changePassword(User user, String newPassword) {
-        if (user == null || newPassword == null || newPassword.trim().isEmpty()) {
-            return false;
+    public boolean changePassword(User user, String newPassword) throws WeakPasswordException, DataAccessException {
+        Objects.requireNonNull(user, "User cannot be null");
+        Objects.requireNonNull(newPassword, "New password cannot be null");   
+
+        // Validate Password Strength
+        String validationError = PasswordValidationUtil.validatePasswordStrength(newPassword);
+        if (validationError != null) {
+            throw new WeakPasswordException(validationError);
         }
 
         // Generate the new hash using PasswordUtil
@@ -96,7 +107,17 @@ public class AuthenticationService implements IAuthenticationService {
         user.updatePasswordHash(newHash);
 
         // Update the user in the repository
-        userRepository.save(user);
+        try {
+            userRepository.save(user);
+            System.out.println("Service: Password updated successfully for user: " + user.getNric());
+        } catch (DataAccessException e) {
+            System.err.println("Service Error: Failed to save updated password for user " + user.getNric() + ": " + e.getMessage());
+            throw e; // Re-throw persistence exception
+        } catch (Exception e) {
+            // Catch unexpected runtime exceptions during save
+            System.err.println("Service Error: Unexpected error saving password for user " + user.getNric() + ": " + e.getMessage());
+            throw new DataAccessException("Unexpected error occurred while saving the user password.", e);
+        }
 
         return true;
     }

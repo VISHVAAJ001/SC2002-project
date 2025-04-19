@@ -27,6 +27,7 @@ package Views <<Folder>> {
         + displayMessage(message: String) : void
         + promptForInput(prompt: String) : String
         + promptForPassword(prompt: String) : String
+        + promptForPasswordWithToggle(prompt: String)
         + promptForInt(prompt: String) : int
         + promptForDouble(prompt: String) : double
         + promptForDate(prompt: String) : LocalDate
