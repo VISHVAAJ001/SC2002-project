@@ -193,6 +193,7 @@ package Service <<Folder>> {
 
     ' --- Utility Classes ---
     class PasswordUtil
+    class PasswordValidationUtil
     class IdGenerator
 
     ' --- Repository Interfaces ---
@@ -248,6 +249,7 @@ package Service <<Folder>> {
 
     ' Dependencies
     AuthenticationService ..> PasswordUtil
+    AuthenticationService ..> PasswordValidationUtil
     ProjectService ..> IdGenerator
     ApplicationService ..> IdGenerator
     BookingService ..> IdGenerator

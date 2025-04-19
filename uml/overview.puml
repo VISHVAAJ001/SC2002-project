@@ -1016,6 +1016,7 @@ ReportService "1" --> "1" IUserRepository
 ReportService "1" --> "1" IApplicationRepository
 ' Dependencies (Utilities)
 AuthenticationService ..> PasswordUtil
+AuthenticationService ..> PasswordValidationUtil
 ProjectService ..> IdGenerator
 ApplicationService ..> IdGenerator
 BookingService ..> IdGenerator
