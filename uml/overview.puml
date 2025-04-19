@@ -503,7 +503,7 @@ package Service <<Folder>> {
          + canApplicantApply(user: User, project: Project) : boolean
          + isApplicantEligibleForFlatType(user : User, flatType : FlatType) : boolean
          + canOfficerRegister(officer: HDBOfficer, project: Project, allRegistrations: Collection<OfficerRegistration>, allApplications: Collection<Application>) : boolean
-         + checkManagerProjectHandlingEligibility(manager : HDBManager, newProjectOpenDate : LocalDate, newProjectCloseDate : LocalDate, allExistingProjects : Collection<Project>)
+         + checkManagerProjectHandlingEligibility(manager : HDBManager, newProjectOpenDate : LocalDate, newProjectCloseDate : LocalDate, allExistingProjects : Collection<Project>) : boolean
      }
      class EligibilityService implements IEligibilityService {
          - projectRepository : IProjectRepository ' Added dependency based on method signature
@@ -511,7 +511,7 @@ package Service <<Folder>> {
          + canApplicantApply(user: User, project: Project) : boolean
          + isApplicantEligibleForFlatType(user : User, flatType : FlatType) : boolean
          + canOfficerRegister(officer: HDBOfficer, project: Project, allRegistrations: Collection<OfficerRegistration>, allApplications: Collection<Application>) : boolean
-         + checkManagerProjectHandlingEligibility(manager : HDBManager, newProjectOpenDate : LocalDate, newProjectCloseDate : LocalDate, allExistingProjects : Collection<Project>)
+         + checkManagerProjectHandlingEligibility(manager : HDBManager, newProjectOpenDate : LocalDate, newProjectCloseDate : LocalDate, allExistingProjects : Collection<Project>) : boolean
      }
 
       interface IProjectService <<ISP>> {
