@@ -48,9 +48,6 @@ public class AccountUIHelper {
      * including password strength validation via the controller.
      *
      * @param currentUser        The user whose password to change
-     * @param newPassword The new plain-text password
-     * @throws WeakPasswordException if the new password does not meet strength criteria (propagated from service).
-     * @throws DataAccessException   if a data persistence error occurs (propagated from service).
      * @return true if the password was successfully changed, false otherwise (due to validation errors, user cancellation, or system errors).
     */
     public boolean handlePasswordChange(User currentUser) {
