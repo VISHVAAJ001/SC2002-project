@@ -421,8 +421,13 @@ package Utility <<Folder>> {
         + {static} parseDoubleOrDefault(value: String, defaultValue: Double) : Double
     }
     class ValidationUtil <<Utility>> {
+        - {static final} NRIC_REGEX: String
+        - {static final} MIN_LENGTH: int
+        - {static final} MAX_LENGTH: int
+        - {static final} WHITESPACE_PATTERN: Pattern 
+        + {static final} ALLOWED_SPECIAL_CHARS: String
         + {static} isValidNric(nric: String) : boolean
-        ' Add other necessary static input methods
+        + {static} validatePasswordStrength(password: String): String
     }
     class PasswordUtil <<Utility>> {
         + {static} hashPassword(plainPassword: String) : String
@@ -437,14 +442,6 @@ package Utility <<Folder>> {
         + {static} generateProjectFlatInfoId() : String
     }
     
-    class PasswordValidationUtil <<Utility>> {
-        - {static final} MIN_LENGTH: int
-        - {static final} MAX_LENGTH: int
-        - {static final} WHITESPACE_PATTERN: Pattern 
-        + {static final} ALLOWED_SPECIAL_CHARS: String
-        - PasswordValidationUtil()
-        + {static} validatePasswordStrength(password: String): String
-    }
 }
 
 ' --- Service Layer ---
@@ -1016,7 +1013,6 @@ ReportService "1" --> "1" IUserRepository
 ReportService "1" --> "1" IApplicationRepository
 ' Dependencies (Utilities)
 AuthenticationService ..> PasswordUtil
-AuthenticationService ..> PasswordValidationUtil
 ProjectService ..> IdGenerator
 ApplicationService ..> IdGenerator
 BookingService ..> IdGenerator

@@ -3,7 +3,7 @@ package com.ntu.fdae.group1.bto.views;
 import com.ntu.fdae.group1.bto.controllers.user.AuthenticationController;
 import com.ntu.fdae.group1.bto.exceptions.DataAccessException;
 import com.ntu.fdae.group1.bto.exceptions.WeakPasswordException;
-import com.ntu.fdae.group1.bto.utils.PasswordValidationUtil;
+import com.ntu.fdae.group1.bto.utils.ValidationUtil;
 import com.ntu.fdae.group1.bto.models.user.User;
 import java.util.Objects;
 
@@ -61,7 +61,7 @@ public class AccountUIHelper {
         baseUI.displayMessage("- At least one uppercase letter (A-Z)");
         baseUI.displayMessage("- At least one lowercase letter (a-z)");
         baseUI.displayMessage("- At least one digit (0-9)");
-        baseUI.displayMessage("- At least one special symbol (" + PasswordValidationUtil.ALLOWED_SPECIAL_CHARS + ")");
+        baseUI.displayMessage("- At least one special symbol (" + ValidationUtil.ALLOWED_SPECIAL_CHARS + ")");
         baseUI.displayMessage("- Cannot contain spaces");
 
         String newPassword = null;

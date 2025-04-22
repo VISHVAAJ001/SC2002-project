@@ -4,7 +4,6 @@ import com.ntu.fdae.group1.bto.models.user.Applicant;
 import com.ntu.fdae.group1.bto.models.user.User;
 import com.ntu.fdae.group1.bto.repository.user.IUserRepository;
 import com.ntu.fdae.group1.bto.utils.PasswordUtil;
-import com.ntu.fdae.group1.bto.utils.PasswordValidationUtil;
 import com.ntu.fdae.group1.bto.utils.ValidationUtil;
 
 import java.util.Objects;
@@ -95,7 +94,7 @@ public class AuthenticationService implements IAuthenticationService {
         Objects.requireNonNull(newPassword, "New password cannot be null");   
 
         // Validate Password Strength
-        String validationError = PasswordValidationUtil.validatePasswordStrength(newPassword);
+        String validationError = ValidationUtil.validatePasswordStrength(newPassword);
         if (validationError != null) {
             throw new WeakPasswordException(validationError);
         }
