@@ -53,7 +53,7 @@ layout: intro
   <div>
     <img src="https://avatars.githubusercontent.com/u/181351248?v=4" class="w-24 h-24 rounded-full mx-auto mb-2 object-cover"/>
     <p class="font-semibold">Murugaraj Vishvaajit</p>
-    <p class="text-xs opacity-70">Documenation</p>
+    <p class="text-xs opacity-70">Tester/Designer</p>
   </div>
 </div>
 
