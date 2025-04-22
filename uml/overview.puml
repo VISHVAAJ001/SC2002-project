@@ -238,9 +238,13 @@ package Exception <<Folder>> {
     class RegistrationException extends Exception {
         + RegistrationException(message: String)
     }
-     class InvalidInputException extends Exception {
+    class InvalidInputException extends Exception {
         + InvalidInputException(message: String)
     }
+    class WeakPasswordException extends Exception {
+        + WeakPasswordException(message: String)
+    }
+
 }
 
 ' --- Repository Package ---
@@ -417,8 +421,13 @@ package Utility <<Folder>> {
         + {static} parseDoubleOrDefault(value: String, defaultValue: Double) : Double
     }
     class ValidationUtil <<Utility>> {
+        - {static final} NRIC_REGEX: String
+        - {static final} MIN_LENGTH: int
+        - {static final} MAX_LENGTH: int
+        - {static final} WHITESPACE_PATTERN: Pattern 
+        + {static final} ALLOWED_SPECIAL_CHARS: String
         + {static} isValidNric(nric: String) : boolean
-        ' Add other necessary static input methods
+        + {static} validatePasswordStrength(password: String): String
     }
     class PasswordUtil <<Utility>> {
         + {static} hashPassword(plainPassword: String) : String
@@ -432,6 +441,7 @@ package Utility <<Folder>> {
         + {static} generateProjectId() : String
         + {static} generateProjectFlatInfoId() : String
     }
+    
 }
 
 ' --- Service Layer ---
@@ -457,7 +467,7 @@ package Service <<Folder>> {
         - userRepository : IUserRepository
         + AuthenticationService(userRepository: IUserRepository)
         + login(nric: String, password: String) : User <<throws AuthenticationException>>
-        + changePassword(user: User, newPassword: String) : boolean
+        + changePassword(user: User, newPassword: String) : boolean <<throws WeakPasswordException, DataAccessException>>
         + registerApplicant(nric: String, plainPassword: String, name: String, age: int, maritalStatus MaritalStatus) : boolean <<throws AuthenticationException, DataAccessException>>
     }
 
@@ -490,7 +500,7 @@ package Service <<Folder>> {
          + canApplicantApply(user: User, project: Project) : boolean
          + isApplicantEligibleForFlatType(user : User, flatType : FlatType) : boolean
          + canOfficerRegister(officer: HDBOfficer, project: Project, allRegistrations: Collection<OfficerRegistration>, allApplications: Collection<Application>) : boolean
-         + checkManagerProjectHandlingEligibility(manager : HDBManager, newProjectOpenDate : LocalDate, newProjectCloseDate : LocalDate, allExistingProjects : Collection<Project>)
+         + checkManagerProjectHandlingEligibility(manager : HDBManager, newProjectOpenDate : LocalDate, newProjectCloseDate : LocalDate, allExistingProjects : Collection<Project>) : boolean
      }
      class EligibilityService implements IEligibilityService {
          - projectRepository : IProjectRepository ' Added dependency based on method signature
@@ -498,7 +508,7 @@ package Service <<Folder>> {
          + canApplicantApply(user: User, project: Project) : boolean
          + isApplicantEligibleForFlatType(user : User, flatType : FlatType) : boolean
          + canOfficerRegister(officer: HDBOfficer, project: Project, allRegistrations: Collection<OfficerRegistration>, allApplications: Collection<Application>) : boolean
-         + checkManagerProjectHandlingEligibility(manager : HDBManager, newProjectOpenDate : LocalDate, newProjectCloseDate : LocalDate, allExistingProjects : Collection<Project>)
+         + checkManagerProjectHandlingEligibility(manager : HDBManager, newProjectOpenDate : LocalDate, newProjectCloseDate : LocalDate, allExistingProjects : Collection<Project>) : boolean
      }
 
       interface IProjectService <<ISP>> {
@@ -647,7 +657,7 @@ package Controller <<Folder>> {
         - authService : IAuthenticationService;
         + AuthenticationController(authService: IAuthenticationService);
         + login(nric: String, password: String) : User <<throws AuthenticationException>>
-        + changePassword(user: User, newPassword: String) : boolean
+        + changePassword(user: User) : boolean <<throws WeakPasswordException, DataAccessException>>
         + registerApplicant(nric: String, plainPassword: String, name: String, age: int, maritalStatus: MaritalStatus) : boolean <<throws AuthenticationException, DataAccessException>>; 
     }
 
@@ -745,6 +755,8 @@ package Views <<Folder>> {
         + displayMessage(message: String) : void
         + promptForInput(prompt: String) : String
         + promptForPassword(prompt: String) : String
+        + promptForPasswordWithToggle(prompt: String)
+        public String promptForPasswordWithToggle(String prompt)
         + promptForInt(prompt: String) : int
         + promptForDouble(prompt: String) : double
         + promptForDate(prompt: String) : LocalDate
