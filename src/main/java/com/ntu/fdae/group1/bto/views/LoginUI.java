@@ -65,9 +65,8 @@ public class LoginUI extends BaseUI {
                 continue;
             }
 
-            // String password = promptForInput("Enter Password:"); // Basic password input
-            // Masked password input
-            String password = promptForPasswordWithToggle("Enter Password:"); // Basic password input
+            // Masked password input with option to toggle mask
+            String password = promptForPasswordWithToggle("Enter Password:");
 
             try {
                 User user = authController.login(nric, password);
