@@ -42,7 +42,6 @@ public interface IAuthenticationService {
      * Registers a new Applicant user.
      * 
      * @param nric          NRIC of the new user (must be unique)
-     * @param plainPassword The desired password (will be hashed)
      * @param name          Full name of the user
      * @param age           Age of the user
      * @param maritalStatus Marital status of the user

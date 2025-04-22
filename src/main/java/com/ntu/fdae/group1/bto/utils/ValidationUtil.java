@@ -53,7 +53,9 @@ public class ValidationUtil {
     // Simpler regex for just checking for whitespace
     private static final Pattern WHITESPACE_PATTERN = Pattern.compile("\\s");
 
-    // For error messages - list the allowed special characters
+    /**
+    * Defines the set of special characters allowed in passwords.
+    */
     public static final String ALLOWED_SPECIAL_CHARS = "!@#$%^&*()_+-=[]{};':\"\\|,.<>/?~";
 
     /**
