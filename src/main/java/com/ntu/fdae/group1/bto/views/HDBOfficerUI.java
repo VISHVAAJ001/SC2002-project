@@ -167,8 +167,9 @@ public class HDBOfficerUI extends BaseUI {
         this.projectUIHelper = new ProjectUIHelper(this, userController, projectController);
         this.accountUIHelper = new AccountUIHelper(this, authController);
         this.enquiryUIHelper = new EnquiryUIHelper(this, userController, projectController);
-        this.applicationUIHelper = new ApplicationUIHelper(this, applicationController, projectController);
-        this.officerRegUIHelper = new OfficerRegUIHelper(this, projectController);
+        this.applicationUIHelper = new ApplicationUIHelper(this, applicationController, projectController,
+                userController);
+        this.officerRegUIHelper = new OfficerRegUIHelper(this, projectController, userController);
         this.bookingUIHelper = new BookingUIHelper(this, userController);
         this.currentProjectFilters = new HashMap<>();
     }
@@ -186,7 +187,8 @@ public class HDBOfficerUI extends BaseUI {
         boolean keepRunning = true;
         while (keepRunning) {
             if (user != null) {
-                displayHeader("HDB Officer Menu - Welcome " + user.getName() + " (" + user.getAge() + ", " + user.getMaritalStatus() + ")");
+                displayHeader("HDB Officer Menu - Welcome " + user.getName() + " (" + user.getAge() + ", "
+                        + user.getMaritalStatus() + ")");
             } else {
                 displayHeader("Applicant Menu - Welcome User (Age, Marital Status)");
             }
@@ -266,8 +268,9 @@ public class HDBOfficerUI extends BaseUI {
 
     /**
      * Handles the workflow for viewing and applying for BTO projects.
-     * Restrict certain users (based on application status) from applying to projects.
-
+     * Restrict certain users (based on application status) from applying to
+     * projects.
+     * 
      * <p>
      * This method allows officers (in their applicant capacity) to:
      * - Manage filters for the project list view
@@ -278,19 +281,19 @@ public class HDBOfficerUI extends BaseUI {
      */
     private void handleViewAndApplyProjects() {
         // Upfront check for existing active application
-        // If users have the statuses PENDING, SUCCESSFUL, or BOOKED, they are not able to apply for any projects
+        // If users have the statuses PENDING, SUCCESSFUL, or BOOKED, they are not able
+        // to apply for any projects
         // If status is UNSUCCESSFUL or WITHDRAWN, the user *can* apply again
         try {
             Application currentApp = applicationController.getMyApplication(this.user);
             if (currentApp != null) {
                 ApplicationStatus status = currentApp.getStatus();
                 if (status == ApplicationStatus.PENDING ||
-                    status == ApplicationStatus.SUCCESSFUL ||
-                    status == ApplicationStatus.BOOKED)
-                {
+                        status == ApplicationStatus.SUCCESSFUL ||
+                        status == ApplicationStatus.BOOKED) {
                     String reason = String.format(
-                        "Sorry. You are not able to apply for any projects.\nReason: You already have an active application (ID: %s, Status: %s). You cannot submit a new one until it is concluded.",
-                        currentApp.getApplicationId(), status);
+                            "Sorry. You are not able to apply for any projects.\nReason: You already have an active application (ID: %s, Status: %s). You cannot submit a new one until it is concluded.",
+                            currentApp.getApplicationId(), status);
                     displayError(reason); // Display the specific reason
                     return; // Exit the method immediately, user cannot proceed
                 }
@@ -396,18 +399,22 @@ public class HDBOfficerUI extends BaseUI {
     private void handleSubmitEnquiry() {
         displayHeader("Submit Enquiry");
 
-        // Use a LinkedHashMap to store projects, preventing duplicates and maintaining order
+        // Use a LinkedHashMap to store projects, preventing duplicates and maintaining
+        // order
         Map<String, Project> projectsForEnquiryMap = new LinkedHashMap<>();
 
-        // 1. Get projects normally visible for application (active period, eligible etc.)
+        // 1. Get projects normally visible for application (active period, eligible
+        // etc.)
         try {
-            List<Project> activeProjects = projectController.getVisibleProjectsForUser(this.user, this.currentProjectFilters);
+            List<Project> activeProjects = projectController.getVisibleProjectsForUser(this.user,
+                    this.currentProjectFilters);
             if (activeProjects != null) {
                 activeProjects.forEach(p -> projectsForEnquiryMap.put(p.getProjectId(), p));
             }
         } catch (Exception e) {
             displayError("Error retrieving available projects: " + e.getMessage());
-            // Decide if you want to continue or return. Let's continue to check for booked project.
+            // Decide if you want to continue or return. Let's continue to check for booked
+            // project.
         }
 
         // 2. Check if the user has an active application (PENDING, SUCCESSFUL, BOOKED)
@@ -417,17 +424,18 @@ public class HDBOfficerUI extends BaseUI {
             if (currentApp != null) {
                 ApplicationStatus status = currentApp.getStatus();
                 if (status == ApplicationStatus.PENDING ||
-                    status == ApplicationStatus.SUCCESSFUL ||
-                    status == ApplicationStatus.BOOKED)
-                {
+                        status == ApplicationStatus.SUCCESSFUL ||
+                        status == ApplicationStatus.BOOKED) {
                     // Fetch the project details for this application
                     associatedProject = projectController.findProjectById(currentApp.getProjectId());
                     if (associatedProject != null) {
                         // Add this project to the map (if not already present)
-                        // putIfAbsent ensures we don't overwrite if it was already added from the active list
+                        // putIfAbsent ensures we don't overwrite if it was already added from the
+                        // active list
                         projectsForEnquiryMap.putIfAbsent(associatedProject.getProjectId(), associatedProject);
                     } else {
-                         displayMessage("Note: Could not find details for project ID " + currentApp.getProjectId() + " associated with your application.");
+                        displayMessage("Note: Could not find details for project ID " + currentApp.getProjectId()
+                                + " associated with your application.");
                     }
                 }
             }
@@ -664,14 +672,16 @@ public class HDBOfficerUI extends BaseUI {
         List<Project> activeManageableProjects = new ArrayList<>();
 
         for (Project project : allApprovedProjects) {
-            if (project == null) continue;
+            if (project == null)
+                continue;
 
             String statusTag = "";
 
             // Determine status and populate the active list
             if (project.getOpeningDate() == null || project.getClosingDate() == null) {
                 statusTag = " (Status Unavailable - Missing Dates)";
-            } else if (!currentDate.isBefore(project.getOpeningDate()) && !currentDate.isAfter(project.getClosingDate())) {
+            } else if (!currentDate.isBefore(project.getOpeningDate())
+                    && !currentDate.isAfter(project.getClosingDate())) {
                 statusTag = " (Active)";
                 activeManageableProjects.add(project);
             } else if (currentDate.isBefore(project.getOpeningDate())) {
@@ -719,7 +729,8 @@ public class HDBOfficerUI extends BaseUI {
                 } else if (choice > 0 && choice <= activeManageableProjects.size()) {
                     selectedProject = activeManageableProjects.get(choice - 1);
                 } else {
-                    displayError("Invalid choice. Please enter a number between 0 and " + activeManageableProjects.size() + ".");
+                    displayError("Invalid choice. Please enter a number between 0 and "
+                            + activeManageableProjects.size() + ".");
                 }
             }
             clearConsole();
@@ -731,15 +742,14 @@ public class HDBOfficerUI extends BaseUI {
             clearConsole();
 
             // --- Step 5a: Fetch Pending Count ---
-             int projectSpecificPendingCount = 0;
-             try {
-                 projectSpecificPendingCount = officerRegController.getPendingRegistrationCountForProject(
-                         this.user,
-                         selectedProject.getProjectId());
-             } catch (AuthorizationException | RuntimeException e) {
-                 displayError("Warning: Could not fetch pending registration count: " + e.getMessage());
-             }
-
+            int projectSpecificPendingCount = 0;
+            try {
+                projectSpecificPendingCount = officerRegController.getPendingRegistrationCountForProject(
+                        this.user,
+                        selectedProject.getProjectId());
+            } catch (AuthorizationException | RuntimeException e) {
+                displayError("Warning: Could not fetch pending registration count: " + e.getMessage());
+            }
 
             // --- Step 5b: Display Details for the SELECTED Project ---
             displayMessage("Managing Active Project: " + selectedProject.getProjectName() + " ("
@@ -760,11 +770,21 @@ public class HDBOfficerUI extends BaseUI {
 
             try {
                 switch (actionChoice) {
-                    case 1: handlePerformBookingAction(selectedProject); break;
-                    case 2: handleGenerateReceiptAction(selectedProject); break;
-                    case 3: handleViewAndReplyProjectEnquiriesAction(selectedProject.getProjectId()); break;
-                    case 0: keepManaging = false; break;
-                    default: displayError("Invalid choice."); break;
+                    case 1:
+                        handlePerformBookingAction(selectedProject);
+                        break;
+                    case 2:
+                        handleGenerateReceiptAction(selectedProject);
+                        break;
+                    case 3:
+                        handleViewAndReplyProjectEnquiriesAction(selectedProject.getProjectId());
+                        break;
+                    case 0:
+                        keepManaging = false;
+                        break;
+                    default:
+                        displayError("Invalid choice.");
+                        break;
                 }
             } catch (DataAccessException | BookingException | InvalidInputException e) {
                 displayError("Operation failed: " + e.getMessage());
@@ -777,7 +797,6 @@ public class HDBOfficerUI extends BaseUI {
             }
         }
     }
-    
 
     /**
      * Handles booking by listing eligible (SUCCESSFUL) applicants for the

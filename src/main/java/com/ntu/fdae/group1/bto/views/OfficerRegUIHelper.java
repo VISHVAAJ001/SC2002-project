@@ -1,6 +1,7 @@
 package com.ntu.fdae.group1.bto.views; // Or views.helpers
 
 import com.ntu.fdae.group1.bto.controllers.project.ProjectController;
+import com.ntu.fdae.group1.bto.controllers.user.UserController;
 import com.ntu.fdae.group1.bto.models.project.Project;
 import com.ntu.fdae.group1.bto.models.project.OfficerRegistration;
 
@@ -40,16 +41,23 @@ public class OfficerRegUIHelper {
     private final ProjectController projectController;
 
     /**
+     * The controller for user-related to get user information.
+     */
+    private final UserController userController;
+
+    /**
      * Constructs a new OfficerRegUIHelper with the specified dependencies.
      *
      * @param baseUI            An instance of BaseUI for console I/O operations
      * @param projectController Controller to fetch project details
      * @throws NullPointerException if either parameter is null
      */
-    public OfficerRegUIHelper(BaseUI baseUI, ProjectController projectController) {
+    public OfficerRegUIHelper(BaseUI baseUI, ProjectController projectController, UserController userController) {
         this.baseUI = Objects.requireNonNull(baseUI, "BaseUI cannot be null for OfficerRegUIHelper");
         this.projectController = Objects.requireNonNull(projectController,
                 "ProjectController cannot be null for OfficerRegUIHelper");
+        this.userController = Objects.requireNonNull(userController,
+                "UserController cannot be null for OfficerRegUIHelper");
     }
 
     /**
@@ -83,10 +91,11 @@ public class OfficerRegUIHelper {
 
             // Format the string for display
             String formattedString = String.format(
-                    "[%d] RegID: %-10s | Officer: %-9s | Project: %s (%s) | Status: %-9s | Date: %s",
+                    "[%d] RegID: %-10s | Officer: %-9s (%s) | Project: %s (%s) | Status: %-9s | Date: %s",
                     index,
                     reg.getRegistrationId(),
                     reg.getOfficerNric(),
+                    userController.getUserName(reg.getOfficerNric()),
                     projName, // Display name
                     reg.getProjectId(), // Display ID
                     reg.getStatus(),

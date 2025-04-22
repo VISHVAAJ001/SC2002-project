@@ -163,9 +163,9 @@ public class HDBManagerUI extends BaseUI {
         this.authController = Objects.requireNonNull(authCtrl);
         this.projectUIHelper = new ProjectUIHelper(this, userCtrl, projCtrl);
         this.accountUIHelper = new AccountUIHelper(this, authCtrl);
-        this.applicationUIHelper = new ApplicationUIHelper(this, appCtrl, projCtrl);
+        this.applicationUIHelper = new ApplicationUIHelper(this, appCtrl, projCtrl, userCtrl);
         this.enquiryUIHelper = new EnquiryUIHelper(this, userCtrl, projCtrl);
-        this.officerRegUIHelper = new OfficerRegUIHelper(this, projCtrl);
+        this.officerRegUIHelper = new OfficerRegUIHelper(this, projCtrl, userCtrl);
         this.currentProjectFilters = new HashMap<>();
     }
 
@@ -182,7 +182,8 @@ public class HDBManagerUI extends BaseUI {
         boolean keepRunning = true;
         while (keepRunning) {
             if (user != null) {
-                displayHeader("HDB Manager Menu - Welcome " + user.getName() + " (" + user.getAge() + ", " + user.getMaritalStatus() + ")");
+                displayHeader("HDB Manager Menu - Welcome " + user.getName() + " (" + user.getAge() + ", "
+                        + user.getMaritalStatus() + ")");
             } else {
                 displayHeader("Applicant Menu - Welcome User (Age, Marital Status)");
             }

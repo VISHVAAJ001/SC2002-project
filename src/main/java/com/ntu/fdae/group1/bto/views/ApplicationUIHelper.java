@@ -8,6 +8,7 @@ import java.util.Objects;
 
 import com.ntu.fdae.group1.bto.controllers.project.ApplicationController;
 import com.ntu.fdae.group1.bto.controllers.project.ProjectController;
+import com.ntu.fdae.group1.bto.controllers.user.UserController;
 import com.ntu.fdae.group1.bto.enums.ApplicationStatus;
 import com.ntu.fdae.group1.bto.enums.FlatType;
 import com.ntu.fdae.group1.bto.enums.MaritalStatus;
@@ -54,6 +55,12 @@ public class ApplicationUIHelper {
     private final ProjectController projectController;
 
     /**
+     * The controller for user-related operations, needed for fetching user
+     * name.
+     */
+    private final UserController userController;
+
+    /**
      * Constructs a new ApplicationUIHelper with the specified dependencies.
      *
      * @param baseUI   An instance of BaseUI for console I/O operations
@@ -61,15 +68,18 @@ public class ApplicationUIHelper {
      * @param projCtrl Controller for project-related operations
      * @throws NullPointerException if any parameter is null
      */
-    public ApplicationUIHelper(BaseUI baseUI, ApplicationController appCtrl, ProjectController projCtrl) {
+    public ApplicationUIHelper(BaseUI baseUI, ApplicationController appCtrl, ProjectController projCtrl,
+            UserController userCtrl) {
         this.baseUI = Objects.requireNonNull(baseUI, "BaseUI cannot be null");
         this.applicationController = Objects.requireNonNull(appCtrl, "ApplicationController cannot be null");
         this.projectController = Objects.requireNonNull(projCtrl, "ProjectController cannot be null");
+        this.userController = Objects.requireNonNull(userCtrl, "UserController cannot be null");
     }
 
     /**
      * Guides the user through submitting an application for a specific project,
-     * including handling flat type preferences based on eligibility and availability.
+     * including handling flat type preferences based on eligibility and
+     * availability.
      * <p>
      * This method:
      * - Retrieves the project details
@@ -99,7 +109,8 @@ public class ApplicationUIHelper {
                 return;
             }
 
-            // 2. Determine Selectable Flat Types for THIS user and THIS project (Eligible and Available)
+            // 2. Determine Selectable Flat Types for THIS user and THIS project (Eligible
+            // and Available)
             List<FlatType> selectableTypes = new ArrayList<>();
             for (FlatType potentialType : project.getFlatTypes().keySet()) {
                 ProjectFlatInfo flatInfo = project.getFlatInfo(potentialType); // Get info for the type
@@ -115,18 +126,20 @@ public class ApplicationUIHelper {
 
             if (selectableTypes.isEmpty()) {
                 // Scenario: No types are eligible OR available
-                baseUI.displayError("Sorry, there are no flat types currently available or eligible for you in project '"
+                baseUI.displayError(
+                        "Sorry, there are no flat types currently available or eligible for you in project '"
                                 + project.getProjectName() + "'. Cannot proceed with application.");
                 return; // Exit the submission process
             } else if (selectableTypes.size() == 1) {
                 // Scenario: Exactly one type is eligible AND available
                 determinedPreference = selectableTypes.get(0);
                 baseUI.displayMessage("Only " + baseUI.formatEnumName(determinedPreference)
-                                + " flats are available and eligible for you in this project.");
+                        + " flats are available and eligible for you in this project.");
                 // Proceed directly to confirmation
             } else {
                 // Scenario: Multiple types are eligible AND available - User must choose
-                baseUI.displayMessage("This project offers multiple flat types you are eligible for and which have units available.");
+                baseUI.displayMessage(
+                        "This project offers multiple flat types you are eligible for and which have units available.");
 
                 // --- Prompting ---
                 StringBuilder promptBuilder = new StringBuilder("Select your preferred flat type:\n");
@@ -157,16 +170,19 @@ public class ApplicationUIHelper {
                 }
             }
 
-            // If determinedPreference is still null here, something went wrong (should have been caught)
-             if (determinedPreference == null) {
-                 baseUI.displayError("Internal error determining flat type preference. Cancelling.");
-                 return;
-             }
+            // If determinedPreference is still null here, something went wrong (should have
+            // been caught)
+            if (determinedPreference == null) {
+                baseUI.displayError("Internal error determining flat type preference. Cancelling.");
+                return;
+            }
 
             // 4. Final Confirmation (using the now determined valid preference)
             String confirmationPrompt = "Confirm application submission for project " + project.getProjectName() + " ("
                     + projectId + ")";
-            confirmationPrompt += " (Targeting: " + baseUI.formatEnumName(determinedPreference) + ")?"; // Changed wording slightly
+            confirmationPrompt += " (Targeting: " + baseUI.formatEnumName(determinedPreference) + ")?"; // Changed
+                                                                                                        // wording
+                                                                                                        // slightly
 
             if (!baseUI.promptForConfirmation(confirmationPrompt)) {
                 baseUI.displayMessage("Application submission cancelled.");
@@ -235,8 +251,8 @@ public class ApplicationUIHelper {
             baseUI.displayMessage("Submission Date: " + app.getSubmissionDate()); // Add formatting if needed
             String statusDisplay = baseUI.formatEnumName(app.getStatus());
             if (app.getRequestedWithdrawalDate() != null) {
-            statusDisplay += " (Withdrawal Requested)";
-             }
+                statusDisplay += " (Withdrawal Requested)";
+            }
             if (app.getPreferredFlatType() != null) {
                 baseUI.displayMessage("Preference/Target: " + baseUI.formatEnumName(app.getPreferredFlatType()));
             }
@@ -385,7 +401,7 @@ public class ApplicationUIHelper {
                     "[%d] AppID: %-10s | Applicant: %-9s | Project: %s (%s) | Status: %-12s%s | Pref: %-8s | Date: %s",
                     index,
                     app.getApplicationId(),
-                    app.getApplicantNric(),
+                    userController.getUserName(app.getApplicantNric()),
                     projName, // Display name
                     app.getProjectId(), // Display ID
                     app.getStatus(), // Enum name is usually fine
