@@ -1,6 +1,9 @@
 package com.ntu.fdae.group1.bto.views;
 
 import com.ntu.fdae.group1.bto.controllers.user.AuthenticationController;
+import com.ntu.fdae.group1.bto.exceptions.DataAccessException;
+import com.ntu.fdae.group1.bto.exceptions.WeakPasswordException;
+import com.ntu.fdae.group1.bto.utils.ValidationUtil;
 import com.ntu.fdae.group1.bto.models.user.User;
 import java.util.Objects;
 
@@ -41,27 +44,42 @@ public class AccountUIHelper {
     }
 
     /**
-     * Handles the workflow for a logged-in user to change their password.
+     * Handles the interactive workflow for a logged-in user to change their password,
+     * including password strength validation via the controller.
      *
-     * This method guides the user through the password change process by:
-     * <ol>
-     * <li>Prompting for a new password</li>
-     * <li>Requesting confirmation of the new password</li>
-     * <li>Validating that the password is not empty</li>
-     * <li>Verifying that the confirmation matches the new password</li>
-     * <li>Delegating to the authentication controller to perform the change</li>
-     * </ol>
-     *
-     * @param currentUser The currently logged-in user
-     * @return true if the password was successfully changed, false otherwise
-     */
+     * @param currentUser        The user whose password to change
+     * @return true if the password was successfully changed, false otherwise (due to validation errors, user cancellation, or system errors).
+    */
     public boolean handlePasswordChange(User currentUser) {
+        // --- 1. Display Info & Get Input ---
         baseUI.displayHeader("Change Password");
-        try {
-            String newPassword = baseUI.promptForInput("Enter NEW password: ");
-            String confirmPassword = baseUI.promptForInput("Confirm NEW password: ");
+        baseUI.displayMessage("Password Requirements:");
+        baseUI.displayMessage("- 8 to 16 characters long");
+        baseUI.displayMessage("- At least one uppercase letter (A-Z)");
+        baseUI.displayMessage("- At least one lowercase letter (a-z)");
+        baseUI.displayMessage("- At least one digit (0-9)");
+        baseUI.displayMessage("- At least one special symbol (" + ValidationUtil.ALLOWED_SPECIAL_CHARS + ")");
+        baseUI.displayMessage("- Cannot contain spaces");
 
-            if (newPassword == null || newPassword.isEmpty()) {
+        String newPassword = null;
+        String confirmPassword = null;
+
+        try {
+            // *** Use the new toggle method ***
+            newPassword = baseUI.promptForPasswordWithToggle("Enter NEW password:"); // <-- Changed method
+            if (newPassword == null) { // Handle potential null return if input reading fails
+                 baseUI.displayError("Failed to read password input.");
+                 return false;
+            }
+    
+            confirmPassword = baseUI.promptForPasswordWithToggle("Confirm NEW password:"); // <-- Changed method
+             if (confirmPassword == null) {
+                 baseUI.displayError("Failed to read password confirmation.");
+                 return false;
+            }
+
+            // --- 2. Basic UI-Level Checks ---
+            if (newPassword.isEmpty()) {
                 baseUI.displayError("Password cannot be empty.");
                 return false;
             }
@@ -70,18 +88,22 @@ public class AccountUIHelper {
                 return false;
             }
 
-            boolean success = authController.changePassword(currentUser, newPassword);
+            // --- 3. Delegate to Controller & Handle Outcome ---
+            authController.changePassword(currentUser, newPassword);
 
-            if (success) {
-                baseUI.displayMessage("Password changed successfully.");
-            } else {
-                baseUI.displayError("Password change failed. Please try again.");
-            }
+            baseUI.displayMessage("Password changed successfully.");
+            return true;
 
-            return success;
+        } catch (WeakPasswordException e) {
+            baseUI.displayError("Password change failed: " + e.getMessage());
+            return false;
+        } catch (DataAccessException e) {
+            baseUI.displayError("Password change failed due to a system error saving the data. Please try again later.");
+            return false;
         } catch (Exception e) {
-            baseUI.displayError("An error occurred during password change: " + e.getMessage());
+            // Display generic error to user
+            baseUI.displayError("An unexpected error occurred during the password change process. Please contact support.");
+            return false;
         }
-        return false;
     }
 }

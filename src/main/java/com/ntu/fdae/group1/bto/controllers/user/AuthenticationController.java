@@ -3,6 +3,7 @@ package com.ntu.fdae.group1.bto.controllers.user;
 import com.ntu.fdae.group1.bto.enums.MaritalStatus;
 import com.ntu.fdae.group1.bto.exceptions.AuthenticationException;
 import com.ntu.fdae.group1.bto.exceptions.DataAccessException;
+import com.ntu.fdae.group1.bto.exceptions.WeakPasswordException;
 import com.ntu.fdae.group1.bto.models.user.User;
 import com.ntu.fdae.group1.bto.services.user.IAuthenticationService;
 
@@ -38,9 +39,11 @@ public class AuthenticationController {
      * 
      * @param user        The user whose password to change
      * @param newPassword The new password
+     * @throws WeakPasswordException   if the new password does not meet strength criteria.
+     * @throws DataAccessException     if there's an error saving the user data.
      * @return true if password change was successful, false otherwise
      */
-    public boolean changePassword(User user, String newPassword) {
+    public boolean changePassword(User user, String newPassword) throws WeakPasswordException, DataAccessException{
         return authService.changePassword(user, newPassword);
     }
 
@@ -48,7 +51,6 @@ public class AuthenticationController {
      * Registers a new applicant
      * 
      * @param nric          NRIC of the new user (must be unique)
-     * @param plainPassword The desired password (will be hashed)
      * @param name          Full name of the user
      * @param age           Age of the user
      * @param maritalStatus Marital status of the user
@@ -56,9 +58,9 @@ public class AuthenticationController {
      * @throws AuthenticationException if NRIC already exists or validation fails.
      * @throws DataAccessException     if saving fails.
      */
-    public boolean registerApplicant(String nric, String plainPassword, String name, int age,
+    public boolean registerApplicant(String nric, String name, int age,
             MaritalStatus maritalStatus)
             throws AuthenticationException, DataAccessException {
-        return authService.registerApplicant(nric, plainPassword, name, age, maritalStatus);
+        return authService.registerApplicant(nric, name, age, maritalStatus);
     }
 }

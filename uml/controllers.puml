@@ -32,7 +32,7 @@ package Controller <<Folder>> {
         - authService : IAuthenticationService; ' Dependency
         + AuthenticationController(authService: IAuthenticationService);
         + login(nric: String, password: String) : User <<throws AuthenticationException>>
-        + changePassword(user: User, newPassword: String) : boolean
+        + changePassword(user: User) : boolean <<throws WeakPasswordException, DataAccessException>>
         + registerApplicant(nric: String, plainPassword: String, name: String, age: int, maritalStatus: MaritalStatus) : boolean <<throws AuthenticationException, DataAccessException>>; 
     }
 

@@ -65,9 +65,8 @@ public class LoginUI extends BaseUI {
                 continue;
             }
 
-            // String password = promptForInput("Enter Password:"); // Basic password input
-            // Masked password input
-            String password = promptForPassword("Enter Password:"); // Basic password input
+            // Masked password input with option to toggle mask
+            String password = promptForPasswordWithToggle("Enter Password:");
 
             try {
                 User user = authController.login(nric, password);
@@ -107,15 +106,6 @@ public class LoginUI extends BaseUI {
                 continue;
             }
 
-            String password = promptForPassword("Enter Password:"); // Basic password input
-            String confirmPassowrd = promptForPassword("Confirm Password:"); // Basic password input
-
-            // Check if password and confirm password match
-            if (!password.equals(confirmPassowrd)) {
-                displayError("Passwords do not match.");
-                continue;
-            }
-
             // Continue to ask for other fields (name, age, marital status, etc.)
             String name = promptForInput("Enter Name:");
 
@@ -143,7 +133,7 @@ public class LoginUI extends BaseUI {
             }
 
             try {
-                boolean success = authController.registerApplicant(nric, password, name, age, maritalStatus);
+                boolean success = authController.registerApplicant(nric, name, age, maritalStatus);
 
                 if (success) { // Only reachable if no exception was thrown
                     displayMessage("\nRegistration successful!");

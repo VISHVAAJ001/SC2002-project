@@ -103,6 +103,25 @@ public abstract class BaseUI {
     }
 
     /**
+     * Prompts the user for potentially sensitive input (like a password),
+     * offering an option to make the input visible.
+     * Defaults to masked input if the user doesn't explicitly choose 'Y'.
+     *
+     * @param prompt The message to display before input.
+     * @return The string entered by the user. Returns null if reading fails.
+    */
+    public String promptForPasswordWithToggle(String prompt) {
+        boolean showPassword = promptForConfirmation("Show password while typing?");
+
+        if (showPassword) {
+            System.out.println("Warning: Password input will be visible.");
+            return promptForInput(prompt);
+        } else {
+            return promptForPassword(prompt);
+        }
+    }
+
+    /**
      * Prompts the user for an integer input with basic error handling.
      * 
      * @param prompt The message to display before input.
