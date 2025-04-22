@@ -29,7 +29,7 @@ layout: intro
   <div>
     <img src="https://avatars.githubusercontent.com/u/85245154?v=4" class="w-24 h-24 rounded-full mx-auto mb-2 object-cover"/>
     <p class="font-semibold">Tang Xinbo</p>
-    <p class="text-xs opacity-70">Tester</p>
+    <p class="text-xs opacity-70">Tester/Designer</p>
   </div>
   <!-- Column 2 -->
   <div>
@@ -96,21 +96,39 @@ layout: default
 
 
 ---
-layout: center
-class: text-center
+layout: default
 ---
 
 # Feature Walkthrough <span class="text-2xl"><carbon-video /></span>
-**(Live Demo)**
 
-**Scenario:** BTO Success
+**Scenario:** application-to-booking flow **(Live Demo)**
 
-<div class="text-left">
+<div class="grid grid-cols-2 gap-4">
 
-- Project: "Maple Grove" (PROJ002) - Created by T4000001F, Visible: ON, Application Period: Active (e.g., Apr 1 - Apr 30, today is Apr 15), Offers ONLY TWO_ROOM (80 total, 80 remaining), No approved officers yet.
-- Applicant: Bob Lee (S1000002B) - Married, 30yo, No active application.
-- Officer: Charlie Tan (T3000001D) - No active application, No registrations.
-- Manager: Alice Lim (T4000001F) - Manager for PROJ002.
+<div>
+
+- **Project: "Maple Grove" (PROJ004)**
+    - Created by T4000001F (Alice Lim)
+    - Visible: ON
+    - Application Period: Active (e.g., Apr 1 - Apr 30, today is Apr 15)
+    - Offers ONLY TWO_ROOM (80 total, 80 remaining)
+
+</div>
+
+<div class="-mt-4">
+
+- **<span v-mark.underline.blue>Applicant:</span>** Bob Lee (S1000002B)
+    - Married, 30yo
+    - No active application.
+
+- **<span v-mark.underline.green>Officer:</span>** Charlie Tan (T3000001D)
+    - No active application.
+    - Approved for "Maple Grove"
+
+- **<span v-mark.underline.purple>Manager:</span>** Alice Lim (T4000001F)
+    - Manager for "Maple Grove"
+
+</div>
 
 </div>
 
@@ -133,31 +151,59 @@ layout: default
 *  **Applicant Preference:** Added `preferredFlatType` to `Application` for better workflow context non-binding.
 
 
+
 ---
 layout: default
 ---
 
-# SOLID Principles Applied <span class="text-2xl"><carbon-rule-test /></span>
+# SOLID Principles: SRP & OCP <span class="text-2xl"><carbon-rule-test /></span>
 
-*   **S**RP: Focused components like `AuthenticationService`, `BookingService`.
-*   **O**CP: Services closed to modification but open to extension via `IRepository` implementations.
-*   **L**SP: `User` subtypes (`Applicant`, `HDBStaff`) used where `User` is expected.
-*   **I**SP: Specific interfaces like `IApplicationService`, `IBookingService` prevent unnecessary dependencies.
-*   **D**IP: Controllers/Services depend on abstractions (`IService`, `IRepository`), not concrete classes.
+*   **S**ingle **R**esponsibility **P**rinciple (SRP):
+    *   Components have a single, well-defined responsibility.
+    *   *Example:* `AuthenticationService` handles only login/logout, `BookingService` manages booking logic.
+
+*   **O**pen/**C**losed **P**rinciple (OCP):
+    *   Software entities should be open for extension, but closed for modification.
+    *   *Example:* Services use `IRepository` interfaces. We can add new repository implementations (e.g., for a database) without changing the service code.
+
+---
+layout: default
+---
+
+# SOLID Principles: LSP & ISP <span class="text-2xl"><carbon-rule-test /></span>
+
+*   **L**iskov **S**ubstitution **P**rinciple (LSP):
+    *   Subtypes must be substitutable for their base types without altering correctness.
+    *   *Example:* `Applicant` and `HDBStaff` inherit from `User` and can be used wherever a `User` object is expected (e.g., in authentication results).
+
+*   **I**nterface **S**egregation **P**rinciple (ISP):
+    *   Clients should not be forced to depend on interfaces they do not use.
+    *   *Example:* Specific interfaces like `IApplicationService`, `IBookingService` ensure that controllers only depend on the methods relevant to their function.
+
+---
+layout: default
+---
+
+# SOLID Principles: DIP <span class="text-2xl"><carbon-rule-test /></span>
+
+*   **D**ependency **I**nversion **P**rinciple (DIP):
+    *   High-level modules should not depend on low-level modules. Both should depend on abstractions.
+    *   Abstractions should not depend on details. Details should depend on abstractions.
+    *   *Example:* Controllers and Services depend on abstractions (`IService`, `IRepository`), not concrete implementations. Dependencies are injected via constructors.
 
 ```java
+// Example: ProjectService depends on Repository/Service interfaces
 public class ProjectService implements IProjectService {
+    // Dependencies are interfaces (abstractions)
     private final IProjectRepository projectRepo;
     private final IEligibilityService eligibilityService;
-    private final IApplicationRepository applicationRepo;
-    private final IOfficerRegistrationRepository officerRegRepo;
+    // ... other dependencies
 
-    public ProjectService(IProjectRepository projectRepo, IEligibilityService eligibilityService,
-            IApplicationRepository applicationRepo, IOfficerRegistrationRepository officerRegRepo) {
+    // Dependencies are injected (Inversion of Control)
+    public ProjectService(IProjectRepository projectRepo, IEligibilityService eligibilityService, ...) {
         this.projectRepo = projectRepo;
         this.eligibilityService = eligibilityService;
-        this.applicationRepo = applicationRepo;
-        this.officerRegRepo = officerRegRepo;
+        // ...
     }
 }
 ```
