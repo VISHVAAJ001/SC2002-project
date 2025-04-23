@@ -4,9 +4,9 @@ transition: slide-left
 highlighter: shiki
 title: "SC2002 Slides"
 info: |
-    SC2002 Object-Oriented Design & Programming
-    Assignment Presentation
-    Group 1
+  SC2002 Object-Oriented Design & Programming
+  Assignment Presentation
+  Group 1
 ---
 
 # SC2002 OODP 
@@ -57,7 +57,6 @@ layout: intro
   </div>
 </div>
 
-
 ---
 layout: default # Standard layout
 ---
@@ -70,7 +69,7 @@ layout: default # Standard layout
 
 * <span class="text-xl mr-1"><carbon-connect-source /></span> **Abstraction & Interfaces:** Defined `IService` and `IRepository` interfaces to enable <span v-mark.highlight.orange>Loose Coupling</span> (DIP/ISP).
 
-* <span class="text-xl mr-1"><carbon-rule /></span> **Design Patterns:** Applied the <span v-mark.underline.blue>Repository Pattern</span> for data access (CSVs) and Composition via <span v-mark.underline.purple>UI Helpers</span> for view logic reuse.
+* <span class="text-xl mr-1"><carbon-rule /></span> **Design Patterns:** Applied the <span v-mark.underline.blue>Repository Pattern</span> for data access (CSVs) and Composition via test test <span v-mark.underline.purple>UI Helpers</span> for view logic reuse.
 
 * <span class="text-xl mr-1"><carbon-cube /></span> **Modularity:** Resulting in maintainable and testable components.
 
@@ -94,7 +93,6 @@ layout: default
 4. **Repository Layer:** Data access layer for CSV file operations.
 5. **Entity Layer:** Represents core data structures (e.g., Application, Booking).
 
-
 ---
 layout: default
 ---
@@ -110,7 +108,7 @@ layout: default
 - **Project: "Maple Grove" (PROJ004)**
     - Created by T4000001F (Alice Lim)
     - Visible: ON
-    - Application Period: Active (e.g., Apr 1 - Apr 30, today is Apr 15)
+    - Application Period: Active (Apr 1 - Apr 30)
     - Offers ONLY TWO_ROOM (80 total, 80 remaining)
 
 </div>
@@ -150,35 +148,87 @@ layout: default
 *  **Application & Booking:** Clear separation reflecting workflow stages.
 *  **Applicant Preference:** Added `preferredFlatType` to `Application` for better workflow context non-binding.
 
+---
+layout: default
+---
 
+# SOLID Principles: SRP <span class="text-2xl"><carbon-rule-test /></span>
+
+*   **S**ingle **R**esponsibility **P**rinciple (SRP):
+    *   A class should have only one reason to change.
+    *   *Example:* `Booking` entity holds booking data (unit, date, applicant). `BookingService` handles the *logic* of creating, validating, and managing bookings. Changes to booking *data structure* affect `Booking`; changes to booking *rules* affect `BookingService`.
+
+```java
+// Booking Entity (Data)
+public class Booking {
+    private String bookingId;
+    // ... other fields like unitId, applicantNric, bookingDate ...
+}
+
+// Booking Service (Logic)
+public class BookingService implements IBookingService {
+    private final IBookingRepository bookingRepo;
+    // ... other dependencies ...
+
+    public Booking createBooking(...) { /* Logic here */ }
+    public void cancelBooking(...) { /* Logic here */ }
+}
+```
 
 ---
 layout: default
 ---
 
-# SOLID Principles: SRP & OCP <span class="text-2xl"><carbon-rule-test /></span>
-
-*   **S**ingle **R**esponsibility **P**rinciple (SRP):
-    *   Components have a single, well-defined responsibility.
-    *   *Example:* `AuthenticationService` handles only login/logout, `BookingService` manages booking logic.
+# SOLID Principles: OCP <span class="text-2xl"><carbon-rule-test /></span>
 
 *   **O**pen/**C**losed **P**rinciple (OCP):
     *   Software entities should be open for extension, but closed for modification.
-    *   *Example:* Services use `IRepository` interfaces. We can add new repository implementations (e.g., for a database) without changing the service code.
+    * *Example:* Our Services depend on Repository Interfaces (IRepository, IProjectRepository).
+      * This means the Services are closed for modification regarding data storage details.
+      * The system is open for extension because we could add a new Database Repository implementing IProjectRepository in the future, and swap it in during initialization, without ever changing the existing Service code.
 
 ---
 layout: default
 ---
 
-# SOLID Principles: LSP & ISP <span class="text-2xl"><carbon-rule-test /></span>
+# SOLID Principles: LSP <span class="text-2xl"><carbon-rule-test /></span>
 
 *   **L**iskov **S**ubstitution **P**rinciple (LSP):
-    *   Subtypes must be substitutable for their base types without altering correctness.
-    *   *Example:* `Applicant` and `HDBStaff` inherit from `User` and can be used wherever a `User` object is expected (e.g., in authentication results).
+    *   Objects of a superclass should be replaceable with objects of its subclasses without affecting the correctness of the program.
+    *   *Example:* `Applicant`, `HDBOfficer` and `HDBManager` inherit from `User`. Methods accepting a `User` (like `App.routeToRoleUI` or `AuthenticationService.login`) can correctly handle instances of `Applicant` or `HDBStaff` because they fulfill the `User` contract.
+
+```java
+private void routeToRoleUI(User user) {
+  switch (user.getRole()) {
+      case APPLICANT:
+          ApplicantUI applicantUI = new ApplicantUI(
+            (Applicant) user, ...);
+            break;
+
+      case HDB_OFFICER:
+          HDBOfficerUI officerUI = new HDBOfficerUI(
+            (HDBOfficer) user, ...);
+            break;
+  }
+}
+```
+
+---
+layout: two-cols
+---
+
+# SOLID Principles: ISP <span class="text-2xl"><carbon-rule-test /></span>
 
 *   **I**nterface **S**egregation **P**rinciple (ISP):
-    *   Clients should not be forced to depend on interfaces they do not use.
-    *   *Example:* Specific interfaces like `IApplicationService`, `IBookingService` ensure that controllers only depend on the methods relevant to their function.
+    *   Clients should not be forced to depend on methods they do not use. Prefer smaller, specific interfaces over large, general ones.
+
+    *   *Example:* `IRepository` has methods like `findAll()`, `findById()`, and `save()`.
+
+    * Then for the `BookingRepository`, we have `IBookingRepository` with methods like `findByProjectId()`. This way, classes only implement the methods they need.
+
+::right::
+
+<img src="./isp.png" alt="ISP Example" class="h-96 mx-auto object-contain mt-4" />
 
 ---
 layout: default
@@ -187,23 +237,20 @@ layout: default
 # SOLID Principles: DIP <span class="text-2xl"><carbon-rule-test /></span>
 
 *   **D**ependency **I**nversion **P**rinciple (DIP):
-    *   High-level modules should not depend on low-level modules. Both should depend on abstractions.
-    *   Abstractions should not depend on details. Details should depend on abstractions.
-    *   *Example:* Controllers and Services depend on abstractions (`IService`, `IRepository`), not concrete implementations. Dependencies are injected via constructors.
+    *   High-level modules (e.g., business logic - `ProjectService`) should not depend on low-level modules (e.g., data access - `ProjectRepository`).
+    *   *Example:* `ProjectService` depends on interfaces like `IProjectRepository` and `IEligibilityService`. Concrete implementations are provided (injected) via the constructor, decoupling the service logic from specific data storage or eligibility rule implementations.
 
 ```java
-// Example: ProjectService depends on Repository/Service interfaces
 public class ProjectService implements IProjectService {
     // Dependencies are interfaces (abstractions)
-    private final IProjectRepository projectRepo;
-    private final IEligibilityService eligibilityService;
-    // ... other dependencies
+    private final IProjectRepository projectRepo; // passed in via constructor
+    // ... other interface dependencies
 
-    // Dependencies are injected (Inversion of Control)
-    public ProjectService(IProjectRepository projectRepo, IEligibilityService eligibilityService, ...) {
-        this.projectRepo = projectRepo;
-        this.eligibilityService = eligibilityService;
-        // ...
+    // Methods use the abstractions, unaware of concrete implementations
+    public List<Project> getVisibleProjects() {
+        return projectRepo.findAll().stream() // Uses IProjectRepository
+                .filter(Project::isVisible)
+                .collect(Collectors.toList());
     }
 }
 ```
@@ -225,7 +272,6 @@ layout: default
 *  <span class="text-lime-600 mr-1">✓</span>   State Transitions (Application/Registration Statuses)
 *  <span class="text-lime-600 mr-1">✓</span>   Business Rules: <span v-mark.circle.purple>Single App Limit, Reg Conflicts, Unit Counts</span>
 *  <span class="text-lime-600 mr-1">✓</span>   Data Persistence (CSV Load/Save)
-
 
 ---
 layout: center
