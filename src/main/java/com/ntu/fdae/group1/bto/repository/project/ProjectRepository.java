@@ -340,6 +340,7 @@ public class ProjectRepository implements IProjectRepository {
                         project.setApprovedOfficerNrics(approvedOfficers.stream().filter(s -> !s.trim().isEmpty())
                                 .collect(Collectors.toList())); // Ensure list is set
                     }
+                    project.setMaxOfficerSlots(maxOfficerSlots); // Recalculate remaining slots
 
                     projectMap.put(projId, project);
                 } catch (Exception e) {

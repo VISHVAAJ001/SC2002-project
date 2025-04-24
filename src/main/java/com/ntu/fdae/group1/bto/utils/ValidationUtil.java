@@ -19,6 +19,12 @@ import java.util.regex.Pattern;
  * </p>
  */
 public class ValidationUtil {
+    /**
+     * Private constructor to prevent instantiation.
+     */
+    private ValidationUtil() {
+        throw new AssertionError(); // Prevent instantiation
+    }
 
     /**
      * Regular expression pattern for validating Singapore NRIC numbers.
@@ -40,22 +46,27 @@ public class ValidationUtil {
     private static final int MAX_LENGTH = 16;
 
     // Regex Explanation:
-    // (?=.*[a-z])  : Positive lookahead ensuring at least one lowercase letter
-    // (?=.*[A-Z])  : Positive lookahead ensuring at least one uppercase letter
-    // (?=.*\d)     : Positive lookahead ensuring at least one digit
-    // (?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?~]) : Positive lookahead ensuring at least one special character
-    //                                               (Adjust the character set [] as needed)
-    // [A-Za-z\d!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?~] : Defines the allowed characters in the password
-    // {8,16}       : Enforces the length constraint (redundant with separate length check, but good practice)
-    // Note: The character set `[...]` should match the special characters in the lookahead `(?=.*[...])`
-    // Important: This regex implicitly disallows whitespace because \s is not included in the allowed character set.
+    // (?=.*[a-z]) : Positive lookahead ensuring at least one lowercase letter
+    // (?=.*[A-Z]) : Positive lookahead ensuring at least one uppercase letter
+    // (?=.*\d) : Positive lookahead ensuring at least one digit
+    // (?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?~]) : Positive lookahead ensuring at
+    // least one special character
+    // (Adjust the character set [] as needed)
+    // [A-Za-z\d!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?~] : Defines the allowed
+    // characters in the password
+    // {8,16} : Enforces the length constraint (redundant with separate length
+    // check, but good practice)
+    // Note: The character set `[...]` should match the special characters in the
+    // lookahead `(?=.*[...])`
+    // Important: This regex implicitly disallows whitespace because \s is not
+    // included in the allowed character set.
 
     // Simpler regex for just checking for whitespace
     private static final Pattern WHITESPACE_PATTERN = Pattern.compile("\\s");
 
     /**
-    * Defines the set of special characters allowed in passwords.
-    */
+     * Defines the set of special characters allowed in passwords.
+     */
     public static final String ALLOWED_SPECIAL_CHARS = "!@#$%^&*()_+-=[]{};':\"\\|,.<>/?~";
 
     /**
@@ -93,7 +104,8 @@ public class ValidationUtil {
      * - No whitespace characters
      *
      * @param password The password string to validate.
-     * @return A String containing an error message if validation fails, or null if the password is valid.
+     * @return A String containing an error message if validation fails, or null if
+     *         the password is valid.
      */
     public static String validatePasswordStrength(String password) {
         Objects.requireNonNull(password, "Password cannot be null");
@@ -118,9 +130,10 @@ public class ValidationUtil {
         if (!password.matches(".*\\d.*")) {
             return "Password must contain at least one digit.";
         }
-        // Use Pattern.quote to safely include special characters in the regex character class
+        // Use Pattern.quote to safely include special characters in the regex character
+        // class
         if (!password.matches(".*[" + Pattern.quote(ALLOWED_SPECIAL_CHARS) + "].*")) {
-             return "Password must contain at least one special symbol (" + ALLOWED_SPECIAL_CHARS + ").";
+            return "Password must contain at least one special symbol (" + ALLOWED_SPECIAL_CHARS + ").";
         }
 
         // 4. If all checks pass: valid password

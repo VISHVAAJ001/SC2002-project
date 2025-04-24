@@ -24,6 +24,7 @@ package Controller <<Folder>> {
     class UserController {
         - userService : IUserService ' Dependency on Service Interface
         + UserController(userService: IUserService)
+        + getUser(nric: String) : String
         + getUserName(nric: String) : String
         + getUserNamesForList(nrics: Collection<String>) : Map<String, String>
     }

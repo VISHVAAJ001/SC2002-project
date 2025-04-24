@@ -649,6 +649,7 @@ package Controller <<Folder>> {
     class UserController {
         - userService : IUserService
         + UserController(userService: IUserService)
+        + getUser(nric: String) : String
         + getUserName(nric: String) : String
         + getUserNamesForList(nrics: Collection<String>) : Map<String, String>
     }
@@ -891,7 +892,7 @@ package Views <<Folder>> {
         + displayApplicantProjectDetails(project: Project) : void
         + displayStaffProjectDetails(project: Project, pendingCount: int) : void
         + displayFlatInfoSection(project: Project) : void
-        + promptForProjectFilters(allowStaffFilters: boolean) : Map<String, Object>
+        + promptForProjectFilters(allowStaffFilters: boolean, isSingleApplicant: boolean) : Map<String, Object>
         + displayFlatAvailability(project: Project) : void
     }
 

@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 /**
  * Helper class for project-related UI operations in the BTO Management System.
@@ -211,13 +212,16 @@ public class ProjectUIHelper {
      * Prompts the user for project filtering criteria (Neighbourhood, Flat Type,
      * Visibility).
      * Allows users to skip criteria by pressing Enter.
-     *
+     * Restricts Flat Type options for single applicants (cannot filter by
+     * THREE_ROOM).
+     * 
      * @param allowStaffFilters Set to true if staff-specific filters (like
      *                          visibility) should be offered.
+     * @param isSingleApplicant Set to true if the user is a single applicant.
      * @return A Map containing the filter keys and selected values. Empty map if no
      *         filters applied.
      */
-    public Map<String, Object> promptForProjectFilters(boolean allowStaffFilters) {
+    public Map<String, Object> promptForProjectFilters(boolean allowStaffFilters, boolean isSingleApplicant) {
         Map<String, Object> filters = new HashMap<>();
         baseUI.displayMessage("\n--- Apply Filters (Press Enter to skip) ---");
 
@@ -227,14 +231,32 @@ public class ProjectUIHelper {
             filters.put("neighborhood", neighborhood.trim());
         }
 
-        List<FlatType> availableFlatTypes = Arrays.asList(FlatType.values()); // Or create dynamically if needed
-        FlatType selectedFlatType = baseUI.promptForEnum(
-                "Filter by Flat Type (Choose number or 0 to cancel/skip):",
-                FlatType.class,
-                availableFlatTypes);
+        // --- Flat Type Filtering Logic ---
+        List<FlatType> allowedFlatTypes;
 
-        if (selectedFlatType != null) { // Only add filter if user didn't cancel/skip
-            filters.put("flatType", selectedFlatType);
+        if (isSingleApplicant) {
+            // If single, filter out THREE_ROOM
+            baseUI.displayMessage("Note: As a single applicant, Three-Room flats are not available for selection.");
+            allowedFlatTypes = Arrays.stream(FlatType.values())
+                    .filter(ft -> ft != FlatType.THREE_ROOM)
+                    .collect(Collectors.toList());
+        } else {
+            // Otherwise, allow all flat types
+            allowedFlatTypes = Arrays.asList(FlatType.values());
+        }
+
+        // Check if there are any allowed types left to prompt for
+        if (!allowedFlatTypes.isEmpty()) {
+            FlatType selectedFlatType = baseUI.promptForEnum(
+                    "Filter by Flat Type (Choose number or 0 to cancel/skip):",
+                    FlatType.class,
+                    allowedFlatTypes);
+
+            if (selectedFlatType != null) {
+                filters.put("flatType", selectedFlatType);
+            }
+        } else {
+            baseUI.displayMessage("No applicable flat types available based on your status.");
         }
 
         // Visibility Filter (For Staff)

@@ -1,4 +1,5 @@
 projectId,projectName,neighborhood,openingDate,closingDate,managerNric,maxOfficerSlots,isVisible,approvedOfficerNrics
+PROJ004,Maple Grove,Yishun,2025-04-01,2025-04-30,T4000001F,2,true,T3000001D
 PROJ003,Hello Ville,Lakeside,2040-01-01,2050-01-01,T8765432F,2,true,T1234567J
 PROJ002,Pine Garden,Boon Lay,2025-04-01,2030-01-01,S5678901G,2,true,T2109876H
 PROJ001,Uncanny Valley,Yishun,2025-04-01,2030-01-01,T8765432F,2,true,T1234567J;S6543210I

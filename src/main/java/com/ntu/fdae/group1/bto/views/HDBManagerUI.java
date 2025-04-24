@@ -163,9 +163,9 @@ public class HDBManagerUI extends BaseUI {
         this.authController = Objects.requireNonNull(authCtrl);
         this.projectUIHelper = new ProjectUIHelper(this, userCtrl, projCtrl);
         this.accountUIHelper = new AccountUIHelper(this, authCtrl);
-        this.applicationUIHelper = new ApplicationUIHelper(this, appCtrl, projCtrl);
+        this.applicationUIHelper = new ApplicationUIHelper(this, appCtrl, projCtrl, userCtrl);
         this.enquiryUIHelper = new EnquiryUIHelper(this, userCtrl, projCtrl);
-        this.officerRegUIHelper = new OfficerRegUIHelper(this, projCtrl);
+        this.officerRegUIHelper = new OfficerRegUIHelper(this, projCtrl, userCtrl);
         this.currentProjectFilters = new HashMap<>();
     }
 
@@ -182,7 +182,8 @@ public class HDBManagerUI extends BaseUI {
         boolean keepRunning = true;
         while (keepRunning) {
             if (user != null) {
-                displayHeader("HDB Manager Menu - Welcome " + user.getName() + " (" + user.getAge() + ", " + user.getMaritalStatus() + ")");
+                displayHeader("HDB Manager Menu - Welcome " + user.getName() + " (" + user.getAge() + ", "
+                        + user.getMaritalStatus() + ")");
             } else {
                 displayHeader("Applicant Menu - Welcome User (Age, Marital Status)");
             }
@@ -614,7 +615,7 @@ public class HDBManagerUI extends BaseUI {
                 case 3:
                     // Change/Set new filters
                     displayMessage("Clearing old filters to set new ones.");
-                    this.currentProjectFilters = projectUIHelper.promptForProjectFilters(true); // Get new filters
+                    this.currentProjectFilters = projectUIHelper.promptForProjectFilters(true, false); // Get new filters
                     break;
                 case 0:
                 default: // Includes Back or invalid choice
@@ -624,7 +625,7 @@ public class HDBManagerUI extends BaseUI {
         } else {
             // No filters were active, ask if they want to apply some now
             if (promptForConfirmation("Apply filters before viewing?:")) {
-                this.currentProjectFilters = projectUIHelper.promptForProjectFilters(true);
+                this.currentProjectFilters = projectUIHelper.promptForProjectFilters(true, false);
             } else {
                 this.currentProjectFilters.clear(); // Ensure empty if they say no
             }
@@ -737,7 +738,7 @@ public class HDBManagerUI extends BaseUI {
                 case 3:
                     // Change/Set new filters
                     displayMessage("Clearing old filters to set new ones.");
-                    this.currentProjectFilters = projectUIHelper.promptForProjectFilters(true); // Get new filters
+                    this.currentProjectFilters = projectUIHelper.promptForProjectFilters(true, false); // Get new filters
                     break;
                 case 0:
                 default: // Includes Back or invalid choice
@@ -747,7 +748,7 @@ public class HDBManagerUI extends BaseUI {
         } else {
             // No filters were active, ask if they want to apply some now
             if (promptForConfirmation("Apply filters before viewing?:")) {
-                this.currentProjectFilters = projectUIHelper.promptForProjectFilters(true);
+                this.currentProjectFilters = projectUIHelper.promptForProjectFilters(true, false);
             } else {
                 this.currentProjectFilters.clear(); // Ensure empty if they say no
             }

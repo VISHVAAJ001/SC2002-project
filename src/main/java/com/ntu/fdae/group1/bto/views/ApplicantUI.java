@@ -3,13 +3,15 @@ package com.ntu.fdae.group1.bto.views;
 import com.ntu.fdae.group1.bto.controllers.project.ApplicationController;
 import com.ntu.fdae.group1.bto.controllers.project.ProjectController;
 import com.ntu.fdae.group1.bto.controllers.enquiry.EnquiryController;
-import com.ntu.fdae.group1.bto.controllers.user.AuthenticationController; // Added
+import com.ntu.fdae.group1.bto.controllers.user.AuthenticationController;
 import com.ntu.fdae.group1.bto.controllers.user.UserController;
 import com.ntu.fdae.group1.bto.enums.ApplicationStatus;
 import com.ntu.fdae.group1.bto.models.enquiry.Enquiry;
 import com.ntu.fdae.group1.bto.models.project.Application;
 import com.ntu.fdae.group1.bto.models.project.Project;
 import com.ntu.fdae.group1.bto.models.user.Applicant;
+import com.ntu.fdae.group1.bto.enums.MaritalStatus;
+
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -125,7 +127,7 @@ public class ApplicantUI extends BaseUI {
         this.accountUIHelper = new AccountUIHelper(this, authCtrl);
         this.projectUIHelper = new ProjectUIHelper(this, userCtrl, projCtrl);
         this.enquiryUIHelper = new EnquiryUIHelper(this, userCtrl, projCtrl);
-        this.applicationUIHelper = new ApplicationUIHelper(this, appCtrl, projCtrl);
+        this.applicationUIHelper = new ApplicationUIHelper(this, appCtrl, projCtrl, userCtrl);
         this.currentProjectFilters = new HashMap<>();
     }
 
@@ -269,7 +271,8 @@ public class ApplicantUI extends BaseUI {
                 case 3:
                     // Change/Set new filters
                     displayMessage("Clearing old filters to set new ones.");
-                    this.currentProjectFilters = projectUIHelper.promptForProjectFilters(false); // Get new filters
+                    boolean isSingle = (this.user != null && this.user.getMaritalStatus() == MaritalStatus.SINGLE);
+                    this.currentProjectFilters = projectUIHelper.promptForProjectFilters(false, isSingle); // Get new filters
                     break;
                 case 0:
                 default: // Includes Back or invalid choice
@@ -279,7 +282,8 @@ public class ApplicantUI extends BaseUI {
         } else {
             // No filters were active, ask if they want to apply some now
             if (promptForConfirmation("Apply filters before viewing?:")) {
-                this.currentProjectFilters = projectUIHelper.promptForProjectFilters(false);
+                boolean isSingle = (this.user != null && this.user.getMaritalStatus() == MaritalStatus.SINGLE);
+                this.currentProjectFilters = projectUIHelper.promptForProjectFilters(false, isSingle);
             } else {
                 this.currentProjectFilters.clear(); // Ensure empty if they say no
             }
