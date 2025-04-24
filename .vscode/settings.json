@@ -2,5 +2,6 @@
     "java.configuration.updateBuildConfiguration": "interactive",
     "slidev.include": [
         "**/slides.md",
-    ]
+    ],
+    "slidev.port": 3030
 }

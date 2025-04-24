@@ -279,23 +279,17 @@ layout: default
 
 # Testing Overview Part 2<span class="text-2xl"><carbon-debug /></span>
 
+* **Approach:** <span v-mark.underline.blue>Manual Testing</span> based on Use Cases & Requirements/FAQ.
+* **Focus:** Positive Paths, **<span v-mark.highlight.red>Error Handling</span>**, Business Rules, Edge Cases.
+
+<br/>
+
 **Test Case Coverage Examples:** *(Referencing Demo)*
 *  <span class="text-lime-600 mr-1">✓</span>   State Transitions <span v-mark.circle.orange>PENDING → SUCCESSFUL → BOOKED</span>
 *  <span class="text-lime-600 mr-1">✓</span>   Business Rules: Duplicate Block, Reg Conflicts, Unit Count Limits
 *  <span class="text-lime-600 mr-1">✓</span>   Data Persistence: CSV Save/Load
 * 📊 <span class="ml-1" v-mark.circle.purple>Verified correct status flows & booking logic</span>
 * 📎 <span class="ml-1">Refer to Appendix A for full test case list</span>
-
----
-layout: center
-class: text-center
----
-
-# Conclusion <span class="text-3xl text-green-500"><carbon-checkmark-outline /></span>
-
-<div class="text-xl mt-4">
-Successfully developed a CLI BTO Management System applying <span v-mark.highlight.teal>OO principles</span> for a <span v-mark.highlight.lime>modular</span> and <span v-mark.highlight.lime>robust</span> design, meeting core requirements.
-</div>
 
 ---
 layout: center
@@ -314,6 +308,16 @@ class: text-center
 
 </div>
 
+---
+layout: center
+class: text-center
+---
+
+# Conclusion <span class="text-3xl text-green-500"><carbon-checkmark-outline /></span>
+
+<div class="text-xl mt-4">
+Successfully developed a CLI BTO Management System applying <span v-mark.highlight.teal>OO principles</span> for a <span v-mark.highlight.lime>modular</span> and <span v-mark.highlight.lime>robust</span> design, meeting core requirements.
+</div>
 
 ---
 layout: center
