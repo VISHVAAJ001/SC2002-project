@@ -212,9 +212,12 @@ public class ProjectUIHelper {
      * Prompts the user for project filtering criteria (Neighbourhood, Flat Type,
      * Visibility).
      * Allows users to skip criteria by pressing Enter.
-     * Restricts Flat Type options for single applicants (cannot filter by THREE_ROOM).
+     * Restricts Flat Type options for single applicants (cannot filter by
+     * THREE_ROOM).
+     * 
      * @param allowStaffFilters Set to true if staff-specific filters (like
      *                          visibility) should be offered.
+     * @param isSingleApplicant Set to true if the user is a single applicant.
      * @return A Map containing the filter keys and selected values. Empty map if no
      *         filters applied.
      */
@@ -235,8 +238,8 @@ public class ProjectUIHelper {
             // If single, filter out THREE_ROOM
             baseUI.displayMessage("Note: As a single applicant, Three-Room flats are not available for selection.");
             allowedFlatTypes = Arrays.stream(FlatType.values())
-                                     .filter(ft -> ft != FlatType.THREE_ROOM) 
-                                     .collect(Collectors.toList());
+                    .filter(ft -> ft != FlatType.THREE_ROOM)
+                    .collect(Collectors.toList());
         } else {
             // Otherwise, allow all flat types
             allowedFlatTypes = Arrays.asList(FlatType.values());
@@ -244,16 +247,16 @@ public class ProjectUIHelper {
 
         // Check if there are any allowed types left to prompt for
         if (!allowedFlatTypes.isEmpty()) {
-             FlatType selectedFlatType = baseUI.promptForEnum(
-                "Filter by Flat Type (Choose number or 0 to cancel/skip):",
-                FlatType.class,
-                allowedFlatTypes);
+            FlatType selectedFlatType = baseUI.promptForEnum(
+                    "Filter by Flat Type (Choose number or 0 to cancel/skip):",
+                    FlatType.class,
+                    allowedFlatTypes);
 
             if (selectedFlatType != null) {
                 filters.put("flatType", selectedFlatType);
             }
         } else {
-             baseUI.displayMessage("No applicable flat types available based on your status.");
+            baseUI.displayMessage("No applicable flat types available based on your status.");
         }
 
         // Visibility Filter (For Staff)

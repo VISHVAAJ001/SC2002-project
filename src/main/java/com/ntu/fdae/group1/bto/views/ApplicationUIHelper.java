@@ -66,6 +66,7 @@ public class ApplicationUIHelper {
      * @param baseUI   An instance of BaseUI for console I/O operations
      * @param appCtrl  Controller for application-related operations
      * @param projCtrl Controller for project-related operations
+     * @param userCtrl Controller for user-related operations
      * @throws NullPointerException if any parameter is null
      */
     public ApplicationUIHelper(BaseUI baseUI, ApplicationController appCtrl, ProjectController projCtrl,

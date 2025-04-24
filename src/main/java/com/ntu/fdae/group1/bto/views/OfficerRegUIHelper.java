@@ -50,6 +50,7 @@ public class OfficerRegUIHelper {
      *
      * @param baseUI            An instance of BaseUI for console I/O operations
      * @param projectController Controller to fetch project details
+     * @param userController    Controller to fetch user details
      * @throws NullPointerException if either parameter is null
      */
     public OfficerRegUIHelper(BaseUI baseUI, ProjectController projectController, UserController userController) {
