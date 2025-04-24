@@ -31,14 +31,14 @@ This is a **Command Line Interface (CLI)** Java application developed for managi
 
 ---
 
-## 🔗 Quick Links
+## Quick Links
 
-- [UML Class Diagram - Overview](./docs/FDAE-grp1_Overview-UML-Diagram.jpg)
-- [UML Class Diagram - Entities](./docs/FDAE-grp1_Entities-UML-Diagram.jpg)
-- [UML Class Diagram - Controllers](./docs/FDAE-grp1_Controllers-UML-Diagram.jpg)
-- [UML Class Diagram - Views](./docs/FDAE-grp1_Views-UML-Diagram.jpg)
-- [UML Class Diagram - Repositories](./docs/FDAE-grp1_Repositories-UML-Diagram.jpg)
-- [UML Class Diagram - Services](./docs/FDAE-grp1_Services-UML-Diagram.jpg)
+- [UML Class Diagram - Overview](./docs/FDAE_grp1_Overview-UML-Diagram.jpg)
+- [UML Class Diagram - Entities](./docs/FDAE_grp1_Entities-UML-Diagram.jpg)
+- [UML Class Diagram - Controllers](./docs/FDAE_grp1_Entities-UML-Diagram.jpg)
+- [UML Class Diagram - Views](./docs/FDAE_grp1_Views-UML-Diagram.jpg)
+- [UML Class Diagram - Repositories](./docs/FDAE_grp1_Repositories-UML-Diagram.jpg)
+- [UML Class Diagram - Services](./docs/FDAE_grp1_Services-UML-Diagram.jpg)
 - [UML Sequence Diagram](./docs/FDAE_grp1_HDB-Officer-Apply-and-Registration.jpg)
 - [UML Sequence Diagram - HDB Manager creating a new project](./docs/FDAE_grp1_HDB-Manager-creating-a-new-project.jpg)
 - [UML Sequence Diagram](./docs/FDAE_grp1_User-Logging-in(Success-and-Fail).jpg)
@@ -46,7 +46,7 @@ This is a **Command Line Interface (CLI)** Java application developed for managi
 
 ---
 
-## 🔧 Prerequisites
+## Prerequisites
 
 To run the application, ensure the following is installed:
 
@@ -65,7 +65,7 @@ To run the application, ensure the following is installed:
 
 ---
 
-## 🚀 Setup & Execution Instructions
+## Setup & Execution Instructions
 
 1. **Clone the Repository**
 
@@ -79,10 +79,10 @@ To run the application, ensure the following is installed:
    Navigate to the JAR file and run it:
 
    ```bash
-   java -jar fdae-group1-bto-project-1.0.jar ./data
+   java -jar FDAE_group1-bto-project-1.0.jar ./data
    ```
 
-   > If `fdae-group1-bto-project-1.0.jar` is not present, you can generate it using:
+   > If `FDAE_group1-bto-project-1.0.jar` is not present, you can generate it using:
 
    ```bash
    mvn clean package
