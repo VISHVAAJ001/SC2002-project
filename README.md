@@ -33,8 +33,12 @@ This is a **Command Line Interface (CLI)** Java application developed for managi
 
 ## 🔗 Quick Links
 
-- 📄 [Project Report (PDF)](./docs/FDAE-grp1.docx)
-- 🖼️ [UML Class Diagram](./docs/class-diagram.png)
+- 🖼️ [UML Class Diagram - Overview](./docs/FDAE-grp1_Overview-UML-Diagram.jpg)
+- 🖼️ [UML Class Diagram - Entities](./docs/FDAE-grp1_Entities-UML-Diagram.jpg)
+- 🖼️ [UML Class Diagram - Controllers](./docs/FDAE-grp1_Controllers-UML-Diagram.jpg)
+- 🖼️ [UML Class Diagram - Views](./docs/FDAE-grp1_Views-UML-Diagram.jpg)
+- 🖼️ [UML Class Diagram - Repositories](./docs/FDAE-grp1_Repositories-UML-Diagram.jpg)
+- 🖼️ [UML Class Diagram - Services](./docs/FDAE-grp1_Services-UML-Diagram.jpg)
 - 🧬 [UML Sequence Diagram](./docs/sequence-diagram.png)
 - 📚 [Javadoc API Documentation](https://vishvaaj001.github.io/SC2002-project/)
 
