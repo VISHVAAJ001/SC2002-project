@@ -16,6 +16,7 @@ import com.ntu.fdae.group1.bto.models.user.HDBOfficer;
 import com.ntu.fdae.group1.bto.exceptions.*; // Import custom exceptions
 import com.ntu.fdae.group1.bto.enums.ApplicationStatus;
 import com.ntu.fdae.group1.bto.enums.FlatType;
+import com.ntu.fdae.group1.bto.enums.MaritalStatus;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -338,7 +339,8 @@ public class HDBOfficerUI extends BaseUI {
                 case 3:
                     // Change/Set new filters
                     displayMessage("Clearing old filters to set new ones.");
-                    this.currentProjectFilters = projectUIHelper.promptForProjectFilters(false, false); // Get new filters
+                    boolean isSingle = (this.user != null && this.user.getMaritalStatus() == MaritalStatus.SINGLE);
+                    this.currentProjectFilters = projectUIHelper.promptForProjectFilters(false, isSingle); // Get new filters
                     break;
                 case 0:
                 default: // Includes Back or invalid choice
@@ -348,7 +350,8 @@ public class HDBOfficerUI extends BaseUI {
         } else {
             // No filters were active, ask if they want to apply some now
             if (promptForConfirmation("Apply filters before viewing?:")) {
-                this.currentProjectFilters = projectUIHelper.promptForProjectFilters(false, false);
+                boolean isSingle = (this.user != null && this.user.getMaritalStatus() == MaritalStatus.SINGLE);
+                this.currentProjectFilters = projectUIHelper.promptForProjectFilters(false, isSingle);
             } else {
                 this.currentProjectFilters.clear(); // Ensure empty if they say no
             }
