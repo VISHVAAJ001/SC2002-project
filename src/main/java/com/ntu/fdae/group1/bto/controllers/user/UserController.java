@@ -39,6 +39,21 @@ public class UserController {
     }
 
     /**
+     * Retrieves a user by their NRIC.
+     * <p>
+     * This method provides a simple wrapper around the service method,
+     * with additional null checking to prevent null pointer exceptions.
+     * </p>
+     *
+     * @param nric The NRIC of the user to find
+     * @return The User object, or null if not found
+     */
+    public User getUser(String nric) {
+        // Directly call the service method designed for this
+        return userService.findUserById(nric);
+    }
+
+    /**
      * Retrieves the name of a user identified by their NRIC.
      * <p>
      * This method provides a simple wrapper around the service method,

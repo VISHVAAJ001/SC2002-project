@@ -340,7 +340,8 @@ public class HDBOfficerUI extends BaseUI {
                     // Change/Set new filters
                     displayMessage("Clearing old filters to set new ones.");
                     boolean isSingle = (this.user != null && this.user.getMaritalStatus() == MaritalStatus.SINGLE);
-                    this.currentProjectFilters = projectUIHelper.promptForProjectFilters(false, isSingle); // Get new filters
+                    this.currentProjectFilters = projectUIHelper.promptForProjectFilters(false, isSingle); // Get new
+                                                                                                           // filters
                     break;
                 case 0:
                 default: // Includes Back or invalid choice
@@ -869,24 +870,16 @@ public class HDBOfficerUI extends BaseUI {
             displayMessage("Applicant's Preference: " + applicantPreference);
         }
 
-        // 5. Prompt for final flat type
-        FlatType finalFlatType = promptForEnum("Enter FINAL Flat Type chosen: ", FlatType.class,
-                currentProject.getFlatTypes().keySet().stream() // Filter choices based on project offering
-                        .collect(Collectors.toList()));
-        if (finalFlatType == null) {
-            displayMessage("Booking cancelled.");
-            return;
-        }
-
         // 6. Confirmation
         if (!promptForConfirmation(
-                String.format("Confirm booking %s for %s?", finalFlatType, selectedApp.getApplicantNric()))) {
+                String.format("Confirm booking %s for %s?", applicantPreference, selectedApp.getApplicantNric()))) {
             displayMessage("Booking cancelled.");
             return;
         }
 
         // 7. Call Controller
-        Booking booking = bookingController.createBooking(this.user, selectedApp.getApplicantNric(), finalFlatType);
+        Booking booking = bookingController.createBooking(this.user, selectedApp.getApplicantNric(),
+                applicantPreference);
 
         // 8. Display Success
         displayMessage("Booking successful! Booking ID: " + booking.getBookingId());

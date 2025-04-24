@@ -649,6 +649,7 @@ package Controller <<Folder>> {
     class UserController {
         - userService : IUserService
         + UserController(userService: IUserService)
+        + getUser(nric: String) : String
         + getUserName(nric: String) : String
         + getUserNamesForList(nrics: Collection<String>) : Map<String, String>
     }
