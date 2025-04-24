@@ -219,10 +219,7 @@ public abstract class BaseUI {
 
             // Display the allowed enum values
             allowedValues
-                    .forEach(value -> displayMessage("[" + counter.getAndIncrement() + "] " + formatEnumName(value)) // Use
-                                                                                                                     // helper
-                                                                                                                     // for
-                                                                                                                     // formatting
+                    .forEach(value -> displayMessage("[" + counter.getAndIncrement() + "] " + formatEnumName(value))                                                                                                                                                                                      
                     );
 
             // Display the cancel option
@@ -273,15 +270,27 @@ public abstract class BaseUI {
     }
 
     /**
-     * Prompts the user for confirmation (Y/N).
+     * Prompts the user for confirmation (Y/N). Accepts 'Y'/'y' for yes, 
+     * 'N'/'n' or blank/Enter for no. Reprompts on invalid input.
      * 
      * @param prompt The message to display before input.
-     * @return True if user confirms (Y/y), false otherwise.
+     * @return True if user confirms (Y/y), false otherwise (N/n or Enter).
      */
     public boolean promptForConfirmation(String prompt) {
-        System.out.print(prompt + " (Y/N): ");
-        String input = scanner.nextLine();
-        return input.equalsIgnoreCase("Y");
+        while (true) {
+            System.out.print(prompt + " (Y/N, Enter for N): "); 
+            String input = scanner.nextLine().trim();
+
+            if (input.isEmpty()) {
+                return false;
+            } else if (input.equalsIgnoreCase("Y")) {
+                return true;
+            } else if (input.equalsIgnoreCase("N")) {
+                return false;
+            } else {
+                displayError("Invalid input. Please enter 'Y' for Yes, 'N' for No, or press Enter for No.");
+            }
+        }
     }
 
     /**
