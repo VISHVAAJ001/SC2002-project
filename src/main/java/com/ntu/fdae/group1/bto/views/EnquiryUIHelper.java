@@ -170,19 +170,18 @@ public class EnquiryUIHelper {
             String repliedStatus = enq.isReplied() ? "[Replied]" : "[UNREPLIED]";
 
             // Use displayMessage for potentially multi-line output
-            baseUI.displayMessage(String.format("%d. %s EnqID: %s | User: %s | Project: %s (%s) | Date: %s",
-                    index, repliedStatus, enq.getEnquiryId(), enq.getUserNric(), projName,
+            baseUI.displayMessage(String.format("%d. %s EnqID: %s | User: %s (%s) | Project: %s (%s) | Date: %s",
+                    index, repliedStatus, enq.getEnquiryId(), enq.getUserNric(),
+                    userController.getUserName(enq.getUserNric()), projName,
                     enq.getProjectId() == null ? "N/A" : enq.getProjectId(),
                     baseUI.formatDateSafe(enq.getSubmissionDate())));
             baseUI.displayMessage(String.format("   Q: %s", enq.getContent())); // Question on new line
 
             if (enq.isReplied()) {
                 baseUI.displayMessage(
-                        String.format("   A: %s (on %s)", enq.getReply(), baseUI.formatDateSafe(enq.getReplyDate()))); // Reply
-                // on
-                // new
-                // line
+                        String.format("   A: %s (on %s)", enq.getReply(), baseUI.formatDateSafe(enq.getReplyDate())));
             }
+            baseUI.displayMessage("\n");
             enquiryMap.put(index, enq);
             index++;
         }
