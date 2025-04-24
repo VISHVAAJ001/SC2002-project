@@ -33,7 +33,7 @@ This is a **Command Line Interface (CLI)** Java application developed for managi
 
 ## 🔗 Quick Links
 
-- 📄 [Project Report (PDF)](./docs/report.pdf)
+- 📄 [Project Report (PDF)](./docs/FDAE-grp1.docx)
 - 🖼️ [UML Class Diagram](./docs/class-diagram.png)
 - 🧬 [UML Sequence Diagram](./docs/sequence-diagram.png)
 - 📚 [Javadoc API Documentation](https://vishvaaj001.github.io/SC2002-project/)

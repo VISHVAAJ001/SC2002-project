@@ -179,14 +179,14 @@ public class BookingService implements IBookingService {
                 project.getProjectId(), flatType, bookingDate);
         bookingRepo.save(newBooking);
 
-        // 10. Update the application status to BOOKED and save the application
+        // 12. Update the application status to BOOKED and save the application
         // (FAQ clarifies Officer manually sets status, system handles consequences -
         // this service method represents the whole transaction triggered by Officer UI
         // action)
         application.setStatus(ApplicationStatus.BOOKED);
         applicationRepo.save(application);
 
-        // 11. Return the newly created booking object
+        // 13. Return the newly created booking object
         return newBooking;
     }
 
