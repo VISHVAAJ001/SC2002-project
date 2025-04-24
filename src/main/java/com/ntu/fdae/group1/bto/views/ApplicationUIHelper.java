@@ -395,13 +395,22 @@ public class ApplicationUIHelper {
             String projName = (proj != null) ? proj.getProjectName() : "Unknown/Deleted";
             String withdrawalStatus = app.getRequestedWithdrawalDate() != null ? " (Withdrawal Req.)" : ""; // Shorter
             String preference = (app.getPreferredFlatType() != null) ? app.getPreferredFlatType().name() : "N/A";
+            User applicant = userController.getUser(app.getApplicantNric());
+
+            if (applicant == null) {
+                baseUI.displayError("Could not retrieve user details for NRIC: " + app.getApplicantNric());
+                continue; // Skip this application if user details are not found
+            }
 
             // Format the string for display
             String formattedString = String.format(
-                    "[%d] AppID: %-10s | Applicant: %-9s | Project: %s (%s) | Status: %-12s%s | Pref: %-8s | Date: %s",
+                    "[%d] AppID: %-10s | Applicant: %-9s (%s, %d, %s)| Project: %s (%s) | Status: %-12s%s | Pref: %-8s | Date: %s",
                     index,
                     app.getApplicationId(),
-                    userController.getUserName(app.getApplicantNric()),
+                    app.getApplicantNric(),
+                    applicant.getName(),
+                    applicant.getAge(),
+                    applicant.getMaritalStatus().toString(),
                     projName, // Display name
                     app.getProjectId(), // Display ID
                     app.getStatus(), // Enum name is usually fine

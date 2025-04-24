@@ -1,5 +1,5 @@
 enquiryId,userNric,projectId,content,reply,isReplied,submissionDate,replyDate
-ENQ005,S1000002B,PROJ004,Where is the nearest mall from this flat?,,false,2025-04-24,
+ENQ005,S1000002B,PROJ004,Where is the nearest mall from this flat?,The nearest mall is Bayfront Mall.,true,2025-04-24,2025-04-24
 ENQ004,S1000002B,PROJ001,Does this flat have a swimming pool?,,false,2025-04-24,
 ENQ003,S1000002B,PROJ002,How far is this place to the closest MRT station?,,false,2025-04-24,
 ENQ002,S4321098C,PROJ001,Are there any grants for married applicants?,Yes. Please refer to the HDB Website for more information.,true,2025-04-14,2025-04-14
