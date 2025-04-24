@@ -615,7 +615,7 @@ public class HDBManagerUI extends BaseUI {
                 case 3:
                     // Change/Set new filters
                     displayMessage("Clearing old filters to set new ones.");
-                    this.currentProjectFilters = projectUIHelper.promptForProjectFilters(true); // Get new filters
+                    this.currentProjectFilters = projectUIHelper.promptForProjectFilters(true, false); // Get new filters
                     break;
                 case 0:
                 default: // Includes Back or invalid choice
@@ -625,7 +625,7 @@ public class HDBManagerUI extends BaseUI {
         } else {
             // No filters were active, ask if they want to apply some now
             if (promptForConfirmation("Apply filters before viewing?:")) {
-                this.currentProjectFilters = projectUIHelper.promptForProjectFilters(true);
+                this.currentProjectFilters = projectUIHelper.promptForProjectFilters(true, false);
             } else {
                 this.currentProjectFilters.clear(); // Ensure empty if they say no
             }
@@ -738,7 +738,7 @@ public class HDBManagerUI extends BaseUI {
                 case 3:
                     // Change/Set new filters
                     displayMessage("Clearing old filters to set new ones.");
-                    this.currentProjectFilters = projectUIHelper.promptForProjectFilters(true); // Get new filters
+                    this.currentProjectFilters = projectUIHelper.promptForProjectFilters(true, false); // Get new filters
                     break;
                 case 0:
                 default: // Includes Back or invalid choice
@@ -748,7 +748,7 @@ public class HDBManagerUI extends BaseUI {
         } else {
             // No filters were active, ask if they want to apply some now
             if (promptForConfirmation("Apply filters before viewing?:")) {
-                this.currentProjectFilters = projectUIHelper.promptForProjectFilters(true);
+                this.currentProjectFilters = projectUIHelper.promptForProjectFilters(true, false);
             } else {
                 this.currentProjectFilters.clear(); // Ensure empty if they say no
             }

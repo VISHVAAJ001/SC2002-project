@@ -338,7 +338,7 @@ public class HDBOfficerUI extends BaseUI {
                 case 3:
                     // Change/Set new filters
                     displayMessage("Clearing old filters to set new ones.");
-                    this.currentProjectFilters = projectUIHelper.promptForProjectFilters(false); // Get new filters
+                    this.currentProjectFilters = projectUIHelper.promptForProjectFilters(false, false); // Get new filters
                     break;
                 case 0:
                 default: // Includes Back or invalid choice
@@ -348,7 +348,7 @@ public class HDBOfficerUI extends BaseUI {
         } else {
             // No filters were active, ask if they want to apply some now
             if (promptForConfirmation("Apply filters before viewing?:")) {
-                this.currentProjectFilters = projectUIHelper.promptForProjectFilters(false);
+                this.currentProjectFilters = projectUIHelper.promptForProjectFilters(false, false);
             } else {
                 this.currentProjectFilters.clear(); // Ensure empty if they say no
             }
